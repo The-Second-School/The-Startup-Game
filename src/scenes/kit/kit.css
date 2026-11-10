@@ -1,0 +1,105 @@
+/* Scene kit idle loops (owner: scenes agent A). transform/opacity only.
+   SVG rule: never put a k-* class on an element that also has a transform attribute.
+   Wrap: <g transform="translate(..)"><g className="k-bob">...</g></g>  */
+
+[class^='k-'], [class*=' k-'] { transform-box: fill-box; transform-origin: center; }
+.k-origin-bottom { transform-origin: 50% 100%; }
+.k-origin-top { transform-origin: 50% 0%; }
+.k-origin-left { transform-origin: 0% 50%; }
+
+@keyframes k-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(var(--bob, -10px)) } }
+.k-bob { animation: k-bob var(--dur, 2.8s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-squash { 0%, 100% { transform: scale(1, 1) } 45% { transform: scale(1.04, 0.95) } 70% { transform: scale(0.97, 1.04) } }
+.k-squash { animation: k-squash var(--dur, 1.6s) ease-in-out infinite; animation-delay: var(--delay, 0s); transform-origin: 50% 100%; }
+
+@keyframes k-sway { 0%, 100% { transform: rotate(var(--sway-a, -3deg)) } 50% { transform: rotate(var(--sway-b, 3deg)) } }
+.k-sway { animation: k-sway var(--dur, 3s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-drift { from { transform: translateX(0) } to { transform: translateX(var(--dx, 2400px)) } }
+.k-drift { animation: k-drift var(--dur, 90s) linear infinite; animation-delay: var(--delay, 0s); }
+
+/* Fly-across: element starts at --from and goes to --to (px, translateX), with a gentle hover bob baked in */
+@keyframes k-fly { from { transform: translateX(var(--from, -600px)) } to { transform: translateX(var(--to, 2600px)) } }
+.k-fly { animation: k-fly var(--dur, 9s) linear infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-blink { 0%, 100% { opacity: 1 } 48% { opacity: 1 } 50% { opacity: 0.15 } 70% { opacity: 0.15 } 72% { opacity: 1 } }
+.k-blink { animation: k-blink var(--dur, 4s) steps(1, end) infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-eyes { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(0.1) } }
+.k-eyes { animation: k-eyes var(--dur, 4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-spin { to { transform: rotate(360deg) } }
+.k-spin { animation: k-spin var(--dur, 6s) linear infinite; animation-delay: var(--delay, 0s); }
+.k-spin-rev { animation: k-spin var(--dur, 6s) linear infinite reverse; animation-delay: var(--delay, 0s); }
+
+@keyframes k-pulse { 0%, 100% { transform: scale(1) } 50% { transform: scale(var(--pulse, 1.08)) } }
+.k-pulse { animation: k-pulse var(--dur, 1.4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.6) } 50% { opacity: 1; transform: scale(1.1) } }
+.k-twinkle { animation: k-twinkle var(--dur, 2s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-steam { 0% { opacity: 0; transform: translateY(0) scale(0.6) } 25% { opacity: 0.9 } 100% { opacity: 0; transform: translateY(var(--rise, -70px)) scale(1.3) } }
+.k-steam { animation: k-steam var(--dur, 2.2s) ease-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-shiver { 0%, 100% { transform: translateX(0) } 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+.k-shiver { animation: k-shiver 0.14s linear infinite; }
+
+@keyframes k-hammer { 0%, 100% { transform: rotate(-38deg) } 40% { transform: rotate(-44deg) } 60% { transform: rotate(14deg) } 70% { transform: rotate(8deg) } }
+.k-hammer { animation: k-hammer var(--dur, 0.9s) cubic-bezier(0.5, 0, 0.6, 1) infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-belt { from { transform: translateX(0) } to { transform: translateX(var(--belt, 80px)) } }
+.k-belt { animation: k-belt var(--dur, 0.8s) linear infinite; }
+
+@keyframes k-rise { 0% { opacity: 0; transform: translateY(0) scale(0.5) } 15% { opacity: 1 } 100% { opacity: 0; transform: translateY(var(--rise, -260px)) scale(1) } }
+.k-rise { animation: k-rise var(--dur, 3s) ease-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-fall { 0% { opacity: 0; transform: translate(0, 0) rotate(0) } 10% { opacity: 1 } 100% { opacity: 0; transform: translate(var(--fx, 30px), var(--fall, 300px)) rotate(200deg) } }
+.k-fall { animation: k-fall var(--dur, 2.6s) linear infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-burst { 0% { opacity: 0; transform: scale(0.1) } 12% { opacity: 1 } 55% { opacity: 1; transform: scale(1) } 100% { opacity: 0; transform: scale(1.15) } }
+.k-burst { animation: k-burst var(--dur, 1.8s) cubic-bezier(0.2, 0.8, 0.3, 1) infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-wiggle { 0%, 100% { transform: rotate(0) } 25% { transform: rotate(var(--wig, 8deg)) } 75% { transform: rotate(calc(var(--wig, 8deg) * -1)) } }
+.k-wiggle { animation: k-wiggle var(--dur, 0.5s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-flag { 0%, 100% { transform: scaleX(1) skewY(0deg) } 50% { transform: scaleX(0.86) skewY(6deg) } }
+.k-flag { animation: k-flag var(--dur, 1.1s) ease-in-out infinite; transform-origin: 0% 50%; animation-delay: var(--delay, 0s); }
+
+@keyframes k-prop { 0%, 100% { transform: scaleX(1) } 50% { transform: scaleX(0.15) } }
+.k-prop { animation: k-prop 0.18s linear infinite; }
+
+@keyframes k-note { 0% { opacity: 0; transform: translate(0, 0) rotate(-10deg) } 20% { opacity: 1 } 100% { opacity: 0; transform: translate(var(--nx, 40px), -120px) rotate(15deg) } }
+.k-note { animation: k-note var(--dur, 2.4s) ease-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-walk-a { 0%, 100% { transform: rotate(-16deg) } 50% { transform: rotate(16deg) } }
+@keyframes k-walk-b { 0%, 100% { transform: rotate(16deg) } 50% { transform: rotate(-16deg) } }
+.k-walk-a { animation: k-walk-a var(--dur, 0.5s) ease-in-out infinite; transform-origin: 50% 0%; }
+.k-walk-b { animation: k-walk-b var(--dur, 0.5s) ease-in-out infinite; transform-origin: 50% 0%; }
+
+@keyframes k-hop { 0%, 100% { transform: translateY(0) scale(1, 1) } 10% { transform: translateY(0) scale(1.06, 0.92) } 45% { transform: translateY(var(--hop, -30px)) scale(0.96, 1.05) } 80% { transform: translateY(0) scale(1.05, 0.94) } }
+.k-hop { animation: k-hop var(--dur, 0.7s) ease-in-out infinite; transform-origin: 50% 100%; animation-delay: var(--delay, 0s); }
+
+@keyframes k-flash { 0%, 100% { opacity: 0 } 6% { opacity: 0.85 } 12% { opacity: 0.1 } 18% { opacity: 0.7 } 30% { opacity: 0 } }
+.k-flash { animation: k-flash var(--dur, 3.2s) linear infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes k-shake { 0%, 100% { transform: translate(0, 0) } 20% { transform: translate(-10px, 4px) } 40% { transform: translate(9px, -5px) } 60% { transform: translate(-7px, 3px) } 80% { transform: translate(5px, -2px) } }
+.k-shake { animation: k-shake 0.35s linear infinite; }
+
+@keyframes k-rays { to { transform: rotate(360deg) } }
+.k-rays { animation: k-rays var(--dur, 24s) linear infinite; }
+
+/* A walker that fades in, strolls --dx, and fades out (no visible teleport on loop) */
+@keyframes k-stroll { 0% { opacity: 0; transform: translateX(0) } 12% { opacity: 1 } 88% { opacity: 1 } 100% { opacity: 0; transform: translateX(var(--dx, 300px)) } }
+.k-stroll { animation: k-stroll var(--dur, 6s) linear infinite; animation-delay: var(--delay, 0s); }
+
+/* Hero lifespan loops: very gentle, transform only */
+@keyframes k-breathe { 0%, 100% { transform: scale(1, 1) } 50% { transform: scale(1.018, 1.03) } }
+.k-breathe { animation: k-breathe var(--dur, 3.6s) ease-in-out infinite; animation-delay: var(--delay, 0s); transform-origin: 50% 100%; }
+@keyframes k-hero { 0%, 100% { transform: translateY(0) rotate(-1.2deg) } 50% { transform: translateY(var(--bob, -10px)) rotate(1.2deg) } }
+.k-hero { animation: k-hero var(--dur, 4.4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-shake, .k-shiver, .k-flash, .k-breathe, .k-hero, .k-stroll { animation: none !important; }
+  .k-drift, .k-fly { animation-duration: calc(var(--dur, 9s) * 2) !important; }
+}

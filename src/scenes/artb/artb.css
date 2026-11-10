@@ -1,0 +1,50 @@
+/* Scenes artist B: shared keyframes. Transform and opacity only. Custom props: --d duration, --dl delay, --amp, --ang. */
+.ab-root{position:absolute;inset:0;overflow:hidden;pointer-events:none;font-family:'Baloo 2',system-ui,sans-serif}
+.ab-root *{box-sizing:border-box}
+@keyframes kBob{0%,100%{transform:translateY(0)}50%{transform:translateY(calc(var(--amp,10px) * -1))}}
+.bob{animation:kBob var(--d,3s) ease-in-out var(--dl,0s) infinite}
+@keyframes kSway{0%,100%{transform:rotate(calc(var(--ang,4deg) * -1))}50%{transform:rotate(var(--ang,4deg))}}
+.sway{animation:kSway var(--d,3s) ease-in-out var(--dl,0s) infinite}
+@keyframes kSquish{0%,100%{transform:scale(1,1)}50%{transform:scale(var(--sx,1.05),var(--sy,.95))}}
+.squish{animation:kSquish var(--d,2s) ease-in-out var(--dl,0s) infinite}
+@keyframes kSpin{to{transform:rotate(360deg)}}
+.spin{animation:kSpin var(--d,10s) linear infinite}
+@keyframes kPulse{0%,100%{transform:scale(1)}50%{transform:scale(var(--s,1.1))}}
+.pulse{animation:kPulse var(--d,1.6s) ease-in-out var(--dl,0s) infinite}
+@keyframes kBlink{0%,92%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.08)}}
+.blink{animation:kBlink var(--d,4s) infinite var(--dl,0s)}
+@keyframes kTwinkle{0%,100%{transform:scale(.5) rotate(0deg);opacity:.35}50%{transform:scale(1.1) rotate(25deg);opacity:1}}
+.twinkle{animation:kTwinkle var(--d,1.8s) ease-in-out var(--dl,0s) infinite}
+@keyframes kDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,-600px))}}
+.drift{animation:kDrift var(--d,60s) linear var(--dl,0s) infinite}
+@keyframes kLegA{0%,100%{transform:rotate(-24deg)}50%{transform:rotate(24deg)}}
+@keyframes kLegB{0%,100%{transform:rotate(24deg)}50%{transform:rotate(-24deg)}}
+.legA{animation:kLegA var(--wd,.7s) ease-in-out infinite}
+.legB{animation:kLegB var(--wd,.7s) ease-in-out infinite}
+@keyframes kStep{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.step{animation:kStep var(--wd,.35s) ease-in-out infinite}
+@keyframes kRise{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translate(var(--dxr,0px),var(--dy,-220px)) scale(var(--s2,1.5));opacity:0}}
+.rise{animation:kRise var(--d,2.4s) ease-out var(--dl,0s) infinite}
+@keyframes kRing{0%{transform:scale(.2);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+.ring{animation:kRing var(--d,1.4s) ease-out var(--dl,0s) infinite}
+@keyframes kWave{from{transform:translateX(0)}to{transform:translateX(-240px)}}
+.wave{animation:kWave var(--d,6s) linear infinite}
+@keyframes kBurst{0%{transform:translate(0,0) scale(.3) rotate(0deg);opacity:0}12%{opacity:1}100%{transform:translate(var(--tx,100px),var(--ty,-100px)) scale(1) rotate(var(--rot,180deg));opacity:0}}
+.burst{animation:kBurst var(--d,1.6s) cubic-bezier(.2,.7,.3,1) var(--dl,0s) infinite}
+@keyframes kFall{0%{transform:translate(0,-60px) rotate(0deg);opacity:0}8%{opacity:1}100%{transform:translate(var(--fx,0px),var(--fy,900px)) rotate(var(--rot,540deg));opacity:1}}
+.fall{animation:kFall var(--d,2.6s) cubic-bezier(.45,0,.9,.6) var(--dl,0s) infinite}
+@keyframes kShake{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-5px,2px) rotate(-1deg)}40%{transform:translate(5px,-2px) rotate(1deg)}60%{transform:translate(-4px,-1px) rotate(-.6deg)}80%{transform:translate(4px,2px) rotate(.6deg)}}
+.shake{animation:kShake var(--d,.35s) linear infinite}
+@keyframes kWobble{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.wobble{animation:kWobble var(--d,.5s) ease-in-out infinite}
+@keyframes kHop{0%,100%{transform:translateY(0) scale(1,1)}10%{transform:translateY(0) scale(1.08,.9)}45%{transform:translateY(calc(var(--amp,40px) * -1)) scale(.95,1.06)}85%{transform:translateY(0) scale(1.06,.93)}}
+.hop{animation:kHop var(--d,.9s) ease-in-out var(--dl,0s) infinite}
+@keyframes kFlap{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.15)}}
+.flap{animation:kFlap var(--d,1.4s) ease-in-out var(--dl,0s) infinite}
+@keyframes kGlint{0%,70%{transform:translateX(-140px)}100%{transform:translateX(260px)}}
+.glint{animation:kGlint var(--d,3s) ease-in-out var(--dl,0s) infinite}
+@keyframes kCrank{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(5px) scale(1.02,.97)}}
+.crank{animation:kCrank var(--d,.5s) ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.shake,.wobble{animation-duration:2s}}
+@keyframes kCopierBar{0%{transform:translateX(0)}50%{transform:translateX(340px)}100%{transform:translateX(0)}}
+.copierbar{animation:kCopierBar 1.6s ease-in-out infinite}

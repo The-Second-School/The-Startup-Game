@@ -1,0 +1,3 @@
+/* Paint/layout containment for full-stage views: each view (incl. one animating out) repaints on its own layer
+   and never invalidates its sibling. .scr-root already clips overflow, so nothing visible is cut off. */
+.scr-view { contain: layout paint; }

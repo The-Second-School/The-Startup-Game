@@ -1,0 +1,293 @@
+/* ==========================================================================
+   The Startup Game: theme (owner: ui)
+   Flat colours only. Depth = stacked flat layers (lip + fill + highlight) and white sticker borders.
+
+   UTILITY CLASSES other builders can use (all transform/opacity only):
+     .ui-bob        gentle up/down bob (8 px, 2.8 s)        vars: --dur, --d (delay), --amp
+     .ui-float      slower float with a tiny rotate (4 s)   vars: --dur, --d, --amp
+     .ui-wiggle     rotate back and forth (+-6 deg, 1.2 s)  vars: --dur, --d, --rot
+     .ui-spin-slow  full turn every 24 s                    vars: --dur
+     .ui-pulse      scale 1 -> 1.06 -> 1 (1.4 s)            vars: --dur, --d
+     .ui-jump       hop with squash and stretch (1.1 s)     vars: --dur, --d
+     .ui-shake      quick horizontal shake (0.5 s, loops)   vars: --dur
+     .ui-blink      scaleY blink for eye groups (use transform-box fill-box automatically)  vars: --dur, --d
+     .ui-pop-in     one-shot pop entrance with overshoot (0.45 s)  vars: --d
+     .ui-glow       flat "glow" ring behind something: pulses scale + opacity  vars: --dur
+   Add  style={{'--d':'-1.2s'}}  to offset loops so rows of things never move in sync.
+   All loops stop / calm down under prefers-reduced-motion.
+
+   TEXT HELPERS:  .ui-title (96), .ui-h1 (80), .ui-h2 (64), .ui-body (44), .ui-label (36), .ui-num (tabular numbers)
+   LAYOUT HELPERS: .ui-row, .ui-col, .ui-center
+   ========================================================================== */
+
+:root {
+  /* --- core tokens (SPEC section 3; names and values fixed) --- */
+  --bg: #FFFCF3;
+  --bg-2: #FFF5DA;
+  --sun: #FFC800;  --sun-edge: #E0A100;
+  --paper: #FFFFFF; --paper-edge: #EED9A0;
+  --ink: #4A3613;  --ink-soft: #8A6F3E;
+  --good: #58CC02; --good-edge: #46A302;
+  --bad: #FF4B4B;  --bad-edge: #D93636;
+  --coin: #FFB800; --coin-edge: #D68F00;
+  --raivan: #7B4BC9; --raivan-edge: #5A2F9E;
+
+  /* --- extra steps --- */
+  --bg-3: #FFEBB4;          /* soft yellow for bands */
+  --sun-hi: #FFE277;        /* highlight on sun fills */
+  --paper-2: #FFFDF6;       /* cream inner panel */
+  --paper-3: #FFF8E4;       /* inner panel on paper cards */
+  --good-hi: #A5ED6E; --good-soft: #D7FFB8;
+  --bad-hi: #FF9C9C;  --bad-soft: #FFDCDC;
+  --coin-hi: #FFE08A;
+  --raivan-hi: #A982E8; --raivan-soft: #E6D8FF;
+  --blue: #1CB0F6;  --blue-edge: #1395D4;
+  --grey: #E9DFC4;  --grey-edge: #CDBE97;   /* disabled */
+  --white: #FFFFFF;
+
+  /* --- shape --- */
+  --r-btn: 40px;
+  --r-card: 48px;
+  --r-inner: 36px;
+  --r-chip: 999px;
+  --border: 6px;           /* even white sticker border on every side */
+  --border-btn: 6px;
+  --border-chip: 5px;
+  --lip-btn: 0px;          /* lips removed: even border + soft shadow instead */
+  --lip-card: 0px;
+  --lip-chip: 0px;
+  --sh: 0 6px 18px rgba(120, 88, 24, 0.13);      /* soft static shadow */
+  --sh-sm: 0 4px 10px rgba(120, 88, 24, 0.12);
+  --fw-body: 600; --fw-strong: 700; --fw-title: 800;
+  --press: 0.94;
+
+  /* --- spacing (stage px) --- */
+  --s-1: 8px; --s-2: 16px; --s-3: 24px; --s-4: 32px; --s-5: 48px; --s-6: 64px; --s-7: 96px;
+
+  /* --- type --- */
+  --font: "Baloo 2", "Nunito", "Noto Sans Devanagari", system-ui, sans-serif;
+  --fs-label: 36px; --fs-body: 44px; --fs-option: 54px; --fs-h2: 64px; --fs-h1: 80px; --fs-title: 112px;
+
+  /* --- motion --- */
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; height: 100%; }
+html, body { overflow: hidden; overscroll-behavior: none; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 600;
+  letter-spacing: 0.012em;
+  line-height: 1.25;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+body[data-app=admin] { touch-action: manipulation; overflow: auto; }
+body[data-app=admin] input, body[data-app=admin] textarea { -webkit-user-select: text; user-select: text; }
+img, svg { -webkit-user-drag: none; }
+button { font-family: inherit; color: inherit; }
+svg { overflow: visible; shape-rendering: geometricPrecision; }
+
+/* ---------- text helpers ---------- */
+.ui-title { font-size: var(--fs-title); font-weight: 800; line-height: 1.02; letter-spacing: 0.015em; }
+.ui-h1 { font-size: var(--fs-h1); font-weight: 800; line-height: 1.12; letter-spacing: 0.01em; }
+.ui-h2 { font-size: var(--fs-h2); font-weight: 700; line-height: 1.18; letter-spacing: 0.01em; }
+.ui-body { font-size: var(--fs-body); font-weight: 600; line-height: 1.38; }
+.ui-label { font-size: var(--fs-label); font-weight: 600; line-height: 1.3; }
+.ui-num { font-variant-numeric: tabular-nums; }
+.ui-row { display: flex; flex-direction: row; align-items: center; }
+.ui-col { display: flex; flex-direction: column; }
+.ui-center { display: grid; place-items: center; }
+
+/* ---------- stage ---------- */
+.ui-stage-outer {
+  position: fixed; inset: 0; overflow: hidden;
+  background: var(--bg-2);
+  touch-action: none;
+}
+.ui-stage {
+  position: absolute; left: 0; top: 0;
+  width: 1920px; height: 1080px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background-color: var(--bg);
+  /* flat dot + soft blob pattern in --bg-2, as an SVG tile (no gradients) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23FFF1CC'%3E%3Ccircle cx='30' cy='30' r='7'/%3E%3Ccircle cx='150' cy='90' r='7'/%3E%3Ccircle cx='90' cy='170' r='5'/%3E%3Ccircle cx='210' cy='210' r='5'/%3E%3Cpath d='M190 20c12-4 26 4 26 16s-10 18-22 16-18-28-4-32z'/%3E%3Cpath d='M40 120c10-6 24-2 26 9s-8 20-20 18-16-21-6-27z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  font-family: var(--font);
+  color: var(--ink);
+  contain: layout paint;
+}
+.ui-stage-blobs { position: absolute; inset: 0; pointer-events: none; }
+
+/* ---------- sticker border trick for SVG (see svg.tsx) ---------- */
+.ui-stk, .ui-stk * {
+  fill: #fff !important;
+  stroke: #fff !important;
+  stroke-width: var(--stk, 12px) !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  opacity: 1 !important;
+}
+.ui-stk .ln { stroke-width: calc(var(--lw, 0px) + var(--stk, 12px)) !important; }
+.ui-stk .in, .ui-stk defs, .ui-stk clipPath { display: none; }
+.ui-svg-art { display: block; overflow: visible; }
+/* Inside SVG art, animated loop classes rotate/scale around their own box (default origin: centre). */
+
+/* ---------- button (flat, even white border, soft shadow, bouncy press) ---------- */
+.ui-btn {
+  --c: var(--sun); --e: var(--sun-edge); --t: var(--ink); --bw: var(--border-btn);
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35em;
+  border: var(--bw) solid #fff; margin: 0;
+  background: var(--c);
+  color: var(--t);
+  font-family: var(--font); font-weight: 700; line-height: 1.1; letter-spacing: 0.02em;
+  border-radius: var(--r-btn);
+  box-shadow: var(--sh);
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+.ui-btn::before { display: none; }
+.ui-btn::after { content: ''; position: absolute; inset: -20px; } /* bigger hit area */
+.ui-btn > .ui-btn-label { position: relative; padding-top: 0.06em; }
+.ui-btn:disabled { cursor: default; --c: var(--grey); --e: var(--grey-edge); --t: var(--ink-soft); }
+.ui-btn-md { font-size: 44px; min-height: 112px; padding: 0 56px; }
+.ui-btn-lg { font-size: 60px; min-height: 160px; min-width: 400px; padding: 0 72px; }
+.ui-btn-xl { font-size: 72px; min-height: 200px; min-width: 480px; padding: 0 92px; border-radius: 56px; }
+
+/* ---------- shared bouncy press (every tappable): scale down on press, spring back with overshoot ---------- */
+.ui-btn, .ui-press, .scr-tap {
+  transform: scale(1);
+  transition: transform 460ms cubic-bezier(0.34, 1.9, 0.5, 1);
+}
+.ui-btn:active:not(:disabled), .ui-btn[data-pressed="1"], .ui-press:active, .scr-tap:not(.is-disabled):active {
+  transform: scale(var(--press));
+  transition: transform 90ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* ---------- card ---------- */
+.ui-card {
+  --c: var(--paper); --e: var(--paper-edge); --in: var(--paper-3); --bw: var(--border);
+  position: relative;
+  background: var(--c);
+  border: var(--bw) solid #fff;
+  border-radius: var(--r-card);
+  box-shadow: var(--sh);
+  padding: 14px;
+}
+.ui-card-inner {
+  position: relative;
+  background: var(--in);
+  border-radius: var(--r-inner);
+  height: 100%;
+}
+.ui-card-hi { display: none; }
+
+/* ---------- pill ---------- */
+.ui-pill {
+  --c: var(--sun); --e: var(--sun-edge); --t: var(--ink); --bw: var(--border-chip);
+  display: inline-flex; align-items: center; gap: 0.3em;
+  background: var(--c); color: var(--t);
+  border: var(--bw) solid #fff;
+  border-radius: 999px;
+  box-shadow: var(--sh-sm);
+  font-weight: 700; line-height: 1; white-space: nowrap; letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+.ui-pill-sm { font-size: 36px; padding: 12px 26px 8px; }
+.ui-pill-md { font-size: 44px; padding: 14px 32px 10px; }
+.ui-pill-lg { font-size: 56px; padding: 16px 40px 12px; }
+
+/* ---------- speech bubble ---------- */
+.ui-bubble {
+  position: relative; display: inline-block;
+  background: #fff;
+  border-radius: 44px;
+  box-shadow: var(--sh);
+  color: var(--ink);
+  font-weight: 600; line-height: 1.32; letter-spacing: 0.015em;
+  margin-bottom: 8px;
+}
+.ui-bubble-md { font-size: 44px; padding: 28px 44px 24px; }
+.ui-bubble-lg { font-size: 52px; padding: 32px 52px 28px; border-radius: 52px; }
+.ui-bubble-tail { position: absolute; width: 64px; height: 64px; pointer-events: none; }
+.ui-bubble-text { position: relative; white-space: pre-wrap; }
+.ui-ghost { opacity: 0; }
+
+/* ---------- header strip (act progress) ---------- */
+:root { --header-h: 104px; --safe-top: 124px; }
+.ui-header { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--header-h) + 28px); z-index: 40; pointer-events: none; }
+.ui-header-bg {
+  position: absolute; inset: 0;
+  /* Perf: no backdrop-filter / mask-image here. A live blur over an animated scene cost ~12 ms/frame; this opaque gradient looks the same
+     (frosted cream fading out at the bottom edge) and is a plain compositor layer. */
+  background: linear-gradient(rgba(255, 252, 243, 0.94) 0, rgba(255, 252, 243, 0.94) calc(var(--header-h) - 6px), rgba(255, 252, 243, 0) 100%);
+}
+.ui-header-in { position: absolute; left: 40px; right: 40px; top: 0; height: var(--header-h); display: flex; align-items: center; }
+
+/* ---------- recipe bar ---------- */
+.ui-recipe { position: relative; display: flex; align-items: center; justify-content: space-between; height: 80px; width: 100%; padding: 0 8px; }
+.ui-recipe-road { position: absolute; left: 60px; right: 60px; top: 50%; height: 0; }
+.ui-recipe-step { position: relative; display: flex; align-items: center; gap: 12px; height: 70px; padding: 0 28px 0 8px; border-radius: 999px; font-size: 36px; font-weight: 700; letter-spacing: 0.02em; line-height: 1; white-space: nowrap; }
+.ui-recipe-step .ui-recipe-name { padding-top: 5px; }
+
+/* ---------- keyframes ---------- */
+@keyframes ui-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(var(--amp, 8px) * -1)); } }
+@keyframes ui-float { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(calc(var(--amp, 14px) * -1)) rotate(1.5deg); } }
+@keyframes ui-wiggle { 0%, 100% { transform: rotate(calc(var(--rot, 6deg) * -1)); } 50% { transform: rotate(var(--rot, 6deg)); } }
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+@keyframes ui-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes ui-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(0) scale(1.08, 0.9); }
+  40% { transform: translateY(-14%) scale(0.95, 1.06); }
+  62% { transform: translateY(0) scale(1.06, 0.93); }
+  76% { transform: translateY(0) scale(0.98, 1.02); }
+}
+@keyframes ui-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px) rotate(-1deg); } 40% { transform: translateX(6px) rotate(1deg); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+@keyframes ui-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(0.08); } }
+@keyframes ui-pop-in { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 80% { transform: scale(0.96); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes ui-glow { 0%, 100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.12); opacity: 0.2; } }
+@keyframes ui-talk { 0%, 100% { transform: scaleY(0.35); } 25% { transform: scaleY(1); } 50% { transform: scaleY(0.55); } 75% { transform: scaleY(0.9); } }
+@keyframes ui-wave { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(18deg); } }
+@keyframes ui-flicker { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(0.88, 1.12); } 60% { transform: scale(1.06, 0.92); } }
+@keyframes ui-steam { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-38px) scale(1.25); opacity: 0; } }
+@keyframes ui-blinklight { 0%, 60%, 100% { opacity: 1; } 70%, 90% { opacity: 0.25; } }
+@keyframes ui-sway { 0%, 100% { transform: translateX(-4px) rotate(-2deg); } 50% { transform: translateX(4px) rotate(2deg); } }
+
+.ui-bob { animation: ui-bob var(--dur, 2.8s) ease-in-out var(--d, 0s) infinite; }
+.ui-float { animation: ui-float var(--dur, 4s) ease-in-out var(--d, 0s) infinite; }
+.ui-wiggle { animation: ui-wiggle var(--dur, 1.2s) ease-in-out var(--d, 0s) infinite; }
+.ui-spin-slow { animation: ui-spin var(--dur, 24s) linear infinite; }
+.ui-pulse { animation: ui-pulse var(--dur, 1.4s) ease-in-out var(--d, 0s) infinite; }
+.ui-jump { animation: ui-jump var(--dur, 1.1s) ease-in-out var(--d, 0s) infinite; transform-origin: 50% 100%; }
+.ui-shake { animation: ui-shake var(--dur, 0.5s) linear infinite; }
+.ui-blink { animation: ui-blink var(--dur, 4s) linear var(--d, 0s) infinite; transform-box: fill-box; transform-origin: center; }
+.ui-pop-in { animation: ui-pop-in 0.45s var(--ease-out) var(--d, 0s) both; }
+.ui-glow { animation: ui-glow var(--dur, 1.6s) ease-in-out infinite; }
+.ui-talk { animation: ui-talk 0.36s linear infinite; transform-box: fill-box; transform-origin: center; }
+.ui-wave { animation: ui-wave 0.7s ease-in-out infinite; }
+.ui-flicker { animation: ui-flicker 0.5s ease-in-out var(--d, 0s) infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.ui-steam { animation: ui-steam var(--dur, 1.4s) ease-out var(--d, 0s) infinite; transform-box: fill-box; transform-origin: center; }
+.ui-blinklight { animation: ui-blinklight 1.4s linear var(--d, 0s) infinite; }
+.ui-sway { animation: ui-sway var(--dur, 3s) ease-in-out var(--d, 0s) infinite; }
+.ui-svg-art .ui-bob, .ui-svg-art .ui-wiggle, .ui-svg-art .ui-float, .ui-svg-art .ui-wave, .ui-svg-art .ui-sway, .ui-svg-art .ui-pulse, .ui-svg-art .ui-shake, .ui-svg-art .ui-jump, .ui-svg-art .ui-spin-slow, .ui-svg-art .ui-glow, .ui-svg-art .ui-blinklight { transform-box: fill-box; transform-origin: center; }
+.ui-svg-art .ui-jump { transform-origin: 50% 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-bob, .ui-float, .ui-wiggle, .ui-jump, .ui-shake, .ui-sway, .ui-wave { animation-duration: 6s; --amp: 3px; --rot: 2deg; }
+  .ui-shake { animation: none; }
+  .ui-spin-slow { animation-duration: 90s; }
+}
