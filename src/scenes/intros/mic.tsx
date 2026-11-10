@@ -21,12 +21,12 @@ export default function MicIntro() {
   return (
     <Root bg="#EEE8FB">
       <Dots y={300} h={520} color="#DED4F6" r={6} />
-      <div style={{ position: 'absolute', left: 0, top: 820, width: 1920, height: 260, background: C.wood }} />
-      <div style={{ position: 'absolute', left: 0, top: 820, width: 1920, height: 20, background: C.woodHi }} />
+      <div style={{ position: 'absolute', left: -400, top: 820, width: 2720, height: 260, background: C.wood }} />
+      <div style={{ position: 'absolute', left: -400, top: 820, width: 2720, height: 20, background: C.woodHi }} />
       <Abs x={760} y={150} className="sway" origin="50% 0%" style={cssVars({ '--ang': '2deg', '--d': '4s' })}><Beam len={760} spread={460} opacity={0.5} /></Abs>
       <Abs x={0} y={0} z={3}><Curtain w={420} side="left" /></Abs>
       <Abs x={1500} y={0} z={3}><Curtain w={420} side="right" /></Abs>
-      <Abs x={0} y={-10} z={4}><Valance w={1920} /></Abs>
+      <Abs x={-400} y={-10} z={4}><Valance w={2720} /></Abs>
       {/* sound rings */}
       {[0, 1, 2].map(i => (
         <Abs key={i} x={800} y={380} w={320} h={320} className="ring" style={cssVars({ '--d': '1.8s', '--dl': `${i * 0.6}s` })}>

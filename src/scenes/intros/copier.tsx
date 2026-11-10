@@ -9,8 +9,8 @@ export default function CopierIntro() {
   return (
     <Root>
       <Dots y={280} h={500} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 180, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 180, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 18, background: C.road2 }} />
       {/* smoke from the machine */}
       <Abs x={480} y={420}>{[0, 1, 2].map(i => <Puff key={i} s={60} color={C.rvHi} d={2.2} dl={i * 0.7} dy={-200} dx={i * 30 - 30} />)}</Abs>
       {/* fake copies pour out of the slot */}

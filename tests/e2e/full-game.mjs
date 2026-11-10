@@ -6,7 +6,7 @@ const BASE = process.argv[2] || 'http://localhost:5173';
 const OUT = process.argv[3] || '/tmp/e2e';
 fs.mkdirSync(OUT, { recursive: true });
 const b = await chromium.launch({ channel: 'chrome' });
-const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, recordVideo: { dir: OUT, size: { width: 1280, height: 720 } }, hasTouch: true });
+const ctx = await b.newContext({ viewport: { width: +(process.env.VW||1920), height: +(process.env.VH||1080) }, recordVideo: { dir: OUT, size: { width: 1280, height: 720 } }, hasTouch: true });
 const scr = await ctx.newPage();
 const errs = [];
 scr.on('pageerror', e => errs.push('screen: ' + e.message));

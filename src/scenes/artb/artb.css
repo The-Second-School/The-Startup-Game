@@ -1,5 +1,5 @@
 /* Scenes artist B: shared keyframes. Transform and opacity only. Custom props: --d duration, --dl delay, --amp, --ang. */
-.ab-root{position:absolute;inset:0;overflow:hidden;pointer-events:none;font-family:'Baloo 2',system-ui,sans-serif}
+.ab-root{position:absolute;inset:0;overflow:visible;pointer-events:none;font-family:'Baloo 2',system-ui,sans-serif}
 .ab-root *{box-sizing:border-box}
 @keyframes kBob{0%,100%{transform:translateY(0)}50%{transform:translateY(calc(var(--amp,10px) * -1))}}
 .bob{animation:kBob var(--d,3s) ease-in-out var(--dl,0s) infinite}

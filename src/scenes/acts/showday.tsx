@@ -16,10 +16,10 @@ const CUR = { color: '#FF7F7F', edge: '#F26565', hi: '#FFC1C1' };
 const Backdrop = memo(function Backdrop() {
   return (
     <>
-      <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: FLOOR, background: WALL }} />
+      <div style={{ position: 'absolute', left: -400, top: 0, width: 2720, height: FLOOR, background: WALL }} />
       {[0, 1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} style={{ position: 'absolute', left: 120 + i * 230, top: 220, width: 70, height: 420, borderRadius: 35, background: PILLAR }} />)}
-      <div style={{ position: 'absolute', left: 0, top: FLOOR, width: 1920, height: 310, background: BOARDS }} />
-      <div style={{ position: 'absolute', left: 0, top: FLOOR, width: 1920, height: 22, background: BOARDS_HI }} />
+      <div style={{ position: 'absolute', left: -400, top: FLOOR, width: 2720, height: 310, background: BOARDS }} />
+      <div style={{ position: 'absolute', left: -400, top: FLOOR, width: 2720, height: 22, background: BOARDS_HI }} />
     </>
   );
 });
@@ -49,7 +49,7 @@ export default function ShowDay({ beat, teams }: SceneBodyProps) {
   return (
     <Root bg={WALL}>
       <Backdrop />
-      <Abs x={0} y={190} z={2}><Bunting w={1920} sag={60} n={14} seed={2} /></Abs>
+      <Abs x={-400} y={190} z={2}><Bunting w={2720} sag={60} n={14} seed={2} /></Abs>
 
       {/* teams on stage (beats 1-2) */}
       {teams.map((t, i) => {
@@ -92,7 +92,7 @@ export default function ShowDay({ beat, teams }: SceneBodyProps) {
       {/* curtains: closed on beat 0, tied back after */}
       <Mv beat={beat} to={[V(420, 0), V(-40, 0), V(-40, 0), V(-40, 0)]} z={7} stiff={60} damp={16} origin="0% 0%"><Curtain w={560} side="left" {...CUR} /></Mv>
       <Mv beat={beat} to={[V(940, 0), V(1400, 0), V(1400, 0), V(1400, 0)]} z={7} stiff={60} damp={16} origin="0% 0%"><Curtain w={560} side="right" {...CUR} /></Mv>
-      <Abs x={0} y={-10} z={8}><Valance w={1920} color={CUR.color} edge={CUR.edge} /></Abs>
+      <Abs x={-400} y={-10} z={8}><Valance w={2720} color={CUR.color} edge={CUR.edge} /></Abs>
 
       {/* beat 0: balloons + excited crowd */}
       <Show when={beat === 0} k="balloons" y={0} style={{ zIndex: 9 }}>{[C.bad, C.sun, C.blue, C.good, C.pink].map((c, i) => (

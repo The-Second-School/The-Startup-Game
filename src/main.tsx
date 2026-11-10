@@ -7,13 +7,16 @@ import './ui/theme.css';
 import './perf.css';
 // Each route is its own chunk: the phone never downloads the big-screen scenes and vice versa.
 // Loaded into state (not React.lazy) so first paint is not held back by Suspense's 300 ms reveal throttle.
+import { isAdminHost } from './sync/channel';
+// The phone admin lives at #/admin, or at the root of any admin.* hostname.
+const isAdminPage = () => isAdminHost() || location.hash.startsWith('#/admin');
 const routes = { admin: () => import('./admin/AdminApp'), screen: () => import('./screen/ScreenApp') };
-void routes[location.hash.startsWith('#/admin') ? 'admin' : 'screen']() // start fetching the route chunk before React mounts
+void routes[isAdminPage() ? 'admin' : 'screen']() // start fetching the route chunk before React mounts
 
 function Root() {
   const [hash, setHash] = useState(location.hash);
   useEffect(() => { const f = () => setHash(location.hash); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
-  const admin = hash.startsWith('#/admin');
+  const admin = isAdminHost() || hash.startsWith('#/admin');
   const [view, setView] = useState<{ admin: boolean; C: ComponentType } | null>(null);
   useEffect(() => { document.body.dataset.app = admin ? 'admin' : 'screen'; }, [admin]);
   useEffect(() => {

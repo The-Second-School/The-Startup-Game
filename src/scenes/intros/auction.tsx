@@ -25,8 +25,8 @@ export default function AuctionIntro() {
   return (
     <Root>
       <Dots y={280} h={500} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 930, width: 1920, height: 150, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 930, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 930, width: 2720, height: 150, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 930, width: 2720, height: 18, background: C.road2 }} />
       {/* the prize ticket */}
       <Abs x={650} y={330} className="sway" origin="50% 100%" style={cssVars({ '--ang': '3deg', '--d': '2.2s' })}>
         <div style={{ width: 620, height: 340, borderRadius: 48, background: C.sun, border: '8px solid #fff', boxShadow: 'var(--sh-sm)', position: 'relative', display: 'grid', placeItems: 'center' }}>

@@ -11,8 +11,8 @@ const WOOD = soft(HUE.wood, 0.45);
 const Workshop = memo(function Workshop() {
   return (
     <Svg>
-      <rect width={1920} height={1080} fill="#FFF6E4" />
-      <rect y={0} width={1920} height={800} fill="#FFF1D8" />
+      <rect x={-400} width={2720} height={1080} fill="#FFF6E4" />
+      <rect x={-400} y={0} width={2720} height={800} fill="#FFF1D8" />
       {/* pegboard dots */}
       {Array.from({ length: 22 }, (_, c) => Array.from({ length: 6 }, (_, r) => <circle key={`${c}-${r}`} cx={90 + c * 84} cy={330 + r * 80} r={6} fill="#F6DFB6" />))}
       {/* window with a sunbeam */}
@@ -25,7 +25,7 @@ const Workshop = memo(function Workshop() {
       <g transform="translate(450 520)"><rect x={-50} y={-90} width={100} height={90} rx={22} fill={HUE.red.base} /><rect x={-50} y={-90} width={100} height={30} rx={14} fill={HUE.red.edge} /></g>
       <g transform="translate(560 520)"><rect x={-30} y={-80} width={60} height={80} rx={22} fill={HUE.green.base} /><rect x={-16} y={-100} width={32} height={26} rx={8} fill="#fff" /></g>
       {/* floor */}
-      <rect y={880} width={1920} height={200} fill={WOOD.base} /><rect y={880} width={1920} height={16} fill={WOOD.hi} />
+      <rect x={-400} y={880} width={2720} height={200} fill={WOOD.base} /><rect x={-400} y={880} width={2720} height={16} fill={WOOD.hi} />
       {Array.from({ length: 9 }, (_, i) => <rect key={i} x={i * 240 + 40} y={930} width={150} height={10} rx={5} fill={WOOD.edge} opacity={0.4} />)}
       {/* workbench */}
       <Slab x={360} y={770} w={1000} h={40} r={20} hue={soft(HUE.wood, 0.15)} border={6} />
@@ -68,7 +68,7 @@ export default function Act2({ beat }: SceneBodyProps) {
   const stage = beat === 0 ? 0 : beat === 1 ? Math.min(sub, 2) : beat === 2 ? 3 + (sub >= 3 ? 1 : 0) : 4;
   const dark = beat === 3;
   return (
-    <div style={{ ...full, overflow: 'hidden' }}>
+    <div style={{ ...full, overflow: 'visible' }}>
       <Workshop />
       {/* spooky tint for the bug beat, opacity only */}
       <motion.div animate={{ opacity: dark ? 0.1 : 0 }} transition={{ duration: 0.8 }} style={{ ...full, background: '#5A2F9E', pointerEvents: 'none', zIndex: 8 }} />

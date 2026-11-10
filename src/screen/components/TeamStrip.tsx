@@ -2,7 +2,7 @@
 // Also the Lock Master's buzzer: tap chip -> choose option -> chip turns into a LOCK button.
 import type { CSSProperties, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, CountUp, MeterIcon, OptionShape } from '../../ui';
+import { Avatar, CountUp, MeterIcon, OptionShape, useStageW } from '../../ui';
 import type { Team } from '../../game/types';
 import { Tap } from './Tap';
 import { cx, teamColors } from '../lib/game';
@@ -33,21 +33,22 @@ interface Props {
 export const STRIP_TOP = 852;
 export const CHIP_H = 180;
 
-export function stripGeometry(n: number, paired = false) {
+export function stripGeometry(n: number, paired = false, W = 1920) {
   const margin = n >= 5 ? 40 : 72;
   const gap = n >= 5 ? 24 : 40;
   if (paired) {
     const inner = 20, between = n >= 5 ? 48 : 64;
     const pairs = Math.ceil(n / 2);
     const gaps = Math.floor(n / 2) * inner + (pairs - 1) * between;
-    return { margin, gap: inner, between, width: Math.floor((1920 - 2 * margin - gaps) / Math.max(1, n)) };
+    return { margin, gap: inner, between, width: Math.floor((W - 2 * margin - gaps) / Math.max(1, n)) };
   }
-  return { margin, gap, between: gap, width: Math.floor((1920 - 2 * margin - (n - 1) * gap) / Math.max(1, n)) };
+  return { margin, gap, between: gap, width: Math.floor((W - 2 * margin - (n - 1) * gap) / Math.max(1, n)) };
 }
 
 export function TeamStrip({ teams, mode = 'plain', selectedId, lockedIds = [], pickReady, faces, spotIds = [], onChip, paired, extra, top = STRIP_TOP, lag, slim }: Props) {
   const shown = useLaggedTeams(teams, lag);
-  const geo = stripGeometry(teams.length, paired);
+  const W = useStageW();
+  const geo = stripGeometry(teams.length, paired, W);
   return (
     <motion.div className="scr-strip" style={{ top, paddingLeft: geo.margin, paddingRight: geo.margin }} initial={{ y: 220, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 24 }}>
       {shown.map((t, i) => {

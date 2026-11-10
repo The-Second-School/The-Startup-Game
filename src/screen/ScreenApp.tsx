@@ -75,7 +75,7 @@ function ViewShell({ state, dispatch }: { state: GameState; dispatch: Dispatch }
   return (
     <motion.div className="scr-view" style={{ pointerEvents: present ? 'auto' : 'none', zIndex: present ? 2 : 1 }} variants={shell} initial="initial" animate="animate" exit="exit">
       <Ctx.Provider value={ctx}>
-        <ViewFor state={state} />
+        <div className="scr-frame"><ViewFor state={state} /></div>
       </Ctx.Provider>
     </motion.div>
   );

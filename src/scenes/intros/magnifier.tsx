@@ -55,8 +55,8 @@ function World({ found }: { found: boolean }) {
   return (
     <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, background: C.bg }}>
       <Dots y={260} h={460} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 700, width: 1920, height: 380, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 700, width: 1920, height: 22, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 700, width: 2720, height: 380, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 700, width: 2720, height: 22, background: C.road2 }} />
       {[0, 1, 2, 3, 4].map(i => <div key={i} style={{ position: 'absolute', left: 80 + i * 390, top: 900, width: 150, height: 18, borderRadius: 9, background: C.road2 }} />)}
       {[[40, C.bad, C.badEdge], [430, C.blue, C.blueEdge], [820, C.good, C.goodEdge], [1210, C.pink, C.pinkEdge], [1600, C.orange, C.orangeEdge]].map(([x, c, e], i) =>
         <Stall key={i} x={x as number} y={470} color={c as string} edge={e as string} />)}

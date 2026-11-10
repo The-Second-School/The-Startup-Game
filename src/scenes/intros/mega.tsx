@@ -24,8 +24,8 @@ export default function MegaIntro() {
   return (
     <Root>
       <Dots y={280} h={520} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 930, width: 1920, height: 150, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 930, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 930, width: 2720, height: 150, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 930, width: 2720, height: 18, background: C.road2 }} />
       {/* puzzle pieces slide together */}
       <motion.div style={{ position: 'absolute', left: 420, top: 340 }} animate={{ x: [-560, 0, 0, 0, -560], scaleX: [1, 0.92, 1.05, 1, 1], opacity: [0, 1, 1, 1, 0] }} transition={{ duration: LOOP, times: [0, 0.3, 0.36, 0.8, 1], repeat: Infinity, ease: 'easeOut' }}><Piece side="l" /></motion.div>
       <motion.div style={{ position: 'absolute', left: 800, top: 340 }} animate={{ x: [560, 0, 0, 0, 560], scaleX: [1, 0.92, 1.05, 1, 1], opacity: [0, 1, 1, 1, 0] }} transition={{ duration: LOOP, times: [0, 0.3, 0.36, 0.8, 1], repeat: Infinity, ease: 'easeOut' }}><Piece side="r" /></motion.div>

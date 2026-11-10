@@ -20,9 +20,9 @@ export default function Finale({ beat, teams }: SceneBodyProps) {
       <Abs x={160} y={320} className="drift" style={cssVars({ '--d': '60s', '--dx': '400px' })}><Cloud w={300} /></Abs>
       <Skyline y={GROUND - 30} color={win ? C.bg4 : C.sky2} accent={win ? C.bg2 : C.sky} seed={5} />
       {[0, 1, 2, 3].map(k => <Abs key={k} x={120 + k * 470} y={GROUND - 30 - 300 * 2.1 + 28}><Bld k={k as 0 | 1 | 2 | 3} s={300} hue={[C.orange, C.pink, C.blue, C.good][k]} edge={[C.orangeEdge, C.pinkEdge, C.blueEdge, C.goodEdge][k]} hi={[C.orangeHi, C.pinkHi, C.blueHi, C.goodHi][k]} /></Abs>)}
-      <div style={{ position: 'absolute', left: 0, top: GROUND - 30, width: 1920, height: 210, background: C.grass2 }} />
-      <div style={{ position: 'absolute', left: 0, top: GROUND - 30, width: 1920, height: 24, background: C.grass }} />
-      <Abs x={0} y={280} z={2}><Bunting w={1920} sag={50} n={14} seed={win ? 3 : 0} /></Abs>
+      <div style={{ position: 'absolute', left: -400, top: GROUND - 30, width: 2720, height: 210, background: C.grass2 }} />
+      <div style={{ position: 'absolute', left: -400, top: GROUND - 30, width: 2720, height: 24, background: C.grass }} />
+      <Abs x={-400} y={280} z={2}><Bunting w={2720} sag={50} n={14} seed={win ? 3 : 0} /></Abs>
 
       {/* beat 0: rAIvan's tricks: copy, cheat, trick */}
       <Mv beat={beat} z={3} to={[V(110, 520), H(110, 520), H(110, 520), H(110, 520), H(110, 520)]} stiff={120}><Copier s={420} mood="sneaky" /></Mv>

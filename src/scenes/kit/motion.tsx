@@ -22,7 +22,7 @@ const CamCtx = createContext<Cam>({ x: 0, y: 0, zoom: 1 });
 
 /** Provides a camera to its <Layer>s. x/y are world pixels at depth 1; zoom 1 = normal. Springs smoothly. */
 export function World({ cam, children, style }: { cam: Cam; children: ReactNode; style?: CSSProperties }) {
-  return <CamCtx.Provider value={cam}><div style={{ ...full, overflow: 'hidden', ...style }}>{children}</div></CamCtx.Provider>;
+  return <CamCtx.Provider value={cam}><div style={{ ...full, overflow: 'visible', ...style }}>{children}</div></CamCtx.Provider>;
 }
 
 /** One parallax layer. depth 0 = fixed (sky), 1 = moves with camera, >1 = foreground (moves faster). */

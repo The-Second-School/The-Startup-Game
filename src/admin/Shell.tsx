@@ -5,6 +5,7 @@ import type { GameState } from '../game/types';
 import { AdminCtx, type AskOpts, type Send } from './ctx';
 import { actLabel, actOf, guide, stepTitle } from './info';
 import { Btn } from './kit';
+import { StatusChip } from './StatusChip';
 import { MoreSheet } from './MoreSheet';
 import { ChoicePanel } from './panels/Choices';
 import { AuctionPanel, BugPanel, MicPanel } from './panels/Live';
@@ -37,9 +38,9 @@ function Panel({ state }: { state: GameState }): ReactNode {
   }
 }
 
-interface ShellProps { state: GameState | null; send: Send; room: string; connected: boolean }
+interface ShellProps { state: GameState | null; send: Send; room: string; connected: boolean; link?: 'connecting' | 'connected' | 'reconnecting'; realtime?: boolean }
 
-export default function Shell({ state, send, room, connected }: ShellProps) {
+export default function Shell({ state, send, room, connected, link = connected ? 'connected' : 'connecting', realtime = true }: ShellProps) {
   const [more, setMore] = useState(false);
   const [cool, setCool] = useState(false);
   const [dialog, setDialog] = useState<{ o: AskOpts; done: (v: boolean) => void } | null>(null);
@@ -48,10 +49,10 @@ export default function Shell({ state, send, room, connected }: ShellProps) {
   if (!state) {
     return (
       <div className="adm">
-        <header className="head"><span className={`dot ${connected ? 'dot-on' : 'dot-off'}`} aria-label="Not connected" /><div className="head-title">Host</div></header>
+        <header className="head"><StatusChip link={link} /><div className="head-title">Host</div></header>
         <main className="main main-center">
           <div className="wait-title">Waiting for the big screen<span className="dots" /></div>
-          <div className="wait-sub">Open the game on the big screen, in this same browser. This phone connects by itself.</div>
+          <div className="wait-sub">{realtime ? 'Open the game on the big screen. This phone connects by itself.' : 'Phone sync over the internet is not set up on this build, so this phone only works in the same browser as the big screen.'}</div>
         </main>
       </div>
     );
@@ -75,7 +76,7 @@ export default function Shell({ state, send, room, connected }: ShellProps) {
     <AdminCtx.Provider value={{ state, send, room, ask, connected }}>
       <div className="adm">
         <header className="head">
-          <span className={`dot ${connected ? 'dot-on' : 'dot-off'}`} role="img" aria-label={connected ? 'Connected to the big screen' : 'Not connected to the big screen'} />
+          <StatusChip link={link} />
           <div className="head-title"><span className="head-act">{act}</span>{stepTitle(step)}</div>
           <div className="progress" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
             <i style={{ width: `${Math.max(1.5, progress * 100)}%` }} />

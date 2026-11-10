@@ -1,11 +1,12 @@
 // Our own flat, layered SVG art for the screen views (no image files). Light from the top-left,
 // darker lips bottom-right, white sticker borders, round caps and joins.
-import type { CSSProperties } from 'react';
+import { useId, type CSSProperties } from 'react';
 
 const INK = 'var(--ink)';
 
 /** Techistan skyline, two flat layers. */
 export function Skyline({ width = 1920, height = 340, style }: { width?: number; height?: number; style?: CSSProperties }) {
+  const gid = 'sk' + useId().replace(/:/g, '');
   const back = [
     [40, 150, 120], [180, 210, 100], [300, 120, 140], [470, 240, 110], [600, 170, 130], [760, 260, 120], [900, 140, 150],
     [1080, 230, 110], [1210, 180, 140], [1380, 250, 120], [1520, 150, 130], [1680, 220, 120], [1820, 160, 110],
@@ -19,7 +20,8 @@ export function Skyline({ width = 1920, height = 340, style }: { width?: number;
     { x: 1780, w: 140, h: 180, c: '#FF97C9', e: '#E5539A', roof: 'antenna' },
   ];
   return (
-    <svg width={width} height={height} viewBox={`0 0 1920 ${height}`} style={style} preserveAspectRatio="xMidYMax meet">
+    <svg width={width + 800} height={height} viewBox={`-400 0 2720 ${height}`} style={{ ...style, marginLeft: -400 }} preserveAspectRatio="xMidYMax meet">
+      <defs><g id={gid}>
       {back.map(([x, h, w], i) => <rect key={i} x={x} y={height - h} width={w} height={h + 20} rx={24} fill="#FFE07A" />)}
       {front.map((b, i) => {
         const y = height - b.h;
@@ -37,7 +39,10 @@ export function Skyline({ width = 1920, height = 340, style }: { width?: number;
           </g>
         );
       })}
-      <rect x={0} y={height - 26} width={1920} height={26} fill="#F2D45C" />
+      </g></defs>
+      {/* the skyline tile repeats left and right so it bleeds across wider stages */}
+      <use href={`#${gid}`} x={-1920} /><use href={`#${gid}`} x={1920} /><use href={`#${gid}`} />
+      <rect x={-400} y={height - 26} width={2720} height={26} fill="#F2D45C" />
     </svg>
   );
 }

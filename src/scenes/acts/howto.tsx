@@ -34,7 +34,7 @@ export default function HowTo({ beat, teams }: SceneBodyProps) {
   const hold = Math.min(teams.length, 6);
 
   return (
-    <div style={{ ...full, overflow: 'hidden' }}>
+    <div style={{ ...full, overflow: 'visible' }}>
       <Sky tone={dark ? 'storm' : 'gold'} horizon={820} />
       <Clouds seed={8} count={4} yMin={300} yMax={520} fill={dark ? '#9C84CC' : '#FFFFFF'} edge={dark ? '#8870BA' : '#FFE9B0'} />
       <Svg>

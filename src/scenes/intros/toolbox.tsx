@@ -98,7 +98,7 @@ export default function ToolboxIntro() {
   return (
     <Root>
       <Dots y={260} h={600} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 860, width: 1920, height: 220, background: C.wood }} /><div style={{ position: 'absolute', left: 0, top: 860, width: 1920, height: 20, background: C.woodHi }} />
+      <div style={{ position: 'absolute', left: -400, top: 860, width: 2720, height: 220, background: C.wood }} /><div style={{ position: 'absolute', left: -400, top: 860, width: 2720, height: 20, background: C.woodHi }} />
       <Abs x={BX - 700} y={880} style={{ width: 1400, height: 40, borderRadius: 20, background: C.woodEdge, opacity: 0.35 }} />
       <div key={run}>
         <motion.div style={{ position: 'absolute', left: BX - 280, top: BY - 180 }} initial={{ y: -300, scaleY: 1.2 }} animate={{ y: 0, scaleY: [1.2, 0.88, 1.04, 1] }} transition={{ duration: 0.5 }}>

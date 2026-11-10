@@ -3,13 +3,24 @@ import { sfx } from '../audio';
 import { darken, inkOn, lighten, mix } from './palette';
 
 // ---------------------------------------------------------------------------
-// StageFrame: fixed 1920x1080 stage, uniformly scaled to fit the window, centred, letterboxed in --bg-2.
-// useStageScale() gives the current scale (handy to convert pointer coords: stageX = (clientX - rect.left) / scale).
+// StageFrame: fixed design HEIGHT of 1080, design WIDTH that follows the window aspect (clamped 1440..2560), scaled by
+// viewportHeight/1080 so it always fills the window (no bars in landscape). Content that was designed for 1920x1080 lives in a
+// centred "frame" (see .scr-frame): when the stage is wider than 1920 the frame is centred and backgrounds bleed out on both sides,
+// when it is narrower the frame is uniformly scaled down to fit. Portrait windows letterbox.
+// CSS vars on .ui-stage: --stage-w (px), --bleed (px each side beyond 1920), --frame-s (frame scale).
+// useStageScale() = window->stage scale (pointer coords: stageX = (clientX - rect.left) / scale); useStage() gives the rest.
 // ---------------------------------------------------------------------------
-const ScaleCtx = createContext(1);
-export const useStageScale = () => useContext(ScaleCtx);
+export type StageInfo = { w: number; h: number; scale: number; frameScale: number; bleed: number; frameW: number };
+const MIN_W = 1440, MAX_W = 2560;
+const defaultStage: StageInfo = { w: 1920, h: 1080, scale: 1, frameScale: 1, bleed: 0, frameW: 1920 };
+const StageCtx = createContext<StageInfo>(defaultStage);
+/** Current stage geometry: design width w (1440..2560), height h (1080), window scale, frame scale (<1 when narrower than 1920) and bleed per side (>0 when wider than 1920). */
+export const useStage = () => useContext(StageCtx);
+export const useStageScale = () => useContext(StageCtx).scale;
+/** Width available to the frame content in frame coordinates (1920 or wider). Use for strips that should stretch. */
+export const useStageW = () => useContext(StageCtx).frameW;
 
-export function StageFrame({ children, pattern = true, blobs = true, style }: { children?: ReactNode; pattern?: boolean; blobs?: boolean; style?: CSSProperties }) {
+export function StageFrame({ children, pattern = true, style }: { children?: ReactNode; pattern?: boolean; blobs?: boolean; style?: CSSProperties }) {
   const [box, setBox] = useState(() => fit());
   useLayoutEffect(() => {
     const on = () => setBox(fit());
@@ -17,33 +28,24 @@ export function StageFrame({ children, pattern = true, blobs = true, style }: { 
     addEventListener('resize', on);
     return () => removeEventListener('resize', on);
   }, []);
+  const { info, x, y } = box;
+  const vars = { '--stage-w': `${info.w}px`, '--bleed': `${info.bleed}px`, '--frame-s': info.frameScale } as CSSProperties;
   return (
     <div className="ui-stage-outer">
-      <div className="ui-stage" style={{ transform: `translate(${box.x}px, ${box.y}px) scale(${box.s})`, backgroundImage: pattern ? undefined : 'none', ...style }}>
-        {blobs && <StageBlobs />}
-        <ScaleCtx.Provider value={box.s}>{children}</ScaleCtx.Provider>
+      <div className="ui-stage" style={{ width: info.w, transform: `translate(${x}px, ${y}px) scale(${info.scale})`, backgroundImage: pattern ? undefined : 'none', ...vars, ...style }}>
+        <StageCtx.Provider value={info}>{children}</StageCtx.Provider>
       </div>
     </div>
   );
 }
 function fit() {
-  if (typeof window === 'undefined') return { s: 1, x: 0, y: 0 };
-  const w = window.innerWidth, h = window.innerHeight;
-  const s = Math.min(w / 1920, h / 1080);
-  return { s, x: (w - 1920 * s) / 2, y: (h - 1080 * s) / 2 };
+  if (typeof window === 'undefined') return { info: defaultStage, x: 0, y: 0 };
+  const vw = Math.max(1, window.innerWidth), vh = Math.max(1, window.innerHeight);
+  const w = Math.round(Math.min(MAX_W, Math.max(MIN_W, (vw / vh) * 1080)));
+  const scale = Math.min(vw / w, vh / 1080);
+  const info: StageInfo = { w, h: 1080, scale, frameScale: Math.min(1, w / 1920), bleed: Math.max(0, (w - 1920) / 2), frameW: Math.max(1920, w) };
+  return { info, x: (vw - w * scale) / 2, y: (vh - 1080 * scale) / 2 };
 }
-/** Big soft flat blobs in the corners of the stage (decorative, behind everything). */
-function StageBlobs() {
-  return (
-    <svg className="ui-stage-blobs" viewBox="0 0 1920 1080" width={1920} height={1080} aria-hidden>
-      <path fill="#FFF1CC" d="M-60 820c120-60 260-40 330 50s40 230-90 270-300 0-330-110 0-160 90-210z" />
-      <path fill="#FFF1CC" d="M1640-80c140-20 300 40 320 160s-80 200-200 210-230-70-240-170 0-180 120-200z" />
-      <circle cx="1810" cy="980" r="150" fill="#FFF1CC" />
-      <circle cx="70" cy="120" r="90" fill="#FFF1CC" />
-    </svg>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Button3D: chunky Duolingo button. Sound on pointerdown, press squash, action on click (pointerup inside).
 // ---------------------------------------------------------------------------

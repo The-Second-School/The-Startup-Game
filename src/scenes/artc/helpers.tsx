@@ -36,11 +36,11 @@ function WaveStrip({ y, color, d, flip = false }: { y: number; color: string; d:
 }
 /** Back water: draw before boats. */
 function SeaBackBase({ y = 700 }: { y?: number }) {
-  return (<><div style={{ position: 'absolute', left: 0, top: y + 40, width: 1920, height: 1080 - y, background: C.water2 }} /><WaveStrip y={y - 10} color={C.water} d={7} /><WaveStrip y={y + 50} color={C.water2} d={5} flip /></>);
+  return (<><div style={{ position: 'absolute', left: -400, top: y + 40, width: 2720, height: 1080 - y, background: C.water2 }} /><WaveStrip y={y - 10} color={C.water} d={7} /><WaveStrip y={y + 50} color={C.water2} d={5} flip /></>);
 }
 /** Front water: draw after boats so hulls sit in the sea. */
 function SeaFrontBase({ y = 770 }: { y?: number }) {
-  return (<><WaveStrip y={y} color={C.water3} d={4.5} /><div style={{ position: 'absolute', left: 0, top: y + 90, width: 1920, height: 1080, background: C.water3 }} /></>);
+  return (<><WaveStrip y={y} color={C.water3} d={4.5} /><div style={{ position: 'absolute', left: -400, top: y + 90, width: 2720, height: 1080, background: C.water3 }} /></>);
 }
 
 // ---------- town pieces ----------

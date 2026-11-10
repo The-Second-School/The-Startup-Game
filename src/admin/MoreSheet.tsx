@@ -11,10 +11,9 @@ const FIELDS = [['customers', 'Customers', SMALL], ['happiness', 'Happiness', SM
 
 /** Everything that is not the main flow: undo, timer, fixes, jumping around, settings. */
 export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { state, send, ask, room, connected } = useA();
+  const { state, send, ask, connected } = useA();
   const now = useNow(250);
   const clockOffset = useAdmin(s => s.clockOffset);
-  const online = useAdmin(s => s.channel?.status() === 'online');
   const cur = currentStep(state);
   const t = state.timer;
   const rem = timerRemaining(state, now + clockOffset);
@@ -88,7 +87,6 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
         <Switch on={state.settings.sound} onChange={v => send({ type: 'SET_SETTING', key: 'sound', value: v })} label="Sound effects" sub="Plays on the big screen" />
         <Switch on={state.settings.voice} onChange={v => send({ type: 'SET_SETTING', key: 'voice', value: v })} label="Bolt’s voice" sub="Bolt reads lines out loud" />
         <div className="set-line"><span>Big screen</span><b className={connected ? 'ok' : 'no'}>{connected ? 'Connected' : 'Not connected'}</b></div>
-        {online && <div className="set-line"><span>Room code (online mode)</span><b className="code">{room}</b></div>}
         <Btn tone="bad" size="lg" onClick={reset} style={{ width: '100%', marginTop: 8 }}>Reset the whole game</Btn>
       </Fold>
     </Sheet>

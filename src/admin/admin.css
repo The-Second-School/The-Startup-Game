@@ -3,7 +3,8 @@
   --a-bg:#FBF6E4; --a-card:#FFFFFF; --a-tint:#F3ECD3; --a-line:#EADFB8;
   --a-ink:#3B3120; --a-soft:#7A6A48;
   --a-sun:#FFC83A; --a-good:#58B80F; --a-good-soft:#E3F4CF; --a-bad:#E5484D; --a-purple:#7B4BC9;
-  position:fixed;inset:0;margin:0 auto;width:min(100%,480px);display:flex;flex-direction:column;
+  position:fixed;top:0;bottom:0;left:0;right:0;margin:0 auto;width:min(100%,520px);height:100vh;height:100dvh;display:flex;flex-direction:column;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);
   background:var(--a-bg);color:var(--a-ink);
   font-family:ui-rounded,'SF Pro Rounded','Nunito','Segoe UI',system-ui,sans-serif;font-weight:600;font-size:18px;line-height:1.3;overflow:hidden;
   -webkit-tap-highlight-color:transparent;
@@ -21,7 +22,7 @@
 .adm .center{text-align:center}
 
 /* ---------- header ---------- */
-.head{flex:none;position:relative;display:flex;align-items:center;gap:12px;padding:14px 18px 14px}
+.head{flex:none;position:relative;display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 18px 14px}
 .head-title{font-size:22px;font-weight:800;line-height:1.1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .head-act{color:var(--a-soft);font-weight:700;margin-right:10px;font-size:18px}
 .dot{width:14px;height:14px;border-radius:50%;flex:none;transition:background .2s}
@@ -31,7 +32,7 @@
 .progress i{display:block;height:100%;background:var(--a-sun);border-radius:0 4px 4px 0;transition:width .35s}
 
 /* ---------- middle ---------- */
-.main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 18px 24px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain;animation:rise .25s ease-out}
+.main{flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;overflow-y:auto;overflow-x:hidden;padding:6px 18px 24px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain;animation:rise .25s ease-out}
 .main::-webkit-scrollbar{display:none}
 .main-center{justify-content:center;align-items:center;text-align:center;gap:10px}
 .say{font-size:24px;font-weight:700;line-height:1.28;padding:4px 2px 6px;letter-spacing:-.005em}
@@ -41,7 +42,7 @@
 .empty{text-align:center;color:var(--a-soft);padding:20px 12px;font-weight:600}
 
 /* ---------- bottom ---------- */
-.bottom{flex:none;display:flex;gap:12px;padding:12px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--a-bg) 70%,rgba(251,246,228,0))}
+.bottom{flex:none;position:sticky;bottom:0;z-index:5;display:flex;gap:12px;padding:12px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--a-bg) 70%,rgba(251,246,228,0))}
 .morebtn{align-self:flex-end;height:76px;flex:none;width:84px;flex-direction:column;gap:0;font-size:16px;padding:6px 0}
 .primary{flex:1;font-size:23px;line-height:1.1;text-align:center;padding:10px 14px}
 
@@ -183,3 +184,15 @@
 .tline-tap{appearance:none;border:0;background:none;font:inherit;color:inherit;width:100%;text-align:left;cursor:pointer;padding:0;transition:transform .25s cubic-bezier(.3,1.9,.5,1)}
 .tline-tap:active{transform:scale(.97)}
 .label small{display:inline;font-size:16px;font-weight:600;opacity:.9}
+
+/* ---------- any phone shape: short screens (9:16 small, landscape-ish) tighten up, tall screens just get more room ---------- */
+@media (max-height:700px){
+  .adm .head{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:8px}
+  .adm .head-title{font-size:20px}
+  .adm .say{font-size:21px}
+  .adm .main{padding-bottom:12px;gap:10px}
+  .adm .bottom{padding-top:8px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .adm .morebtn{height:62px}
+  .adm .primary{font-size:21px;padding:8px 12px}
+}
+@media (max-width:360px){.adm .head,.adm .main,.adm .bottom{padding-left:12px;padding-right:12px}}

@@ -17,8 +17,8 @@ export default function PriceIntro() {
   return (
     <Root>
       <Dots y={280} h={500} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 180, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 180, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 18, background: C.road2 }} />
       <Abs x={1340} y={560}><Stall s={420} color={st.tint} edge={st.edge} /></Abs>
       <Abs x={1180} y={730}><CashBox s={300} coins={st.coins} empty={st.coins === 0} /></Abs>
       {/* the tag */}

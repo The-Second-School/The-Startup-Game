@@ -14,12 +14,12 @@ export function Sky({ tone = 'sunrise', horizon = 760 }: { tone?: SkyTone; horiz
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9 }}>
           {SKIES[tone].bands.map((c, i) => {
             const y = (horizon / SKIES[tone].bands.length) * i;
-            return <rect key={i} x={0} y={i === 0 ? 0 : y} width={1920} height={1080 - (i === 0 ? 0 : y)} fill={c} rx={i === 0 ? 0 : 0} />;
+            return <rect key={i} x={-400} y={i === 0 ? -400 : y} width={2720} height={1080 + (i === 0 ? 800 : 400) - (i === 0 ? 0 : y)} fill={c} rx={i === 0 ? 0 : 0} />;
           })}
           {/* soft rounded band edges so it is not a flat stripe chart */}
           {SKIES[tone].bands.slice(1).map((c, i) => {
             const y = (horizon / SKIES[tone].bands.length) * (i + 1);
-            return <g key={`w${i}`} fill={c}>{Array.from({ length: 9 }, (_, k) => <ellipse key={k} cx={k * 240 + (i % 2) * 120} cy={y} rx={170} ry={22} />)}</g>;
+            return <g key={`w${i}`} fill={c}>{Array.from({ length: 13 }, (_, k) => <ellipse key={k} cx={k * 240 - 360 + (i % 2) * 120} cy={y} rx={170} ry={22} />)}</g>;
           })}
         </motion.svg>
       </AnimatePresence>
@@ -76,7 +76,7 @@ export function Stars({ seed = 9, count = 26, yMax = 500, color = '#FFE680' }: {
   return (
     <svg width={1920} height={1080} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       {Array.from({ length: count }, (_, i) => {
-        const x = r() * 1920, y = 40 + r() * yMax, s = 8 + r() * 12;
+        const x = r() * 2400 - 240, y = 40 + r() * yMax, s = 8 + r() * 12;
         return (
           <g key={i} transform={`translate(${x} ${y})`}>
             <path className="k-twinkle" d={starPath(s, s * 0.45, 4)} fill={color} style={{ ['--dur' as string]: `${1.6 + r() * 2}s`, ['--delay' as string]: `${-r() * 3}s` }} />

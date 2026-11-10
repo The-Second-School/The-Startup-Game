@@ -6,8 +6,8 @@ export default function MoodIntro() {
   return (
     <Root>
       <Dots y={280} h={500} color={C.bg2} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 180, background: C.road }} />
-      <div style={{ position: 'absolute', left: 0, top: 900, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 180, background: C.road }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 18, background: C.road2 }} />
       <div style={{ position: 'absolute', left: 940, top: 380, width: 14, height: 520, borderRadius: 7, background: C.bg3 }} />
       {/* sad side */}
       <Abs x={90} y={350} className="bob" style={cssVars({ '--amp': '10px', '--d': '3s' })}><Cloud w={760} color="#B8BFD6" shade="#8E96B4" /></Abs>

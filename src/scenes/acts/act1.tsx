@@ -66,15 +66,15 @@ export default function Act1({ beat }: SceneBodyProps) {
   const zoom = beat === 1 || beat === 2;
   const cam = zoom ? { x: (GX - 960) * 1.5, y: (GY - 300 - 640) * 1.5, zoom: 1.5 } : beat === 3 ? { x: 400, y: 0, zoom: 1 } : { x: 0, y: 0, zoom: 1 };
   return (
-    <div style={{ ...full, overflow: 'hidden' }}>
+    <div style={{ ...full, overflow: 'visible' }}>
       <Sky tone={beat === 4 ? 'gold' : 'day'} horizon={800} />
       <Clouds seed={2} count={5} yMin={300} yMax={560} fill="#fff" edge="#DDF0FB" />
       <World cam={cam}>
         <Backdrop />
         <Layer depth={1}>
           <Svg w={2400}>
-            <Ground y={830} width={2400} road={false} pave={HUE.cream} />
-            <rect x={-40} y={920} width={2480} height={200} fill={LAWN.base} /><rect x={-40} y={920} width={2480} height={14} fill={LAWN.hi} />
+            <g transform="translate(-500 0)"><Ground y={830} width={3400} road={false} pave={HUE.cream} /></g>
+            <rect x={-540} y={920} width={3480} height={300} fill={LAWN.base} /><rect x={-540} y={920} width={3480} height={14} fill={LAWN.hi} />
             <School />
             <Tree x={900} y={850} s={1.2} /><Tree x={1680} y={850} s={1.4} hue={HUE.mint} /><Bush x={1480} y={860} s={0.8} />
             <Bench />

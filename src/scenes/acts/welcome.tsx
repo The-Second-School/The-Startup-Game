@@ -28,7 +28,7 @@ export default function Welcome({ beat }: SceneBodyProps) {
   const boss: { x: number; y: number; scale: number } = beat === 4 ? { x: 0, y: 0, scale: 0.85 } : beat === 5 ? { x: -100, y: 0, scale: 0.95 } : { x: 300, y: 120, scale: 0.5 };
 
   return (
-    <div style={{ ...full, overflow: 'hidden' }}>
+    <div style={{ ...full, overflow: 'visible' }}>
       <Sky tone={tone} horizon={780} />
       <Mv to={{ opacity: tone === 'storm' ? 0 : 1, scale: 1 }} spring={SPRING.settle}><Sun x={1560} y={330} r={100} /></Mv>
       <Clouds seed={4} count={5} yMin={290} yMax={520} speed={tone === 'storm' ? 2 : 1} fill={sk.cloud} edge={sk.cloudEdge} />
@@ -55,7 +55,7 @@ export default function Welcome({ beat }: SceneBodyProps) {
 
       {/* bunting for the festival */}
       <Svg style={{ pointerEvents: 'none' }}>
-        <g style={{ opacity: beat >= 3 ? 1 : 0, transition: 'opacity .5s' }}><Bunting x1={0} y1={400} x2={1920} y2={420} sag={90} n={18} /></g>
+        <g style={{ opacity: beat >= 3 ? 1 : 0, transition: 'opacity .5s' }}><Bunting x1={-400} y1={400} x2={2320} y2={420} sag={90} n={26} /></g>
       </Svg>
 
       {/* the crowd */}

@@ -104,7 +104,7 @@
 .scr-raivan-bubble { position: absolute; right: 300px; top: 0; width: 640px; }
 
 /* ---------- team strip (y 852..) ---------- */
-.scr-strip { position: absolute; left: 0; right: 0; height: 196px; display: flex; align-items: flex-start; z-index: 4; }
+.scr-strip { position: absolute; left: calc(0px - var(--bleed, 0px)); right: calc(0px - var(--bleed, 0px)); height: 196px; display: flex; align-items: flex-start; z-index: 4; }
 .scr-chip-slot { position: relative; height: 180px; flex: none; }
 .scr-pair-plus { position: absolute; top: 40px; width: 60px; text-align: center; font-size: 72px; font-weight: 700; line-height: 1; color: var(--ink); z-index: 6; pointer-events: none; }
 .scr-chip-tap { width: 100%; height: 100%; perspective: 1400px; }
@@ -269,7 +269,7 @@
 }
 .scr-mood-team { font-size: 60px; font-weight: 700; line-height: 1; }
 .scr-mood-text { font-size: 52px; font-weight: 700; line-height: 1.1; margin-top: 6px; }
-.scr-mood-ground { position: absolute; left: 0; right: 0; top: 760px; height: 92px; background: #F2D45C; border-top: 8px solid #fff; }
+.scr-mood-ground { position: absolute; left: -400px; right: -400px; top: 760px; height: 92px; background: #F2D45C; border-top: 8px solid #fff; }
 .scr-mood-shop { position: absolute; left: 90px; top: 400px; z-index: 2; }
 .scr-mood-cloud { position: absolute; left: 70px; top: 300px; z-index: 4; }
 .scr-mood-crowd { position: absolute; left: 640px; top: 590px; z-index: 3; }

@@ -1,12 +1,13 @@
 import { motion } from 'motion/react';
 import { Bolt, SpeechBubble } from '../../ui';
 import { useScreen } from '../../store/screenStore';
-import { QrCode } from '../components/QrCode';
+import { adminAddress, hasRealtime } from '../../sync/channel';
 import { Skyline } from '../components/art';
 
 export function LobbyView() {
-  const room = useScreen(s => s.room);
-  const url = `${location.origin}${location.pathname}#/admin?room=${room}`;
+  const phones = useScreen(s => s.phones);
+  const link = useScreen(s => s.link);
+  const addr = adminAddress();
   const letters = 'The Startup Game'.split('');
   return (
     <div className="scr-full scr-lobby">
@@ -27,9 +28,12 @@ export function LobbyView() {
       </motion.div>
       <motion.div className="scr-roomcard" initial={{ scale: 0, rotate: 10 }} animate={{ scale: 1, rotate: 2 }} transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.9 }}>
         <div className="scr-roomcard-label">Host phone</div>
-        <div className="scr-roomcard-qr"><QrCode text={url} size={290} /></div>
-        <div className="scr-roomcard-code">{room.split('').map((c, i) => <span key={i}>{c}</span>)}</div>
-        <div className="scr-roomcard-hint">Scan to run the game</div>
+        <div className="scr-roomcard-addr" style={{ fontSize: 54, fontWeight: 800, lineHeight: 1.1, background: 'var(--sun-hi)', borderRadius: 18, padding: '6px 22px 10px' }}>{addr}</div>
+        <div className="scr-roomcard-hint">Open this on a phone to run the game</div>
+        <div data-testid="phones" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 28, fontWeight: 700, color: 'var(--ink-soft)' }}>
+          <i style={{ width: 16, height: 16, borderRadius: '50%', background: phones > 0 ? '#2FA84F' : '#B8B8B8' }} />
+          <span>{hasRealtime || phones > 0 ? `${phones} ${phones === 1 ? 'phone' : 'phones'}${link === 'reconnecting' ? ' (reconnecting)' : ''}` : 'Same-browser mode: phone sync keys not set'}</span>
+        </div>
       </motion.div>
       <div className="scr-kbd-hint" title="Keyboard works too">⌨️</div>
     </div>

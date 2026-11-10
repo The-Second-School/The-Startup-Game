@@ -2,7 +2,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { useAdmin } from '../store/adminStore';
 import './admin.css';
-import { useNow } from './kit';
 import Shell from './Shell';
 
 // Dev-only: /#/admin-preview?step=auction fakes a game state so every panel can be checked without the big screen.
@@ -11,20 +10,15 @@ const HostSim = import.meta.env.DEV ? lazy(() => import('./HostSim')) : null;
 
 function Live() {
   const state = useAdmin(s => s.state);
-  const lastSeen = useAdmin(s => s.lastSeen);
   const room = useAdmin(s => s.room);
   const send = useAdmin(s => s.send);
-  const now = useNow(500);
+  const link = useAdmin(s => s.link);
+  const realtime = useAdmin(s => s.realtime);
 
-  useEffect(() => {
-    useAdmin.getState().connect();
-    // Heartbeat: the screen answers every hello with its full state, which keeps the green dot honest.
-    const id = setInterval(() => useAdmin.getState().channel?.send({ kind: 'hello', from: 'admin-ui' }), 2000);
-    return () => clearInterval(id);
-  }, []);
+  useEffect(() => { useAdmin.getState().connect(); }, []);
 
-  const connected = state !== null && now - lastSeen < 4000;
-  return <Shell state={state} send={send} room={room} connected={connected} />;
+  const connected = state !== null && link === 'connected';
+  return <Shell state={state} send={send} room={room} connected={connected} link={link} realtime={realtime} />;
 }
 
 export default function AdminApp() {

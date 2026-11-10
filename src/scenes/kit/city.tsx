@@ -136,10 +136,10 @@ function Roof({ b, top }: { b: Bld; top: number }) {
 }
 
 /** Near skyline: colourful buildings with windows and Indian rooftops. baseY = street line. */
-export function NearSkyline({ width = 1920, baseY = 820, seed = 11, minH = 260, maxH = 520, lit = 0.35, kinds = ['tank', 'dome', 'temple', 'antenna', 'tiers', 'round', 'dish', 'tank'] as Kind[] }: { width?: number; baseY?: number; seed?: number; minH?: number; maxH?: number; lit?: number; kinds?: Kind[] }) {
+export function NearSkyline({ width = 2720, baseY = 820, seed = 11, minH = 260, maxH = 520, lit = 0.35, kinds = ['tank', 'dome', 'temple', 'antenna', 'tiers', 'round', 'dish', 'tank'] as Kind[] }: { width?: number; baseY?: number; seed?: number; minH?: number; maxH?: number; lit?: number; kinds?: Kind[] }) {
   const blds = planSkyline(width, seed, minH, maxH, kinds);
   return (
-    <g>
+    <g transform={width === 2720 ? 'translate(-400 0)' : undefined}>
       {blds.map((b, i) => {
         const top = baseY - b.h;
         return (
@@ -157,11 +157,11 @@ export function NearSkyline({ width = 1920, baseY = 820, seed = 11, minH = 260, 
 }
 
 /** Far skyline: one flat silhouette colour with a few pale windows. */
-export function FarSkyline({ width = 1920, baseY = 760, seed = 5, color = '#FFC772', win = '#FFE7A8', minH = 200, maxH = 460 }: { width?: number; baseY?: number; seed?: number; color?: string; win?: string; minH?: number; maxH?: number }) {
+export function FarSkyline({ width = 2720, baseY = 760, seed = 5, color = '#FFC772', win = '#FFE7A8', minH = 200, maxH = 460 }: { width?: number; baseY?: number; seed?: number; color?: string; win?: string; minH?: number; maxH?: number }) {
   const blds = planSkyline(width, seed, minH, maxH, ['tiers', 'round', 'antenna', 'dome', 'tank', 'tiers']);
   const flat: Hue = { hi: color, base: color, edge: color };
   return (
-    <g>
+    <g transform={width === 2720 ? 'translate(-400 0)' : undefined}>
       {blds.map((b, i) => {
         const top = baseY - b.h;
         const r = rng(b.seed);
@@ -234,9 +234,9 @@ export function Streetlight({ x, y, h = 300, singing = false, delay = 0 }: { x: 
 }
 
 /** Pavement + road + kerb across `width`. y = top of the pavement. */
-export function Ground({ y = 820, width = 1920, road = true, pave = HUE.cream, roadHue = HUE.road }: { y?: number; width?: number; road?: boolean; pave?: Hue; roadHue?: Hue }) {
+export function Ground({ y = 820, width = 2720, road = true, pave = HUE.cream, roadHue = HUE.road }: { y?: number; width?: number; road?: boolean; pave?: Hue; roadHue?: Hue }) {
   return (
-    <g>
+    <g transform={width === 2720 ? 'translate(-400 0)' : undefined}>
       <rect x={-40} y={y} width={width + 80} height={1080 - y + 40} fill={pave.base} />
       <rect x={-40} y={y} width={width + 80} height={14} fill={pave.hi} />
       {Array.from({ length: Math.ceil(width / 120) + 1 }, (_, i) => <rect key={i} x={i * 120 - 4} y={y + 18} width={8} height={70} rx={4} fill={pave.edge} opacity={0.6} />)}

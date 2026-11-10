@@ -3,10 +3,16 @@
 import { create } from 'zustand';
 import { initialState, reduce } from '../game/engine';
 import type { Action, GameState } from '../game/types';
-import { openChannel, roomCode, type Channel } from '../sync/channel';
+import { currentRoom, hasRealtime, openChannel, type Channel, type Link } from '../sync/channel';
 
 const SAVE_KEY = 'sg-state-v1';
 const ME = `screen-${Math.random().toString(36).slice(2, 7)}`;
+// One id per screen page-load: phones use it to tell a restarted screen from an old one. `version` only ever goes up.
+const SID = Math.random().toString(36).slice(2, 10);
+let version = 1;
+const seenActions: string[] = [];
+const phoneSeen = new Map<string, number>();
+const PHONE_TTL = 8000;
 
 function load(): GameState {
   try {
@@ -41,7 +47,8 @@ function scheduleBroadcast(get: () => ScreenStore, me: string) {
   queueMicrotask(() => {
     sendQueued = false;
     const { channel, state } = get();
-    channel?.send({ kind: 'state', state, from: me, now: Date.now() });
+    version++;
+    channel?.send({ kind: 'state', state, from: me, now: Date.now(), sid: SID, v: version });
   });
 }
 
@@ -49,6 +56,8 @@ interface ScreenStore {
   state: GameState;
   past: GameState[];
   room: string;
+  link: Link;
+  phones: number;
   channel: Channel | null;
   dispatch: (a: Action | { type: 'UNDO' }) => void;
   connect: () => void;
@@ -57,7 +66,9 @@ interface ScreenStore {
 export const useScreen = create<ScreenStore>((set, get) => ({
   state: load(),
   past: [],
-  room: roomCode(),
+  room: currentRoom(),
+  link: hasRealtime ? 'connecting' : 'local',
+  phones: 0,
   channel: null,
   dispatch: a => {
     const { state, past, channel } = get();
@@ -80,11 +91,34 @@ export const useScreen = create<ScreenStore>((set, get) => ({
   connect: () => {
     if (get().channel) return;
     const channel = openChannel(get().room);
+    const sendState = (urgent: boolean) => channel.send({ kind: 'state', state: get().state, from: ME, now: Date.now(), sid: SID, v: version }, { urgent });
+    const touchPhone = (id: string) => {
+      const known = phoneSeen.has(id);
+      phoneSeen.set(id, Date.now());
+      if (!known) set({ phones: phoneSeen.size });
+    };
     channel.onMessage(m => {
-      if (m.kind === 'action') get().dispatch(m.action);
-      if (m.kind === 'hello') channel.send({ kind: 'state', state: get().state, from: ME, now: Date.now() });
+      if (m.kind === 'hello') { touchPhone(m.from); if (m.need) sendState(true); return; }
+      if (m.kind !== 'action') return;
+      touchPhone(m.from);
+      // Duplicate (same action over two transports, or a retry) or stale (NEXT tapped on a step that is already over).
+      if (seenActions.includes(m.id)) return;
+      seenActions.push(m.id); if (seenActions.length > 300) seenActions.splice(0, 100);
+      if (m.action.type === 'NEXT' && m.step !== get().state.stepIndex) { sendState(true); return; }
+      get().dispatch(m.action);
+    });
+    channel.onLink(l => {
+      set({ link: l });
+      if (l === 'online') sendState(false); // phones that joined first get the state as soon as we are reachable
     });
     set({ channel });
-    channel.send({ kind: 'state', state: get().state, from: ME, now: Date.now() });
+    sendState(false);
+    // Tiny liveness ping so phones know the screen is alive and whether they are up to date; also prunes gone phones.
+    setInterval(() => {
+      channel.send({ kind: 'beat', from: ME, now: Date.now(), sid: SID, v: version });
+      const cutoff = Date.now() - PHONE_TTL;
+      for (const [k, t] of phoneSeen) if (t < cutoff) phoneSeen.delete(k);
+      if (phoneSeen.size !== get().phones) set({ phones: phoneSeen.size });
+    }, 2000);
   },
 }));

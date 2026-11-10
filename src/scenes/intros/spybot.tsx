@@ -104,8 +104,8 @@ export default function SpyBotIntro() {
       <Abs x={170} y={400}><div style={{ width: 380, height: 300, borderRadius: 40, background: C.sky, border: '12px solid #fff', boxShadow: 'var(--sh-sm)' }}>
         <div style={{ position: 'absolute', left: 190, top: 20, width: 12, height: 270, background: '#fff' }} /><div style={{ position: 'absolute', left: 20, top: 130, width: 340, height: 12, background: '#fff' }} />
         <Abs x={30} y={40} className="drift" style={{ ['--dx' as string]: '200px', ['--d' as string]: '30s' } as CSSProperties}><Cloud w={140} /></Abs></div></Abs>
-      <div style={{ position: 'absolute', left: 0, top: 880, width: 1920, height: 200, background: C.wood }} />
-      <div style={{ position: 'absolute', left: 0, top: 880, width: 1920, height: 20, background: C.woodHi }} />
+      <div style={{ position: 'absolute', left: -400, top: 880, width: 2720, height: 200, background: C.wood }} />
+      <div style={{ position: 'absolute', left: -400, top: 880, width: 2720, height: 20, background: C.woodHi }} />
       {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ position: 'absolute', left: i * 340 + 40, top: 940, width: 220, height: 12, borderRadius: 6, background: C.woodEdge, opacity: 0.5 }} />)}
       {/* desk with notebook */}
       <Abs x={1330} y={640}>

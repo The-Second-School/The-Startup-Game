@@ -70,7 +70,7 @@ export const ActScene = memo(function ActScene({ sceneId, teams, recap, onDone }
 
   const shown = Math.min(beat, scene.beats.length - 1);
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
       {/* isolated so art z-indexes can never paint over Bolt or the header */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, isolation: 'isolate' }}>
         {Body ? <Suspense fallback={null}><Body beat={shown} beats={scene.beats} teams={teams} recap={recap} /></Suspense> : <Fallback title={scene.title} />}
@@ -79,7 +79,7 @@ export const ActScene = memo(function ActScene({ sceneId, teams, recap, onDone }
       <AnimatePresence>
         {isRecap && (
           <motion.div key="recap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 36, padding: '340px 60px 80px', flexWrap: 'wrap', background: 'rgba(255,252,243,0.7)' }}>
+            style={{ position: 'absolute', top: 0, bottom: 0, left: -400, right: -400, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 36, padding: '340px 60px 80px', flexWrap: 'wrap', background: 'rgba(255,252,243,0.7)' }}>
             {recap.map((r, i) => {
               const team = teams.find(t => t.id === r.teamId);
               return (
@@ -123,7 +123,7 @@ export const QuestionIntro = memo(function QuestionIntro({ anim, text, onDone }:
     return () => clearTimeout(t);
   }, [text]);
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, isolation: 'isolate' }}>{Body ? <Suspense fallback={null}><Body /></Suspense> : <Fallback title="" />}</div>
       <div style={{ position: 'absolute', left: 40, right: 40, top: 122, zIndex: 20, display: 'flex', alignItems: 'flex-start', gap: 28, pointerEvents: 'none' }}>
         <motion.div initial={{ x: -200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -200, opacity: 0 }} transition={{ type: 'spring', stiffness: 280, damping: 20 }}><div className="ui-bob"><BoltM pose="talk" size={170} talking /></div></motion.div>

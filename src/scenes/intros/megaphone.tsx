@@ -27,7 +27,7 @@ export default function MegaphoneIntro() {
       <Abs x={160 - 400} y={640 - 700} w={1600} h={1600} className="spin" style={{ ['--d' as string]: '50s', opacity: 0.5 } as CSSProperties}>
         <Svg vw={1600} vh={1600} w={1600}>{Array.from({ length: 14 }, (_, i) => <path key={i} d="M800 800 L720 -100 L880 -100Z" fill={C.bg2} transform={`rotate(${(i * 360) / 14} 800 800)`} />)}</Svg>
       </Abs>
-      <div style={{ position: 'absolute', left: 0, top: 920, width: 1920, height: 160, background: C.road }} /><div style={{ position: 'absolute', left: 0, top: 920, width: 1920, height: 18, background: C.road2 }} />
+      <div style={{ position: 'absolute', left: -400, top: 920, width: 2720, height: 160, background: C.road }} /><div style={{ position: 'absolute', left: -400, top: 920, width: 2720, height: 18, background: C.road2 }} />
       <Waves />
       {/* megaphone with recoil on each blast */}
       <Abs x={160} y={520}>

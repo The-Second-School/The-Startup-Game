@@ -80,7 +80,7 @@ export default function Act3({ beat }: SceneBodyProps) {
   const sub = useSubstep(beat, [600, 1800, 3000]);
   const tone: SkyTone = beat === 0 ? 'sunrise' : beat <= 2 ? 'sunrise' : 'gold';
   return (
-    <div style={{ ...full, overflow: 'hidden' }}>
+    <div style={{ ...full, overflow: 'visible' }}>
       <Sky tone={tone} horizon={800} />
       <Clouds seed={6} count={4} yMin={330} yMax={560} />
       <Backdrop />

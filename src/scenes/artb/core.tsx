@@ -45,7 +45,7 @@ export function Svg({ vw, vh, w, children, style, className }: { vw: number; vh:
 
 /** Scene root: fills the stage, never takes pointer events. */
 export function Root({ bg = C.bg, children }: { bg?: string; children?: ReactNode }) {
-  return <div className="ab-root" style={{ background: bg }}>{children}</div>;
+  return <div className="ab-root" style={{ background: bg, boxShadow: `0 0 0 600px ${bg}` }}>{children}</div>;
 }
 
 export const cssVars = (v: Record<string, string | number>) => v as CSSProperties;
@@ -147,7 +147,7 @@ export function Sun({ s = 220, style }: { s?: number; style?: CSSProperties }) {
 }
 
 /** Row of overlapping hills + a flat ground, with a soft pattern of dots. */
-export function Dots({ x = 0, y = 0, w = 1920, h = 300, color = C.bg2, gap = 90, r = 8 }: { x?: number; y?: number; w?: number; h?: number; color?: string; gap?: number; r?: number }) {
+export function Dots({ x = -400, y = 0, w = 2720, h = 300, color = C.bg2, gap = 90, r = 8 }: { x?: number; y?: number; w?: number; h?: number; color?: string; gap?: number; r?: number }) {
   const cols = Math.ceil(w / gap), rows = Math.ceil(h / gap);
   return (
     <svg width={w} height={h} style={{ position: 'absolute', left: x, top: y }}>

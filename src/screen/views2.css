@@ -4,7 +4,7 @@
    Only transform and opacity animate. Min text 36px.
    ========================================================================== */
 
-.v2-root { position: absolute; inset: 0; overflow: hidden; font-family: var(--font); color: var(--ink); }
+.v2-root { position: absolute; inset: 0; overflow: visible; font-family: var(--font); color: var(--ink); }
 
 /* ---------- shared bits ---------- */
 .v2-card {

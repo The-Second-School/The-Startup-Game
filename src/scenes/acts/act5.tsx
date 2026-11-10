@@ -16,10 +16,10 @@ export default function Act5({ beat }: SceneBodyProps) {
       <Show when={!fumes} k="sun" y={0}><Abs x={1560} y={300}><Sun s={220} /></Abs></Show>
       <Abs x={120} y={310} className="drift" style={cssVars({ '--d': '60s', '--dx': '500px' })}><Cloud w={300} color={fumes ? '#B8BFD6' : '#fff'} shade={fumes ? '#8E96B4' : '#FBEFC2'} /></Abs>
       <Skyline y={GROUND - 30} color={fumes ? '#C8B8E8' : C.sky2} accent={fumes ? '#D9CCF0' : C.sky} />
-      <div style={{ position: 'absolute', left: 0, top: GROUND - 30, width: 1920, height: 210, background: C.grass2 }} />
-      <div style={{ position: 'absolute', left: 0, top: GROUND - 30, width: 1920, height: 24, background: C.grass }} />
-      <div style={{ position: 'absolute', left: 0, top: GROUND + 60, width: 1920, height: 120, background: C.road }} />
-      <Abs x={0} y={380} z={2}><Bunting w={1920} sag={40} n={14} /></Abs>
+      <div style={{ position: 'absolute', left: -400, top: GROUND - 30, width: 2720, height: 210, background: C.grass2 }} />
+      <div style={{ position: 'absolute', left: -400, top: GROUND - 30, width: 2720, height: 24, background: C.grass }} />
+      <div style={{ position: 'absolute', left: -400, top: GROUND + 60, width: 2720, height: 120, background: C.road }} />
+      <Abs x={-400} y={380} z={2}><Bunting w={2720} sag={40} n={14} /></Abs>
 
       {/* the four growing startups */}
       {[0, 1, 2, 3].map(k => {

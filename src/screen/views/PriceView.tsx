@@ -1,7 +1,7 @@
 // Price It Right: pick a team, slide a price (Rs 10..100), lock; reveal price tags; spotlight with a reacting crowd.
 import { useRef } from 'react';
 import { motion } from 'motion/react';
-import { Avatar, CountUp, ProductArt } from '../../ui';
+import { Avatar, CountUp, ProductArt, useStageW } from '../../ui';
 import { PRICE, productById } from '../../game/content';
 import { teamById } from '../../game/engine';
 import type { Deltas, PriceState, Team } from '../../game/types';
@@ -196,7 +196,9 @@ function PriceSlider({ value, onChange }: { value: number | null; onChange: (v: 
 
 /** After the reveal: one price tag per team, lined up above its chip. */
 function PriceTags({ teams, locks }: { teams: Team[]; locks: Record<string, number> }) {
-  const geo = stripGeometry(teams.length);
+  const W = useStageW();
+  const geo = stripGeometry(teams.length, false, W);
+  const bleed = (W - 1920) / 2;
   return (
     <>
       {teams.map((t, i) => {
@@ -207,7 +209,7 @@ function PriceTags({ teams, locks }: { teams: Team[]; locks: Record<string, numb
           <motion.div
             key={t.id}
             className="scr-ptag"
-            style={{ left: geo.margin + i * (geo.width + geo.gap), width: geo.width, top: TILE_TOP, height: TILE_H - 20, background: c.shades[0], boxShadow: `var(--sh)` }}
+            style={{ left: geo.margin - bleed + i * (geo.width + geo.gap), width: geo.width, top: TILE_TOP, height: TILE_H - 20, background: c.shades[0], boxShadow: `var(--sh)` }}
             initial={{ y: 120, rotate: -8, opacity: 0 }}
             animate={{ y: 0, rotate: i % 2 ? 2 : -2, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.1 + i * 0.09 }}

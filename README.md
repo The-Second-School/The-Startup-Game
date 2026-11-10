@@ -15,3 +15,11 @@ Disable edge swipes: registry `AllowEdgeSwipe=0` and `KioskSwipeGesturesEnabled=
 Reach line (bottom half only), multi-touch, taskbar swipe, speech voices, speaker loudness.
 
 Tests: `npx tsx tests/engine.test.ts`
+
+## Phone-to-screen sync and where data lives
+
+- Big screen: `thestartupgame.thesecondschool.org` (route `/`). Host phone: `admin.thestartupgame.thesecondschool.org` (any `admin.*` hostname shows the phone admin at the root path; `/#/admin` also works everywhere).
+- Both join ONE fixed Supabase Realtime broadcast room, `tss-main`. No pairing, no codes, no security: anyone who opens the admin address controls the game. `?room=xyz` overrides the room (testing only).
+- The big screen is the only source of truth. It keeps the game state in its own browser `localStorage` (key `sg-state-v1`), applies every phone action, and broadcasts the full state. Phones hold nothing beyond what the screen broadcasts. Supabase only relays messages; it stores nothing (no tables).
+- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time (`.env.local` for local dev). Without them the app falls back to BroadcastChannel (same browser only) and says so on the phone and the lobby.
+- Outgoing Supabase messages are capped at 8 per second; state broadcasts are coalesced.
