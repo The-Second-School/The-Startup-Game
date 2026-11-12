@@ -13,7 +13,7 @@
 
 /* ---------- ONE clear product card ---------- */
 .pr-card {
-  position: absolute; left: 40px; right: 40px; top: 208px; height: 332px; z-index: 2;
+  position: absolute; left: 40px; right: 40px; top: 208px; height: 320px; z-index: 2;
   display: flex; align-items: center; gap: 36px; padding: 0 40px 0 28px;
   background: var(--paper); border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh);
 }
@@ -109,7 +109,7 @@
 .pr-spot-unit { font-size: 36px; font-weight: 700; line-height: 1.05; text-align: center; }
 .pr-verdict { font-size: 44px; font-weight: 800; line-height: 1.05; text-align: center; padding: 4px 22px 8px; border-radius: 999px; border: 4px solid #fff; box-shadow: var(--sh-sm); }
 .pr-spot-right { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 6px 14px 6px 22px; }
-.pr-shoppers { display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 1fr; gap: 12px; }
+.pr-shoppers { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 1fr; gap: 12px; }
 .pr-shopper { display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 32px; padding: 6px 8px 8px; background: var(--paper-3); transition: background 0.25s; min-width: 0; }
 .pr-shopper.is-buy { background: var(--good-soft); }
 .pr-shopper.is-walk { background: var(--bad-soft); }

@@ -1,4 +1,4 @@
-// Bolt (the yellow robot guide) and Fibbot (the fibbing, copying, cheating purple robot villain). Flat layered SVG with white sticker borders.
+// Bolt (the yellow robot guide) and Jhootu (the fibbing, copying, cheating purple robot villain). Flat layered SVG with white sticker borders.
 import { motion } from 'motion/react';
 import { Sticker, Shaded, rrect, path } from './svg';
 
@@ -110,8 +110,8 @@ export function Bolt({ pose = 'idle', size = 160, talking }: { pose?: BoltPose; 
 }
 
 // ---------------------------------------------------------------------------
-// Fibbot: THE villain. One cheeky purple robot who fibs, copies and cheats. His Pinocchio nose grows every time he fibs.
-// Same flat sticker style as Bolt: white border, darker edge layer, a little shine. Every Fibbot in the app is this component.
+// Jhootu: THE villain. One cheeky purple robot who fibs, copies and cheats. His Pinocchio nose grows every time he fibs.
+// Same flat sticker style as Bolt: white border, darker edge layer, a little shine. Every Jhootu in the app is this component.
 // ---------------------------------------------------------------------------
 export type FibbotMood = 'laugh' | 'angry' | 'sneaky' | 'dizzy' | 'shock';
 const P = { hi: '#A982E8', base: '#7B4BC9', shade: '#6A3CB6', edge: '#5A2F9E' };
@@ -212,7 +212,7 @@ function FibbotMouth({ mood }: { mood: FibbotMood }) {
   return <ellipse cx={140} cy={152} rx={12} ry={15} fill={MOUTH} stroke={EYE} strokeWidth={4} />;
 }
 
-/** Fibbot: a cheeky round-square purple robot with horn antennas, a copyright badge and a long fibbing nose. viewBox 0 0 300 300 (feet at the bottom, nose points right). */
+/** Jhootu: a cheeky round-square purple robot with horn antennas, a copyright badge and a long fibbing nose. viewBox 0 0 300 300 (feet at the bottom, nose points right). */
 export function Fibbot({ mood = 'laugh', size = 160, smoke = false }: { mood?: FibbotMood; size?: number; smoke?: boolean }) {
   const armA: Record<FibbotMood, [number, number]> = { laugh: [-30, 30], angry: [25, -25], sneaky: [10, -60], dizzy: [-55, 55], shock: [-150, 150] };
   const [la, ra] = armA[mood];

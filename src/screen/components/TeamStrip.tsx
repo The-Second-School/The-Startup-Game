@@ -3,11 +3,12 @@
 // Also the Lock Master's buzzer: tap chip -> choose option -> chip turns into a LOCK button.
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { motion, useAnimationControls } from 'motion/react';
-import { Avatar, CountUp, MeterIcon, OptionShape, useStageW } from '../../ui';
+import { Avatar, CountUp, MeterIcon, OptionShape, useStageH, useStageW } from '../../ui';
 import { lighten } from '../../ui/palette';
 import type { Team } from '../../game/types';
 import { Tap } from './Tap';
 import { cx, teamColors } from '../lib/game';
+import { BAR_BOTTOM } from '../lib/layout';
 import { useLaggedTeams } from '../hooks/useLaggedTeams';
 import '../choice.css';
 
@@ -37,9 +38,8 @@ interface Props {
 }
 
 /** Legacy constants (old layout). The bar now sizes itself: use stripLayout(). */
-export const STRIP_TOP = 852;
 export const CHIP_H = 180;
-export const STRIP_BOTTOM = 20;
+export const STRIP_BOTTOM = BAR_BOTTOM;
 
 export function stripGeometry(n: number, paired = false, W = 1920) {
   const margin = n >= 5 ? 40 : 72;
@@ -53,17 +53,18 @@ export function stripGeometry(n: number, paired = false, W = 1920) {
   return { margin, gap, between: gap, width: Math.floor((W - 2 * margin - (n - 1) * gap) / Math.max(1, n)) };
 }
 
-/** Bar geometry: `oneLine` when chips are wide enough for avatar + name + meters side by side. `top` = where the bar starts. */
-export function stripLayout(n: number, paired = false, W = 1920) {
+/** Bar geometry: `oneLine` when chips are wide enough for avatar + name + meters side by side.
+ *  `H` = real frame height (1080 + --fx). The bar is pinned to the bottom: top = H - BAR_BOTTOM - h. */
+export function stripLayout(n: number, paired = false, W = 1920, H = 1080) {
   const geo = stripGeometry(n, paired, W);
   const oneLine = geo.width >= 520;
   const h = oneLine ? 96 : 136;
-  return { ...geo, oneLine, h, top: 1080 - STRIP_BOTTOM - h };
+  return { ...geo, oneLine, h, top: H - STRIP_BOTTOM - h };
 }
 
 /** Horizontal centre and vertical centre of team i's chip (used to fly cards between the stage and the bar). */
-export function chipCenter(i: number, n: number, paired = false, W = 1920) {
-  const g = stripLayout(n, paired, W);
+export function chipCenter(i: number, n: number, paired = false, W = 1920, H = 1080) {
+  const g = stripLayout(n, paired, W, H);
   let left = g.margin + i * g.width;
   for (let j = 1; j <= i; j++) left += paired ? (j % 2 === 1 ? g.gap : g.between) : g.gap;
   return { x: left + g.width / 2, y: g.top + g.h / 2 };
@@ -72,7 +73,8 @@ export function chipCenter(i: number, n: number, paired = false, W = 1920) {
 export function TeamStrip({ teams, mode = 'plain', selectedId, lockedIds = [], pickReady, faces, spotIds = [], onChip, tappableIds, paired, extra, top, lag, slim }: Props) {
   const shown = useLaggedTeams(teams, lag);
   const W = useStageW();
-  const geo = stripLayout(teams.length, paired, W);
+  const H = useStageH();
+  const geo = stripLayout(teams.length, paired, W, H);
   return (
     <motion.div className="cx-strip" style={{ top: top ?? geo.top, height: geo.h, paddingLeft: geo.margin, paddingRight: geo.margin }} initial={{ y: 160, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 24 }}>
       {shown.map((t, i) => {

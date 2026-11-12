@@ -1,5 +1,5 @@
-// Act 5 Grow: startups grow stall -> shop -> office -> tower; Fibbot fumes and plots; a huge Festival order arrives; rocket launch.
-// Beats (see SCENES.act5): 0 recap, 1 growth, 2 Fibbot fumes (the subject: he is enlarged, the city dims), 3 the plot and the huge order, 4 rocket.
+// Act 5 Grow: startups grow stall -> shop -> office -> tower; Jhootu fumes and plots; a huge Festival order arrives; rocket launch.
+// Beats (see SCENES.act5): 0 recap, 1 growth, 2 Jhootu fumes (the subject: he is enlarged, the city dims), 3 the plot and the huge order, 4 rocket.
 import { C, Abs, Root, Sun, Cloud, Person, Bunting, Puff, Sparkle, Star, RocketIcon, RecipeStrip, cssVars } from '../artb/core';
 import { Copier, FakeSheet } from '../artb/props';
 import { Fibbot } from '../../ui';
@@ -15,7 +15,7 @@ export default function Act5({ beat }: SceneBodyProps) {
   const fumes = beat === 2;
   return (
     <Root bg={fumes ? '#E7DDF5' : C.sky}>
-      {/* the city: dimmed while Fibbot fumes (the main subject), no blur on this moving scene */}
+      {/* the city: dimmed while Jhootu fumes (the main subject), no blur on this moving scene */}
       <Focus active={fumes}>
         <Backdrop blur={0} dim={0.55}>
           <Show when={!fumes} k="sun" y={0}><Abs x={1560} y={300}><Sun s={220} /></Abs></Show>
@@ -49,7 +49,7 @@ export default function Act5({ beat }: SceneBodyProps) {
         </Backdrop>
       </Focus>
 
-      {/* beat 2: Fibbot fumes, and he is the main subject: a little bigger, centred above the city */}
+      {/* beat 2: Jhootu fumes, and he is the main subject: a little bigger, centred above the city */}
       {/* (his box is 520 x 460; y 450 keeps the enlarged top edge below the Bolt bubble) */}
       <Mv beat={beat} z={4} origin="50% 100%" stiff={110} damp={11} to={[H(1330, 420, 0.3), H(1330, 420, 0.3), V(1220, 450, fumes ? 1.22 : 1.05), V(1400, 520, 0.7), H(1700, 520, 0.4)]}>
         <div style={{ position: 'relative', width: 520, height: 460 }}>

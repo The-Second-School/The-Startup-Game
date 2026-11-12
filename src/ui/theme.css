@@ -138,8 +138,8 @@ svg { overflow: visible; shape-rendering: geometricPrecision; }
 }
 .ui-stage-blobs { display: none; }
 /* The 1920x1080 design frame: centred in the (possibly wider/narrower) stage. Wider stage: backgrounds bleed out (see --bleed).
-   Narrower stage: the frame is uniformly scaled down (--frame-s), anchored to the bottom so the team strip hugs the bottom edge. */
-.scr-frame { position: absolute; left: 50%; top: 0; width: 1920px; height: 1080px; margin-left: -960px; transform: scale(var(--frame-s, 1)); transform-origin: 50% 100%; }
+   Narrower stage: the frame is uniformly scaled down (--frame-s) and made taller (--frame-h = 1080 / --frame-s) so it fills the window top to bottom. */
+.scr-frame { position: absolute; left: 50%; top: 0; width: 1920px; height: var(--frame-h, 1080px); margin-left: -960px; transform: scale(var(--frame-s, 1)); transform-origin: 50% 0; }
 
 /* ---------- sticker border trick for SVG (see svg.tsx) ---------- */
 .ui-stk, .ui-stk * {

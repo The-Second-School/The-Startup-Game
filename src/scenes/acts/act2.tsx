@@ -2,10 +2,11 @@
 import { motion } from 'motion/react';
 import { memo, type CSSProperties } from 'react';
 import {
-  Bug, Burst, Gear, HUE, INK, Kid, Lightbulb, RecipeTrack, SPRING, Slab, Sparkle, Svg, full, soft, useSubstep,
+  Bug, Burst, Gear, HUE, INK, Kid, Lightbulb, SPRING, Slab, Sparkle, Svg, full, soft, useSubstep,
 } from '../kit';
 import { Mv, Show } from '../shared/bits';
 import { Backdrop as Dim, Focus, Subject } from '../kit/focus';
+import { ProgressScreen } from '../../screen/views/ProgressView';
 import type { SceneBodyProps } from '../types';
 
 const WOOD = soft(HUE.wood, 0.45);
@@ -143,7 +144,7 @@ export default function Act2({ beat }: SceneBodyProps) {
 
       {/* beat 4: step 2 of the recipe (the product is the picture, nothing is dimmed) */}
       <Show when={beat === 4} k="recipe" y={40} style={{ zIndex: 9 }}>
-        <div style={{ position: 'absolute', left: 80, top: 400 }}><RecipeTrack active={2} /></div>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><ProgressScreen act={2} overlay intro /></div>
         <Burst fire={5} x={960} y={640} count={60} />
       </Show>
     </div>

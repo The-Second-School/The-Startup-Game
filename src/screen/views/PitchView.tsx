@@ -4,13 +4,14 @@ import '../views2.css';
 import '../board.css';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, CheckBadge, DeltaPill, Num, ProductArt, TimerRing } from '../../ui';
+import { Avatar, CheckBadge, DeltaPill, Num, ProductArt, TimerRing, useStageH } from '../../ui';
 import { PITCH_MS, RECIPE, productById } from '../../game/content';
 import { timerRemaining } from '../../game/engine';
 import { memberWithRole } from '../../game/helpers';
 import type { PitchState, Team } from '../../game/types';
 import { useGame } from '../lib/ctx';
 import { teamBase, teamName } from '../lib/game';
+import { useDockAt } from '../../narration/useDockAt';
 import { Hand } from '../components/art';
 import { ReadyHint } from '../components/ReadyHint';
 import { useNow } from '../hooks/useNow';
@@ -35,16 +36,20 @@ function Pitch({ st }: { st: PitchState }) {
 
 function PitchDone() {
   const { state } = useGame();
+  const H = useStageH();
+  // The heading sits at the top and Bolt sits right under it; the team cards fill the rest of the frame.
+  useDockAt(40, 200, 1840);
+  const avatarSize = 170 + Math.round((H - 1080) * 0.35);
   return (
     <motion.div className="bd-root" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
-      <motion.div className="bd-card bd-pt-banner" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+      <motion.div className="bd-card bd-pt-banner" style={{ top: 16, height: 168 }} initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
         <div className="bd-pt-big">What a show!</div>
         <div className="bd-pt-sub">Every startup has pitched. Time for the Golden Trophy!</div>
       </motion.div>
       <div className="bd-pt-sumrow">
         {state.teams.map((t, i) => (
           <motion.div key={t.id} className="bd-card bd-pt-sum" initial={{ y: 80, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 80, opacity: 0, scale: 0.8 }} transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.1 + i * 0.09 }}>
-            <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={170} mood="wow" />
+            <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={avatarSize} mood="wow" />
             <div className="bd-pt-sum-name">{teamName(t)}</div>
             <CheckBadge size={64} />
           </motion.div>
@@ -58,6 +63,8 @@ function PitchDone() {
 function Stage({ st, team, total }: { st: PitchState; team: Team; total: number }) {
   const { state } = useGame();
   const now = useNow(state.timer.running, 200);
+  const H = useStageH();
+  const voterSize = 120 + Math.round((H - 1080) / 4);
   const speaker = memberWithRole(team, 'speaker');
   const product = productById(team.productId);
   const voting = st.phase === 'voting';
@@ -169,7 +176,7 @@ function Stage({ st, team, total }: { st: PitchState; team: Team; total: number 
                 const done = votes[v.id] !== undefined;
                 return (
                   <motion.div key={v.id} className={`bd-card bd-pt-voter${done ? ' is-done' : ''}`} initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 20, delay: 0.1 + i * 0.07 }}>
-                    <Avatar seed={v.avatarSeed} colorIndex={v.colorIndex} shade={2} size={120} mood={done ? 'happy' : 'cool'} />
+                    <Avatar seed={v.avatarSeed} colorIndex={v.colorIndex} shade={2} size={voterSize} mood={done ? 'happy' : 'cool'} />
                     <div className="bd-pt-voter-name">{teamName(v)}</div>
                     <div className="bd-pt-voter-status">{done ? 'Voted!' : 'Thinking...'}</div>
                     <AnimatePresence>

@@ -31,7 +31,7 @@ export interface HistoryEntry {
   label: string;        // short text, e.g. "Asked 10 people"
   story: string;        // full reveal line, already filled with team name
   deltas: Deltas;
-  trap?: boolean;       // Fibbot's trick
+  trap?: boolean;       // Jhootu's trick
 }
 
 export interface Team {
@@ -133,7 +133,7 @@ export interface AuctionState {
   ticket: number;
   bid: { by: string; amount: number };      // by = teamId or 'fibbot'
   bidLog: { by: string; amount: number }[];
-  villainCap: number;                       // Fibbot's secret walk-away price for this ticket (set by the fairness algorithm)
+  villainCap: number;                       // Jhootu's secret walk-away price for this ticket (set by the fairness algorithm)
   winners: Record<string, { by: string; amount: number }>; // ticketId -> winner
 }
 
@@ -227,8 +227,8 @@ export interface GameState {
   timer: TimerState;
   progressView: boolean;      // host toggle: full-screen progress overlay on the big screen (also pauses the timer)
   progressPaused: boolean;
-  frozen: boolean;            // host froze the whole screen at this exact moment (everything stops; the timer too)
-  frozenPaused: boolean;      // freezing paused a running timer and will resume it    // the overlay paused a running timer and will resume it
+  paused: boolean;            // host paused the show: speech, sound, animations and the timer stop until resumed
+  pausedTimer: boolean;       // pausing stopped a running timer; resuming restarts it
   micPicked: string[];        // teamIds already picked for Mic Time
   votes: Record<string, Record<string, number>>; // pitcherTeamId -> voterTeamId -> stars 1..5
   updatedAt: number;
@@ -255,7 +255,7 @@ export type Action =
   | { type: 'BID'; by: string; amount: number }
   | { type: 'SOLD' }
   | { type: 'SET_PROGRESS_VIEW'; on: boolean }
-  | { type: 'SET_FROZEN'; on: boolean }
+  | { type: 'SET_PAUSED'; on: boolean }
   | { type: 'MIC_PICK'; teamId: string }
   | { type: 'PITCH_START' }
   | { type: 'VOTE'; pitcherId: string; voterId: string; stars: number }

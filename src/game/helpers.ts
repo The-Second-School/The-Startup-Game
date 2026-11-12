@@ -77,6 +77,6 @@ export function micQuestionFor(team: Team, act: number): string {
   const last = [...team.history].reverse().find(h => h.act === act && h.stepId !== 'bugsmash' && h.stepId !== 'auction' && !h.stepId.startsWith('mood'));
   const base = MIC_QUESTIONS[act] ?? 'What did your team learn so far?';
   if (!last || act === 4) return base;
-  if (last.trap) return `Your team chose “${last.label}”. That was Fibbot’s trick! Why was it a risky choice, and what would you do next time?`;
+  if (last.trap) return `Your team chose “${last.label}”. That was Jhootu’s trick! Why was it a risky choice, and what would you do next time?`;
   return `Your team chose “${last.label}”. Why was that a good idea for your startup? ${base}`;
 }

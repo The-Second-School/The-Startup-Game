@@ -24,7 +24,7 @@ const MAMI: Look = { suit: '#F08A4B', tie: '#FFFFFF', skin: '#A86B45', hair: '#2
 // where each investor stands: centre x, top, box width and height (feet on FLOOR)
 const SLOT = [
   { x: 360, top: 380, w: 260, h: 530 },   // mentor
-  { x: 780, top: 510, w: 420, h: 420 },   // Fibbot
+  { x: 780, top: 510, w: 420, h: 420 },   // Jhootu
   { x: 1200, top: 380, w: 260, h: 530 },  // boss
   { x: 1620, top: 380, w: 560, h: 530 },  // Mama-Mami couple
 ];

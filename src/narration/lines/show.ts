@@ -56,7 +56,7 @@ function spokenReason(res: AwardResult, s: GameState): string {
     case 'banana': return 'You slipped the most today, but you kept smiling. That is the real winner spirit!';
     case 'pitch': return 'The other teams loved your pitch!';
     case 'customer': return `You won ${team.customers} customers!`;
-    case 'happiness': return `Your customers are the happiest, with ${team.happiness} happiness!`;
+    case 'happiness': return `Your customers are the happiest. You have ${team.happiness} happiness!`;
     case 'champion': return `Your Success score is ${success(team)} out of 100!`;
   }
 }
@@ -90,7 +90,7 @@ function awardsNarr(s: GameState): Narration | null {
   ];
   if (champ) {
     lines.push({ text: 'Congratulations! You win the Golden Trophy!', tone: 'cheer', pose: 'cheer', gap: 900 });
-    lines.push({ text: 'Look! The secret Success board is open now. It shows how everyone really did.', tone: 'excited', pose: 'point' });
+    lines.push({ text: 'Look! The hidden Success board is open now. It shows how every team did.', tone: 'excited', pose: 'point' });
   }
   return { id: `awards-${r}`, lines, summary: `${res.title}: ${name}!` };
 }
@@ -101,7 +101,7 @@ function endNarr(): Narration {
     lines: [
       { text: 'Thank you for playing! You were wonderful!', tone: 'cheer', pose: 'cheer', gap: 700 },
       { text: 'You built real startups in Techistan. Keep asking, keep building and always be honest.', tone: 'excited', pose: 'talk', gap: 700 },
-      { text: 'See you next time, young founders!', tone: 'cheer', pose: 'wave' },
+      { text: 'See you next time, startup stars!', tone: 'cheer', pose: 'wave' },
     ],
     summary: 'Thank you for playing! Keep asking, building and being honest.',
   };

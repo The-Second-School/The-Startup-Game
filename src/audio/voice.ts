@@ -134,7 +134,7 @@ export function cleanForSpeech(text: string): string {
   return text
     .replace(/\p{Extended_Pictographic}/gu, '')
     .replace(/[\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{FE0E}\u{200D}\u{20E3}\u{1F3FB}-\u{1F3FF}]/gu, '')
-    .replace(/\bFibbot\b/g, 'Fib-bot')
+    .replace(/\bFibbot\b/g, 'Jhoo-too')
     .replace(/\bA\.?\s?I\.?(?=\W|$)/g, 'A. I.')              // "AI" would be read as "ay" + a short "i"
     .replace(/\b[Pp][Ss][Ss]+[Tt]\b/g, 'hey, come closer')    // "psst" is read letter by letter
     .replace(/\b[Uu]h[- ]?[Oo]h\b/g, 'oh no')

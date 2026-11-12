@@ -153,7 +153,7 @@ export function Sparkle({ size = 60, color = '#FFFFFF', delay = 0, style }: S & 
   );
 }
 
-/** Fibbot's cute purple bug with wiggling legs. 120x100 box. */
+/** Jhootu's cute purple bug with wiggling legs. 120x100 box. */
 export function Bug({ size = 120, hue = HUE.fibbot, style, className }: S & { hue?: Hue }) {
   return (
     <svg {...svgBox(120, 100, size, style, className)}>

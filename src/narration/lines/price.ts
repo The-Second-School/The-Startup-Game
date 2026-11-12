@@ -12,7 +12,7 @@ export const REASON_TEXT: Record<ShopperReason, string> = {
   great: 'Great deal!',
   ok: 'Okay price',
   pricey: 'Too expensive',
-  fibbot: 'Fibbot’s copy is cheaper',
+  fibbot: 'Jhootu’s copy is cheaper',
 };
 
 /**
@@ -42,17 +42,17 @@ function spotlightLines(name: string, unit: string, o: PriceOutcome, verdict: ke
   const walked = o.interested - o.buyers;
   const earn = o.profitPerUnit;
   const eachSale = earn > 0 ? `each sale earns ₹${earn}` : earn < 0 ? `each sale LOSES ₹${-earn}` : 'each sale earns nothing';
-  const sold = o.buyers === 0 ? 'Nobody bought it.' : walked === 0 ? 'All 10 people bought!' : `${o.buyers} of 10 people bought and ${walked} walked away${fibbotWalkers > 0 ? `, ${fibbotWalkers === 1 ? 'one' : fibbotWalkers} of them to Fibbot’s cheaper copy` : ''}.`;
+  const sold = o.buyers === 0 ? 'Nobody bought it.' : walked === 0 ? 'All 10 people bought!' : `${o.buyers} of 10 people bought and ${walked} walked away${fibbotWalkers > 0 ? `, ${fibbotWalkers === 1 ? 'one' : fibbotWalkers} of them to Jhootu’s cheaper copy` : ''}.`;
   const total = o.totalProfit;
   const money = o.buyers === 0
-    ? 'No sales means no profit, so no new coins.'
+    ? 'No sales, so no money comes in and no new coins.'
     : earn < 0
-      ? `${o.buyers} sales losing ₹${-earn} each is ₹${-total} lost, so ${Math.abs(coins)} coins leave your coin box.`
+      ? `${o.buyers} sales. Each one loses ₹${-earn}. That is ₹${-total} lost, so ${Math.abs(coins)} coins leave your coin box.`
       : earn === 0
         ? `${o.buyers} sales earning nothing each, so no new coins.`
         : `${o.buyers} sales times ₹${earn} is ₹${total}, so ${coins} coins go into your coin box.`;
   const cust = customers > 0 ? `${customers} more customers, because more than 4 people bought.` : customers < 0 ? `${-customers} fewer customers, because fewer than 4 people bought.` : 'Exactly 4 people bought, so your customers stay the same.';
-  const happy = happiness > 0 ? 'A fair price makes people happy.' : happiness < 0 ? 'A greedy price makes people grumpy.' : 'Happiness stays the same.';
+  const happy = happiness > 0 ? 'A fair price makes people happy.' : happiness < 0 ? 'A very high price makes people grumpy.' : 'Happiness stays the same.';
   return {
     lines: [
       { text: `${name} priced ${unit} at ₹${o.price}. ${flair[verdict]}`, tone: verdict === 'right' ? 'excited' : 'normal', pose: verdict === 'right' ? 'cheer' : verdict === 'close' ? 'talk' : 'think' },
@@ -73,9 +73,9 @@ export function priceNarration(s: GameState): Narration | null {
       id: 'price-intro',
       lines: [
         { text: 'Welcome to the money act! Every team now sets a price for what it sells.', tone: 'excited', pose: 'wave', gap: 700 },
-        { text: 'Your product card shows what ONE sale is, and what it costs you to make one.', pose: 'point', gap: 700 },
+        { text: 'Your product card shows what ONE sale is. It also shows what it costs you to make one.', pose: 'point', gap: 700 },
         { text: 'Slide to pick your price. Too high, and people walk away. Too low, and you earn almost nothing on each sale.', pose: 'talk', gap: 900 },
-        { text: 'Each sale puts coins in your coin box. Coins are your team’s money. Customers and happiness are your two big scores: a good price wins customers and keeps them happy.', pose: 'think', gap: 900 },
+        { text: 'Each sale puts coins in your coin box. Coins are your team’s money. Customers and happiness are your two big scores. A good price brings customers and keeps them happy.', pose: 'think', gap: 900 },
         { text: 'Talk it over as a team. Then tap your team again to lock your price.', pose: 'point', gap: 600 },
       ],
       summary: 'Pick a price for ONE product. Too high, people leave. Too low, you earn nothing. Sales fill your coin box.',
@@ -90,7 +90,7 @@ export function priceNarration(s: GameState): Narration | null {
     return {
       id: 'price-open',
       showText: false,
-      lines: [{ text: 'Psst, here is a secret. Think of what one costs you to make, then what a customer would happily pay.', tone: 'whisper', pose: 'think' }],
+      lines: [{ text: 'Psst, here is a tip. Think about what one costs you to make. Then think about what a customer would pay.', tone: 'whisper', pose: 'think' }],
     };
   }
 
@@ -98,7 +98,7 @@ export function priceNarration(s: GameState): Narration | null {
     return {
       id: 'price-revealed',
       mascot: 'fibbot',
-      lines: [{ text: 'Hehehe! The price tags are out. My copies are cheaper than yours, so watch out for your customers!', tone: 'villain' }],
+      lines: [{ text: 'Hehehe! The price tags are out. My copies are cheaper than yours. Watch out for your customers!', tone: 'villain' }],
     };
   }
 

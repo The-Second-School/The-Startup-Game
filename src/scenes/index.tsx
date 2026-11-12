@@ -60,15 +60,15 @@ const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, Math.max(0, m
 /** Reading pace for a line the voice cannot speak (same rule as the voice engine's own fallback). */
 const readingMs = (text: string) => Math.max(1600, 900 + text.length * 62);
 
-/** Tone per line: whispers for secrets and tips, excited for wins and steps, villain for Fibbot's own lines (not quoted speech). */
+/** Tone per line: whispers for secrets and tips, excited for wins and steps, villain for Jhootu's own lines (not quoted speech). */
 function toneFor(text: string): Tone {
   if (/psst|secret|\btip\b|shh|whisper/i.test(text)) return 'whisper';
-  if (/fibbot/i.test(text) && !/[“"]/.test(text)) return 'villain';
+  if (/jhootu/i.test(text) && !/[“"]/.test(text)) return 'villain';
   if (/golden|festival is here|works!|growing fast|step \d|coming|\bwins?\b|poof|boom/i.test(text)) return 'excited';
   return 'normal';
 }
 /** Lines that deserve a longer breath after them. */
-const isImportant = (text: string, tone: Tone) => tone === 'excited' || tone === 'villain' || /step \d|golden|in short/i.test(text);
+const isImportant = (text: string, tone: Tone) => tone === 'excited' || tone === 'villain' || /step \d|golden|summary/i.test(text);
 
 /** Speaks one line and resolves when it has been said. If the voice did not speak it (off, refused, unsupported), waits the reading time. */
 async function speakLine(text: string, tone: Tone): Promise<void> {
@@ -121,7 +121,7 @@ function ActPlayer({ sceneId, teams, recap, onDone }: { sceneId: SceneId; teams:
     const holdMs = recapBeat ? Math.max(6500, 2600 + teams.length * 1400) : 0;
     void (async () => {
       const started = Date.now();
-      await speakLine(inSummary ? `In short. ${line}` : line, tone);
+      await speakLine(inSummary ? `Summary. ${line}` : line, tone);
       await sleep(holdMs - (Date.now() - started) + gap);
       if (!alive) return;
       if (inSummary) { doneRef.current?.(); return; }
@@ -134,7 +134,7 @@ function ActPlayer({ sceneId, teams, recap, onDone }: { sceneId: SceneId; teams:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [armed, beat, inSummary]);
 
-  const bubble = inSummary ? `In short: ${line}` : line;
+  const bubble = inSummary ? `Summary: ${line}` : line;
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
       {/* isolated so art z-indexes can never paint over Bolt or the header */}

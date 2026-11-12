@@ -3,7 +3,7 @@ import '../views2.css';
 import '../board.css';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Avatar, Confetti } from '../../ui';
+import { Avatar, Confetti, useStageH } from '../../ui';
 import { sfx } from '../../audio';
 import { useGame } from '../lib/ctx';
 import { teamName } from '../lib/game';
@@ -19,10 +19,13 @@ export function EndView() {
     const id = setInterval(() => setFire(f => f + 1), 4500);
     return () => { clearTimeout(first); clearInterval(id); };
   }, []);
+  const H = useStageH();
+  const X = H - 1080;                       // extra height on tall windows: the avatars grow by a third of it
   const n = Math.max(1, teams.length);
   const small = n >= 5;
   const slotW = 1840 / n;
   const mSize = Math.max(40, Math.min(70, Math.floor((slotW - 60) / 5) - 6));
+  const bigSize = (small ? 210 : 270) + Math.round(X * 0.3);
 
   return (
     <div className="bd-root">
@@ -41,7 +44,7 @@ export function EndView() {
         {teams.map((t, i) => (
           <motion.div key={t.id} className="bd-end-team" initial={{ y: 500, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 500, opacity: 0 }} transition={{ type: 'spring', stiffness: 170, damping: 13, delay: 0.5 + i * 0.12 }}>
             <div className="v2-dance" style={{ ['--d' as string]: `${-i * 0.23}s` }}>
-              <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={small ? 210 : 270} mood="wow" />
+              <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={bigSize} mood="wow" />
             </div>
             <div className="bd-end-members">
               {t.members.slice(0, 5).map((m, k) => (

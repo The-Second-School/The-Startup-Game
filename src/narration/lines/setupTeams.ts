@@ -32,7 +32,7 @@ function teamsNarration(s: GameState): Narration {
       id: 'teams-intro',
       lines: [
         { text: 'Time to make teams!', tone: 'excited', pose: 'cheer' },
-        { text: 'I deal the kids out like cards, from the biggest class down to the smallest. So every team gets big kids AND small kids.', gap: 700 },
+        { text: 'I deal the kids out like cards, starting from class 10 and going down. So every team gets big kids and small kids.', gap: 700 },
         { text: 'Pick how many teams you want, then press the big button!', pose: 'point' },
       ],
       summary: 'Every team mixes big and small kids. Pick how many teams, then press the button.',
@@ -43,7 +43,7 @@ function teamsNarration(s: GameState): Narration {
     lines: [
       { text: 'Drumroll please! Who will land in which team?', tone: 'excited', pose: 'think', gap: 4200 },
       { text: 'Ta-da! Here are your teams!', tone: 'cheer', pose: 'cheer', gap: 700 },
-      { text: 'Look at the coloured dots. Every team has kids from different classes, so you can all learn from each other!', pose: 'point' },
+      { text: 'Look at the coloured dots. Every team has kids from different classes. So you can all learn from each other!', pose: 'point' },
     ],
     summary: 'Every team mixes classes: big and small kids learn together.',
   };
@@ -65,8 +65,8 @@ function rolesNarration(s: GameState): Narration {
   const big = s.teams.some(t => t.members.length >= 5);
   const lines: Narration['lines'] = [
     { text: 'Pick your jobs!', tone: 'excited', pose: 'cheer' },
-    { text: 'The CEO has the final say after the team talks.' },
-    { text: 'The Money Manager watches the coins and bids in the auction.' },
+    { text: 'The CEO makes the final decision after the team talks.' },
+    { text: 'The Money Manager keeps an eye on the coins and bids in the auction.' },
     { text: 'The Lock Master taps the team’s choice and locks it.' },
     { text: 'The Speaker answers at Mic Time and gives the final pitch.', gap: big ? 450 : 800 },
   ];
@@ -78,15 +78,15 @@ function rolesNarration(s: GameState): Narration {
 // ---------------------------------------------------------------- products
 const PRODUCT_LINES: Record<string, string> = {
   tiffingo: 'TiffinGo! Hot lunch boxes, delivered right to your school. Yummy!',
-  cycleshare: 'CycleShare! Smart cycles that anybody can rent by the hour. Ring ring!',
-  mathmagic: 'MathMagic! An A.I. maths coach that turns practice into a game. Maths just got fun!',
-  farmfriend: 'FarmFriend! A phone buddy that tells farmers exactly when to water their crops. Super useful!',
+  cycleshare: 'CycleShare! Smart cycles that anybody can rent for an hour. Ring ring!',
+  mathmagic: 'MathMagic! A smart coach that turns maths practice into a game. Maths just got fun!',
+  farmfriend: 'FarmFriend! A phone buddy that tells farmers when to water their crops. Super useful!',
   petpal: 'PetPal! You will walk and feed pets while their families are busy. Woof woof!',
-  homeworkbuddy: 'HomeworkBuddy! A robot that plans your homework and exam revision. Every kid wants one!',
+  homeworkbuddy: 'HomeworkBuddy! A robot that plans your homework and helps you study for exams. Every kid wants one!',
   sipbottle: 'SipBottle! A smart bottle that lights up to remind you to drink water. Glug glug!',
   roombot: 'RoomBot! A robot that tidies your room while you play. What a dream!',
-  solarbuddy: 'SolarBuddy! Small solar lamps for homes that face power cuts. What a bright idea!',
-  cleanstreet: 'CleanStreet! Neighbours sort their waste and you collect it for recycling. Clean and green!',
+  solarbuddy: 'SolarBuddy! Small solar lamps for homes with power cuts. What a bright idea!',
+  cleanstreet: 'CleanStreet! Neighbours sort their trash, and you collect it so it can be reused. Clean and green!',
 };
 
 function productsNarration(s: GameState): Narration {
@@ -108,7 +108,7 @@ function productsNarration(s: GameState): Narration {
     { text: `${who} got ${idea}`, tone: 'excited', pose: 'cheer', gap: 700 },
   ];
   if (next) lines.push({ text: `Next up: ${teamName(next)}! Press SPIN!`, tone: 'excited', pose: 'point' });
-  else lines.push({ text: 'Every team has a startup idea! Great job, founders!', tone: 'cheer', pose: 'cheer' });
+  else lines.push({ text: 'Every team has a startup idea! Great job, startup teams!', tone: 'cheer', pose: 'cheer' });
   return { id: `prod-${got.length}`, lines, summary: next ? `${who} got ${p?.name ?? 'an idea'}. Next: ${teamName(next)} spins.` : `${who} got ${p?.name ?? 'an idea'}. Every team has a startup!` };
 }
 

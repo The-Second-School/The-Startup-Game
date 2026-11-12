@@ -8,12 +8,14 @@ import { useGame } from '../lib/ctx';
 import { useUi } from '../lib/ui';
 import { GRADE_COLORS } from '../lib/grade';
 import { KidKeyboard, TypingField } from '../components/TouchKeyboard';
+import { useDockAt } from '../../narration/useDockAt';
 
 export { GRADE_COLORS, KidKeyboard, TypingField };
 
 const MAX_SHOWN = 21;
 
 export function PlayersView() {
+  useDockAt(56, 136, 1100);
   const { state } = useGame();
   const grade = useUi(s => s.grade);
   const n = state.players.length;

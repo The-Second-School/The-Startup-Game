@@ -249,6 +249,6 @@ export const sfx = {
   /** master volume 0..1 (default 0.6) */
   setVolume: (v: number) => { volume = Math.max(0, Math.min(1, v)); if (master && ctx) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.02); },
   unlock: unlockAudio,
-  /** Freeze (suspend) or resume all sound. */
-  freeze: (on: boolean) => { if (!ctx) return; void (on ? ctx.suspend() : ctx.resume()); },
+  /** Pause (suspend) or resume all sound. */
+  suspend: (on: boolean) => { if (!ctx) return; void (on ? ctx.suspend() : ctx.resume()); },
 };

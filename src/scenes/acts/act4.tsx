@@ -2,8 +2,9 @@
 // change who buys, and investors stroll through the market later. No water, no boats.
 // Beats (see SCENES.act4): 0 recap, 1 customers arrive, 2 price too high / too low, 3 investors walk the market, 4 the step stamp.
 import { memo, useEffect, useState, type CSSProperties } from 'react';
-import { Bunting, Burst, Clouds, FarSkyline, Ground, HUE, INK, Kid, NearSkyline, RecipeTrack, Sky, Svg, Tree, Bush, full, type Hue } from '../kit';
+import { Bunting, Burst, Clouds, FarSkyline, Ground, HUE, INK, Kid, NearSkyline, Sky, Svg, Tree, Bush, full, type Hue } from '../kit';
 import { Backdrop, Focus, Subject } from '../kit/focus';
+import { ProgressScreen } from '../../screen/views/ProgressView';
 import { CoinBit, Mv, Show } from '../shared/bits';
 import type { SceneBodyProps } from '../types';
 
@@ -115,7 +116,7 @@ export default function Act4({ beat }: SceneBodyProps) {
 
       {/* beat 4: step 4 of the recipe */}
       <Show when={beat === 4} k="recipe" y={40} style={{ zIndex: 9 }}>
-        <div style={{ position: 'absolute', left: 80, top: 400 }}><RecipeTrack active={4} /></div>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><ProgressScreen act={4} overlay intro /></div>
         <Burst fire={4} x={960} y={640} count={60} />
       </Show>
     </div>

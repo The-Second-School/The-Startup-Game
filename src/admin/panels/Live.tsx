@@ -35,7 +35,7 @@ export function BugPanel() {
 }
 
 // ---------- Auction ----------
-// Fibbot bids by himself inside the engine (his limit is secret and never shown). The host only enters team bids.
+// Jhootu bids by himself inside the engine (his limit is secret and never shown). The host only enters team bids.
 export function AuctionPanel() {
   const { state, send } = useA();
   const st = state.step;
@@ -51,12 +51,12 @@ export function AuctionPanel() {
   };
   const team = by ? teamById(state, by) : null;
   const max = team ? maxBid(team) : 0;
-  // Keep the amount inside the legal range even if Fibbot raised the bid while the host was choosing.
+  // Keep the amount inside the legal range even if Jhootu raised the bid while the host was choosing.
   const amount = team ? Math.min(max, Math.max(minNext, picked ?? minNext)) : 0;
   const ok = !!team && canBid(team.id) && amount >= minNext && amount <= max;
 
   const tk = st.tickets[st.ticket];
-  const nameOf = (id: string) => (id === 'fibbot' ? 'Fibbot' : teamById(state, id)?.name ?? 'a team');
+  const nameOf = (id: string) => (id === 'fibbot' ? 'Jhootu' : teamById(state, id)?.name ?? 'a team');
   const top = st.bid.by === 'fibbot' && st.bidLog.length === 0 ? 'Opening price' : nameOf(st.bid.by);
   const recent = st.bidLog.slice(-3).reverse();
 

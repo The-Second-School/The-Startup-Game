@@ -23,7 +23,7 @@ const tint = (hex: string, a: number) => {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 };
 
-export function ProgressScreen({ act, overlay }: { act: number; overlay?: boolean }) {
+export function ProgressScreen({ act, overlay, intro }: { act: number; overlay?: boolean; intro?: boolean }) {
   const a = Math.max(0, Math.min(N, Math.round(act)));
   const live = !overlay;                                   // step mode: the traveller walks, then the act turns into a check
   const phase = useTimeline(`${a}-${overlay ? 'o' : 's'}`, live ? [2900] : []);
@@ -44,7 +44,7 @@ export function ProgressScreen({ act, overlay }: { act: number; overlay?: boolea
   let title: ReactNode, sub: string;
   if (overlay) {
     title = a >= 1 ? <>We are on Act <Num value={a} /> of {N}</> : 'Getting ready';
-    sub = info ? `${info.name}: ${info.goal}. A short pause, we continue soon.` : 'The game starts soon. Get ready to build a startup!';
+    sub = info ? (intro ? `${info.name}: ${info.goal}.` : `${info.name}: ${info.goal}. A short pause, we continue soon.`) : 'The game starts soon. Get ready to build a startup!';
   } else if (a >= N) {
     title = <>All <Num value={N} /> acts done!</>;
     sub = 'You built real startups in Techistan.';

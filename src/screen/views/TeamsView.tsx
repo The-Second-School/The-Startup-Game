@@ -18,9 +18,10 @@ import { BigButton } from '../components/BigButton';
 import { Hatch } from '../components/Hatch';
 import { Tap } from '../components/Tap';
 import { useStableCallback } from '../hooks/useStableCallback';
+import { useDockAt } from '../../narration/useDockAt';
 
 // ---------------------------------------------------------------- geometry (stage 1920 x 1080)
-const COL_TOP = 300, COL_H = 600, SLOTS_TOP = 250;
+const COL_TOP = 292, COL_H = 576, SLOTS_TOP = 250;
 const CHIP_H = 52;
 const CX = 960, CY = 640;
 const RINGS = [{ rx: 780, ry: 205, dir: 1, scale: 1 }, { rx: 470, ry: 118, dir: -0.8, scale: 0.9 }];
@@ -209,6 +210,7 @@ function Chips({ chips, slots, plan, mode, runKey }: { chips: ChipData[]; slots:
 
 // ---------------------------------------------------------------- view
 export function TeamsView() {
+  useDockAt(56, 136, 1100);
   const { state, dispatch, live } = useGame();
   const count = state.settings.teamCount;
   const players = state.players;
@@ -284,6 +286,8 @@ export function TeamsView() {
         )}
       </div>
 
+      <div className="s2-info">{players.length} kids · {count} teams</div>
+
       {mode === 'idle' && (
         <motion.div className="s2-mix" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           {players.length ? 'Big kids and small kids get mixed into every team!' : 'Add some players first!'}
@@ -296,7 +300,7 @@ export function TeamsView() {
             const c = teamColors(t);
             const sorted = t.members.slice().sort((a, b) => b.grade - a.grade);
             return (
-              <motion.div key={`${t.id}-${t.avatarSeed}`} className="s2-box" style={{ left: geo.left(ti), top: COL_TOP, width: geo.colW, height: COL_H, background: c.shades[0] }}
+              <motion.div key={`${t.id}-${t.avatarSeed}`} className="s2-box" style={{ left: geo.left(ti), top: COL_TOP, width: geo.colW, height: `calc(${COL_H}px + var(--fx, 0px))`, background: c.shades[0] }}
                 initial={running ? { y: 160, opacity: 0 } : false} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 240, damping: 22, delay: ti * 0.08 }}>
                 <div className="s2-box-egg">
                   <Hatch team={t} size={112} delay={Math.max(0, (plan?.hatch[ti] ?? 0) - 950)} instant={!running} restless burst />

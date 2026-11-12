@@ -5,6 +5,7 @@ import type { Team } from '../../game/types';
 import { useA } from '../ctx';
 import { SHAPES, coinTag } from '../info';
 import { Btn, Card, Label, Pill, TeamLine } from '../kit';
+import { useHoldTimerWhenLocked } from '../../screen/components/TimerBadge';
 
 const PRICES = Array.from({ length: (PRICE.max - PRICE.min) / PRICE.step + 1 }, (_, i) => PRICE.min + i * PRICE.step);
 
@@ -15,6 +16,12 @@ export function ChoicePanel() {
   const [sel, setSel] = useState<number | null>(null);
   const step = currentStep(state);
   const st = state.step;
+  // Everybody locked: the talk clock stops on the phone too (same rule as the big screen, which owns the shared state).
+  const choosing = (st.type === 'question' || st.type === 'price' || st.type === 'megaorder') && st.phase === 'open';
+  const everyoneLocked = st.type === 'megaorder'
+    ? st.pairs.length > 0 && Object.keys(st.locks).filter(id => id !== st.solo).length >= st.pairs.length * 2
+    : (st.type === 'question' || st.type === 'price') && state.teams.length > 0 && Object.keys(st.locks).length >= state.teams.length;
+  useHoldTimerWhenLocked(state, send, everyoneLocked, choosing);
   if (st.type !== 'question' && st.type !== 'price' && st.type !== 'megaorder') return null;
   if (st.phase !== 'open') return null;
   const q = st.type === 'question' && step.kind === 'question' ? QUESTIONS[step.qId] : null;
@@ -39,20 +46,20 @@ export function ChoicePanel() {
     if (q) return shapes(t, q.options.map(o => ({ ok: canAfford(t, o.coins), note: coinTag(o.coins) })));
     if (st.type === 'price') {
       const p = productById(t.productId);
-      // Fibbot's copy price, shown as a quiet reference on the grid (nearest ₹10 step).
+      // Jhootu's copy price, shown as a quiet reference on the grid (nearest ₹10 step).
       const rivalStep = p ? Math.min(PRICE.max, Math.max(PRICE.min, Math.round(p.rival / PRICE.step) * PRICE.step)) : null;
       return (
         <>
           {p && (
             <div className="hint">
               <div>{p.icon} <b>{p.name}</b>. One sale is {p.unit}.</div>
-              <div>It costs <b>₹{p.cost}</b> to make one. Fibbot’s copy sells for <b>₹{p.rival}</b>.</div>
+              <div>It costs <b>₹{p.cost}</b> to make one. Jhootu’s copy sells for <b>₹{p.rival}</b>.</div>
             </div>
           )}
           <div className="pricegrid">
             {PRICES.map(v => (
               <Btn key={v} tone="soft" onClick={() => { send({ type: 'LOCK', teamId: t.id, choice: v }); setOpen(null); }} className={v === rivalStep ? 'price-ref' : ''}>
-                ₹{v}{v === rivalStep && <small>Fibbot</small>}
+                ₹{v}{v === rivalStep && <small>Jhootu</small>}
               </Btn>
             ))}
           </div>

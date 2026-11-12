@@ -1,4 +1,4 @@
-// Shared bits for the act scenes (welcome, howto, act1..act3): a mover wrapper and the scene version of Fibbot (wraps the ui Fibbot).
+// Shared bits for the act scenes (welcome, howto, act1..act3): a mover wrapper and the scene version of Jhootu (wraps the ui Jhootu).
 import { AnimatePresence, motion } from 'motion/react';
 import type { CSSProperties, ReactNode } from 'react';
 import { HUE, INK, SPRING } from '../kit';
@@ -19,7 +19,7 @@ export function Mv({ left = 0, top = 0, to, from, spring = SPRING.settle, origin
   );
 }
 
-/** Fibbot for the scenes: a thin wrapper around the one and only ui Fibbot. 520 x 460 box (scaled by `size`), feet at the bottom.
+/** Jhootu for the scenes: a thin wrapper around the one and only ui Jhootu. 520 x 460 box (scaled by `size`), feet at the bottom.
  *  angry = angry face, smoke = puffs from his antennas. */
 export function Fibbot({ size = 520, angry = false, smoke = false, mood, style }: { size?: number; angry?: boolean; smoke?: boolean; mood?: FibbotMood; style?: CSSProperties }) {
   return (

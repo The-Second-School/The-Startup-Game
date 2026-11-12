@@ -10,15 +10,17 @@ import { darken, inkOn, lighten, mix } from './palette';
 // CSS vars on .ui-stage: --stage-w (px), --bleed (px each side beyond 1920), --frame-s (frame scale).
 // useStageScale() = window->stage scale (pointer coords: stageX = (clientX - rect.left) / scale); useStage() gives the rest.
 // ---------------------------------------------------------------------------
-export type StageInfo = { w: number; h: number; scale: number; frameScale: number; bleed: number; frameW: number };
+export type StageInfo = { w: number; h: number; scale: number; frameScale: number; bleed: number; frameW: number; frameH: number };
 const MIN_W = 1440, MAX_W = 2560;
-const defaultStage: StageInfo = { w: 1920, h: 1080, scale: 1, frameScale: 1, bleed: 0, frameW: 1920 };
+const defaultStage: StageInfo = { w: 1920, h: 1080, scale: 1, frameScale: 1, bleed: 0, frameW: 1920, frameH: 1080 };
 const StageCtx = createContext<StageInfo>(defaultStage);
 /** Current stage geometry: design width w (1440..2560), height h (1080), window scale, frame scale (<1 when narrower than 1920) and bleed per side (>0 when wider than 1920). */
 export const useStage = () => useContext(StageCtx);
 export const useStageScale = () => useContext(StageCtx).scale;
 /** Width available to the frame content in frame coordinates (1920 or wider). Use for strips that should stretch. */
 export const useStageW = () => useContext(StageCtx).frameW;
+/** Height available to the frame content in frame coordinates (1080, or taller when the window is narrower than 16:9). */
+export const useStageH = () => useContext(StageCtx).frameH;
 
 export function StageFrame({ children, pattern = true, style }: { children?: ReactNode; pattern?: boolean; blobs?: boolean; style?: CSSProperties }) {
   const [box, setBox] = useState(() => fit());
@@ -29,7 +31,7 @@ export function StageFrame({ children, pattern = true, style }: { children?: Rea
     return () => removeEventListener('resize', on);
   }, []);
   const { info, x, y } = box;
-  const vars = { '--stage-w': `${info.w}px`, '--bleed': `${info.bleed}px`, '--frame-s': info.frameScale } as CSSProperties;
+  const vars = { '--stage-w': `${info.w}px`, '--bleed': `${info.bleed}px`, '--frame-s': info.frameScale, '--frame-h': `${info.frameH}px`, '--fx': `${info.frameH - 1080}px`, '--grow': Math.min(1.2, info.frameH / 1080) } as CSSProperties;
   return (
     <div className="ui-stage-outer">
       <div className="ui-stage" style={{ width: info.w, transform: `translate(${x}px, ${y}px) scale(${info.scale})`, backgroundImage: pattern ? undefined : 'none', ...vars, ...style }}>
@@ -43,7 +45,7 @@ function fit() {
   const vw = Math.max(1, window.innerWidth), vh = Math.max(1, window.innerHeight);
   const w = Math.round(Math.min(MAX_W, Math.max(MIN_W, (vw / vh) * 1080)));
   const scale = Math.min(vw / w, vh / 1080);
-  const info: StageInfo = { w, h: 1080, scale, frameScale: Math.min(1, w / 1920), bleed: Math.max(0, (w - 1920) / 2), frameW: Math.max(1920, w) };
+  const info: StageInfo = { w, h: 1080, scale, frameScale: Math.min(1, w / 1920), bleed: Math.max(0, (w - 1920) / 2), frameW: Math.max(1920, w), frameH: 1080 / Math.min(1, w / 1920) };
   return { info, x: (vw - w * scale) / 2, y: (vh - 1080 * scale) / 2 };
 }
 // ---------------------------------------------------------------------------

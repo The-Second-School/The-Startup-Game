@@ -2,7 +2,7 @@
 // ten customers decide, one by one, to buy or walk away. Bolt (the narration dock) is drawn by ScreenApp, never here.
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, CountUp, Fibbot, MeterIcon, Num, ProductArt, useStageW } from '../../ui';
+import { Avatar, CountUp, Fibbot, MeterIcon, Num, ProductArt, useStageH, useStageW } from '../../ui';
 import { PRICE, TIMER_SHOW_MS, buyersAt, productById, type Product } from '../../game/content';
 import { teamById, timerRemaining } from '../../game/engine';
 import type { Deltas, PriceOutcome, PriceState, Team } from '../../game/types';
@@ -10,7 +10,7 @@ import { sfx } from '../../audio';
 import { useNarr } from '../../narration/store';
 import { shoppersAt } from '../../narration/lines/price';
 import { useGame } from '../lib/ctx';
-import { CONTENT_TOP, DOCK_TOP } from '../lib/layout';
+import { DOCK_TOP, GAP } from '../lib/layout';
 import { moodFor, teamColors } from '../lib/game';
 import { inputLocked } from '../lib/tap';
 import { useNow } from '../hooks/useNow';
@@ -18,8 +18,8 @@ import { ShopperGrid } from '../components/Crowd';
 import { DeltaRow } from '../components/DeltaRow';
 import { ReadyHint } from '../components/ReadyHint';
 import { Tap } from '../components/Tap';
-import { STRIP_TOP, stripGeometry, TeamStrip } from '../components/TeamStrip';
-import { TimerBadge } from '../components/TimerBadge';
+import { stripGeometry, stripLayout, TeamStrip } from '../components/TeamStrip';
+import { TimerBadge, useHoldTimerWhenLocked } from '../components/TimerBadge';
 import { DoneBoards, useChooser, useRevealLock } from '../components/ChoiceParts';
 import '../price.css';
 
@@ -29,6 +29,16 @@ const ZERO: Deltas = { coins: 0, customers: 0, happiness: 0 };
 const TITLE_RIGHT = 40;
 const FIRST_PRICE = 50;
 const oneOf = (unit: string) => unit.replace(/^one\b/i, 'ONE');
+const PANEL_TOP = 560;   // the touch zone starts here (kids reach y >= 560)
+const CARD_TOP_PR = 208; // the product / status card under the title
+const SPOT_TOP = 156;    // the shopper spotlight card (matches .pr-spot in price.css)
+
+/** Absolute y where the price content must end: the team bar's top minus the one GAP. Measured from the real frame height. */
+function useContentBottom(n: number) {
+  const W = useStageW();
+  const H = useStageH();
+  return stripLayout(n, false, W, H).top - GAP;
+}
 
 /** 0 first, then `value` after `ms`: makes a rolling number count up once on reveal. */
 function useAfter(value: number, ms: number) {
@@ -69,20 +79,23 @@ function IntroStage() {
 
 // ---------- open: set the price ----------
 function OpenStage({ st }: { st: PriceState }) {
-  const { state, live } = useGame();
+  const { state, live, dispatch } = useGame();
   const teams = state.teams;
   const { pick, setPick, onChip } = useChooser(st);
   const sel = teamById(state, st.selectedTeamId);
   const lockedIds = Object.keys(st.locks);
   const allLocked = teams.length > 0 && lockedIds.length >= teams.length;
+  // Everybody locked: the clock stops and the badge goes away.
+  useHoldTimerWhenLocked(state, dispatch, allLocked, live);
   const prod = sel ? productById(sel.productId) : null;
 
-  // 5 minutes of talk time, but the timer only shows in the last minute: it pops in at the same place and the title card shrinks.
+  // 5 minutes of talk time, but the timer only shows in the last minute (and only while a team is still choosing): it pops in at the same place and the title card shrinks.
   const now = useNow(state.timer.running, 500);
-  const showTimer = state.timer.total > 0 && timerRemaining(state, now) <= TIMER_SHOW_MS;
+  const showTimer = state.timer.total > 0 && !allLocked && timerRemaining(state, now) <= TIMER_SHOW_MS;
 
   const sub = allLocked ? '' : !sel ? 'Tap your team below to start' : pick === null ? 'Slide the coin, then tap your team again to lock' : 'Happy with it? Tap your team again to lock it!';
-  const panelH = Math.min(360, STRIP_TOP - 16 - 560);
+  const bottomY = useContentBottom(teams.length);
+  const panelH = bottomY - PANEL_TOP;
 
   return (
     <div className="scr-full">
@@ -100,7 +113,7 @@ function OpenStage({ st }: { st: PriceState }) {
           <PricePanel key={`panel-${sel.id}`} prod={prod} pick={pick} height={panelH} onPick={v => live && setPick(v)} />
         </>
       ) : (
-        <StatusCard allLocked={allLocked} height={STRIP_TOP - 16 - 208} />
+        <StatusCard allLocked={allLocked} height={bottomY - CARD_TOP_PR} />
       )}
 
       <TeamStrip
@@ -191,7 +204,7 @@ function PricePanel({ prod, pick, height, onPick }: { prod: Product; pick: numbe
 
 const SLIDER_W = 688, SLIDER_PAD = 56;
 
-/** Chunky slider: drag anywhere, snaps to Rs 10. Softly marks the loss zone, the usual prices and Fibbot's copy price. */
+/** Chunky slider: drag anywhere, snaps to Rs 10. Softly marks the loss zone, the usual prices and Jhootu's copy price. */
 function PriceSlider({ prod, value, onChange }: { prod: Product; value: number | null; onChange: (v: number) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef(false);
@@ -242,7 +255,7 @@ function PriceSlider({ prod, value, onChange }: { prod: Product; value: number |
       <div className="pr-stem" style={{ left: PAD + fx }} />
       <div className={flip ? 'pr-fibbot is-left' : 'pr-fibbot'} style={{ left: PAD + fx - 32 }}>
         <Fibbot mood="sneaky" size={64} />
-        <span className="pr-fibbot-l">Fibbot’s copy ₹{prod.rival}</span>
+        <span className="pr-fibbot-l">Jhootu’s copy ₹{prod.rival}</span>
       </div>
       <motion.div
         className={value === null ? 'pr-knob is-ghost' : 'pr-knob'}
@@ -263,8 +276,8 @@ function TagsStage({ st, teams }: { st: PriceState; teams: Team[] }) {
   const W = useStageW();
   const geo = stripGeometry(teams.length, false, W);
   const bleed = (W - 1920) / 2;
-  const top = 320;
-  const height = Math.min(500, STRIP_TOP - 16 - top);
+  const top = SPOT_TOP + 96 + GAP;   // under the "price tags are out" heading (96px tall)
+  const height = useContentBottom(teams.length) - top;
   return (
     <div className="scr-full">
       <motion.div className="pr-tags-head" initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>The price tags are out!</motion.div>
@@ -315,9 +328,10 @@ const VERDICT: Record<string, { text: string; color: string }> = {
 };
 
 function SpotStage({ st, teams }: { st: PriceState; teams: Team[] }) {
+  const bottomY = useContentBottom(teams.length);
   const team = teams[st.spotlight];
   if (!team) return null;
-  const height = Math.max(560, STRIP_TOP - 16 - CONTENT_TOP);
+  const height = Math.max(560, bottomY - SPOT_TOP);
   return (
     <div className="scr-full">
       <SpotCard key={team.id} team={team} outcome={st.outcomes[team.id]} verdict={st.verdict[team.id] ?? 'low'} deltas={st.pending[team.id] ?? ZERO} height={height} />

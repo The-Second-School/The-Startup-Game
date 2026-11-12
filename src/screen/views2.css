@@ -38,7 +38,7 @@
 .v2-row-center { display: flex; justify-content: center; align-items: center; gap: 20px; }
 
 .v2-band {
-  position: absolute; left: 40px; top: 552px; width: 1840px; height: 488px;
+  position: absolute; left: 40px; top: 552px; width: 1840px; bottom: 32px;
   background: var(--bg-2); border: 6px solid #fff; border-radius: var(--r-card);
   box-shadow: var(--sh);
 }

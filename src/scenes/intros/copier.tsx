@@ -1,4 +1,4 @@
-// Intro (Act 5, copies): Fibbot's Copy-O-Matic spits out fake copies; then an angry Fibbot steps up to watch them pile up.
+// Intro (Act 5, copies): Jhootu's Copy-O-Matic spits out fake copies; then an angry Jhootu steps up to watch them pile up.
 import { motion } from 'motion/react';
 import { C, Abs, Root, Dots, Star, Coin } from '../artb/core';
 import { Copier, FakeSheet } from '../artb/props';

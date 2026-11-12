@@ -4,21 +4,22 @@
 import '../board.css';
 import { useCallback, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Confetti, RecipeIcon } from '../../ui';
+import { Confetti, RecipeIcon, useStageH } from '../../ui';
 import { sfx } from '../../audio';
 import { BOARD_FIELDS, valueBefore, type Field } from '../../narration/lines/board';
-import { CONTENT_TOP, STAGE_H } from '../lib/layout';
+import { CONTENT_TOP } from '../lib/layout';
 import { useGame } from '../lib/ctx';
 import { Board, type BoardEvent } from '../components/RankBoards';
 import { ReadyHint } from '../components/ReadyHint';
 import { RECIPE } from '../../game/content';
 
-const BOTTOM = 108;                                   // room for the small secret-winner note
-const PANEL_H = STAGE_H - CONTENT_TOP - BOTTOM;       // boards use the whole height below the dock
-
 export function BoardView({ act, recap }: { act: number; recap?: boolean }) {
   const { state } = useGame();
   const teams = state.teams;
+  const H = useStageH();
+  // The boards fill everything below the dock down to the small secret-winner note, which is pinned to the real bottom.
+  const SECRET_TOP = H - 88;
+  const PANEL_H = SECRET_TOP - 12 - (CONTENT_TOP + 8);
   const recipe = RECIPE.find(r => r.act === act);
   const [fire, setFire] = useState(0);
   const last = useRef<Record<string, number>>({});
@@ -58,7 +59,7 @@ export function BoardView({ act, recap }: { act: number; recap?: boolean }) {
         ))}
       </div>
 
-      <motion.div className="bd-secret" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 24, delay: 0.9 }}>
+      <motion.div className="bd-secret" style={{ top: SECRET_TOP }} initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 24, delay: 0.9 }}>
         <span>🤫</span>
         3 boards. The real winner is a secret mix of everything. We will not tell you how!
       </motion.div>

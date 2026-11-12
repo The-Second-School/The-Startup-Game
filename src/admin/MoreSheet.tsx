@@ -64,7 +64,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
         </div>
       )}
 
-      <Switch on={state.frozen} onChange={v => send({ type: 'SET_FROZEN', on: v })} label="Freeze the screen" sub="Stops everything on the big screen exactly where it is: animations, timer, voice and sound. Switch off to continue." />
+      <Switch on={state.paused} onChange={v => send({ type: 'SET_PAUSED', on: v })} label="Pause the big screen" sub="Stops the voice, sound, animations and timer. Switch off to carry on." />
 
       <Fold title="Fix a score" hint="Meters stay between 0 and 50">
         {state.teams.length === 0 && <div className="empty">No teams yet.</div>}

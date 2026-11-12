@@ -68,7 +68,7 @@ export function build(stepId: string, phase: string | null, teamCount: 4 | 6): G
     if (p !== 'intro') {
       next();
       const [a, b] = ids();
-      // Fibbot counter-bids inside the engine after each team bid, so only team bids are sent here.
+      // Jhootu counter-bids inside the engine after each team bid, so only team bids are sent here.
       d({ type: 'BID', by: a, amount: 30 }); d({ type: 'BID', by: b, amount: 60 });
       if (p === 'sold') next();
       if (p === 'bidding2') { next(); next(); d({ type: 'BID', by: ids()[2], amount: 30 }); }

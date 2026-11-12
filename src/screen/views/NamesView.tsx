@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Avatar, Confetti } from '../../ui';
 import { KidKeyboard, TypingField } from '../components/TouchKeyboard';
+import { useDockAt } from '../../narration/useDockAt';
 import { useGame } from '../lib/ctx';
 import { useUi } from '../lib/ui';
 import { cx, isDefaultName, teamColors } from '../lib/game';
@@ -13,6 +14,7 @@ import { GRADE_COLORS } from '../lib/grade';
 import { namingTeamId } from '../lib/typing';
 
 export function NamesView() {
+  useDockAt(56, 136, 1100);
   const { state } = useGame();
   const typing = useUi(s => s.typing);
   const kbTeam = useUi(s => s.kbTeam);
@@ -34,7 +36,7 @@ export function NamesView() {
 
   const activeId = done ? null : namingTeamId(state, kbTeam);
   const gap = n >= 5 ? 24 : 32;
-  const colW = Math.floor((1840 - (n - 1) * gap) / Math.max(1, n));
+  const colW = Math.floor((1808 - (n - 1) * gap) / Math.max(1, n));
   const cardW = Math.min(420, colW);
 
   return (
@@ -48,6 +50,11 @@ export function NamesView() {
         <AnimatePresence>
           {!done && <div key="field" className="st-names-field"><TypingField hint="Type your team name" /></div>}
         </AnimatePresence>
+      </div>
+
+      <div className="st-count">
+        <span className="st-count-num">{n - left}</span>
+        <span className="st-count-label">of {n} named</span>
       </div>
 
       <AnimatePresence mode="wait">

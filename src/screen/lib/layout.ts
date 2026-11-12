@@ -9,3 +9,8 @@ export const KID_TOP = 560;          // kids can only reach y >= 560
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
 export const SIDE = 40;              // outer margin
+// Vertical rhythm for the frame. The frame is 1080 tall, or taller on windows narrower than 16:9 (useStageH()). Everything that
+// is "below the content" is measured from the real frame height H, never from 1080.
+export const BAR_BOTTOM = 24;        // the team bar sits this far above the bottom edge of the frame
+export const GAP = 32;               // the one gap between content blocks, and between content and the team bar
+export const MINI_CARD_H = 140;      // the question card once it is no longer the subject (see QuestionCard size 'mini')

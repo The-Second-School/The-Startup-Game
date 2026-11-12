@@ -1,4 +1,4 @@
-// Fibbot slides in from the right with ONE short line and STAYS (idle bounce) until `show` goes false, then slides out.
+// Jhootu slides in from the right with ONE short line and STAYS (idle bounce) until `show` goes false, then slides out.
 import type { CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fibbot, SpeechBubble } from '../../ui';

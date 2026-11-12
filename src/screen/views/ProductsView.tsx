@@ -13,6 +13,7 @@ import { teamColors, teamName } from '../lib/game';
 import { Wheel } from '../components/Wheel';
 import { BigButton } from '../components/BigButton';
 import { useStableCallback } from '../hooks/useStableCallback';
+import { useDockAt } from '../../narration/useDockAt';
 
 const darken = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
@@ -21,6 +22,7 @@ const darken = (hex: string) => {
 };
 
 export function ProductsView() {
+  useDockAt(56, 136, 1100);
   const { state, dispatch, live } = useGame();
   const [spin, setSpin] = useState<{ index: number; id: number; teamId: string; productId: string } | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -62,13 +64,16 @@ export function ProductsView() {
 
   return (
     <div className="scr-full">
-      <motion.div className="scr-wheel-pos" style={{ left: 44, top: 252 }} initial={{ x: -300, opacity: 0, rotate: -20 }} animate={{ x: 0, opacity: 1, rotate: 0 }} exit={{ x: -300, opacity: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 18 }}>
+      <motion.div className="scr-wheel-pos" style={{ left: 56, top: 'calc(338px + var(--fx, 0px) / 2)' }} initial={{ x: -300, opacity: 0, rotate: -20 }} animate={{ x: 0, opacity: 1, rotate: 0 }} exit={{ x: -300, opacity: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 18 }}>
         <motion.div animate={spinning ? { scale: 1 } : { scale: [1, 1.018, 1] }} transition={spinning ? { duration: 0.2 } : { duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}>
-          <Wheel slices={slices} size={780} spin={spin ? { index: spin.index, id: spin.id } : null} onDone={onDone} />
+          <Wheel slices={slices} size={700} spin={spin ? { index: spin.index, id: spin.id } : null} onDone={onDone} />
         </motion.div>
       </motion.div>
-      <div className="s2-p-side">
+      <div className="s2-head">
         <motion.div className="s2-title" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>Spin your product!</motion.div>
+      </div>
+      <div className="s2-info">{state.teams.filter(t => t.productId).length} of {state.teams.length} spun</div>
+      <div className="s2-p-side">
         <div className="s2-p-rows">
           {state.teams.map((t, i) => {
             const p = productById(t.productId);

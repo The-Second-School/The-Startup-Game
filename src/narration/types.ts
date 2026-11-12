@@ -1,4 +1,4 @@
-// Narration: what Bolt (or Fibbot) says on each screen. One Narration per screen "moment". Lines are spoken in order.
+// Narration: what Bolt (or Jhootu) says on each screen. One Narration per screen "moment". Lines are spoken in order.
 import type { Tone } from '../audio/voice';
 
 export type { Tone };

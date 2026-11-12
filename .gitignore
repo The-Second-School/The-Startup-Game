@@ -5,3 +5,6 @@ shots
 .vercel
 .env.local
 .playwright-mcp
+
+.vercel
+.env*

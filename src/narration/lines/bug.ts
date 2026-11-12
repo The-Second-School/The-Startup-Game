@@ -36,11 +36,11 @@ export function bugNarration(s: GameState): Narration | null {
 
   if (st.phase === 'intro') {
     const lines: NarrLine[] = [
-      { text: 'Bug Smash time! Fibbot sneaked bugs into your apps.', tone: 'excited', pose: 'point', gap: 700 },
+      { text: 'Bug Smash time! Jhootu sneaked bugs into your apps.', tone: 'excited', pose: 'point', gap: 700 },
       { text: 'Bugs make customers grumpy, and some customers even leave.', tone: 'normal', pose: 'shock', gap: 900 },
-      { text: 'So every team gets a turn to smash the bugs and protect its startup. More bugs smashed means happier customers!', tone: 'normal', pose: 'cheer', gap: 900 },
+      { text: 'So every team gets a turn to smash bugs and protect its startup. More smashed bugs means happier customers!', tone: 'normal', pose: 'cheer', gap: 900 },
       { text: 'Careful: butterflies are friends, so do not tap them. Armoured bugs need two taps.', tone: 'normal', pose: 'point', gap: 900 },
-      { text: 'Teams that tested early with friends get 5 extra seconds, because their app has fewer bugs to fix.', say: 'Teams that tested early with friends get five extra seconds, because their app has fewer bugs to fix.', tone: 'calm', pose: 'idle' },
+      { text: 'Teams that tested early with friends get 5 extra seconds. Their app has fewer bugs to fix.', say: 'Teams that tested early with friends get five extra seconds. Their app has fewer bugs to fix.', tone: 'calm', pose: 'idle' },
     ];
     return { id: 'bugs-intro', lines, summary: 'Smash bugs to keep customers happy. Skip the butterflies. Tested early? +5 seconds!' };
   }
@@ -88,10 +88,10 @@ export function bugNarration(s: GameState): Narration | null {
   const champText = champs.length === 1 ? champs[0] : champs.slice(0, -1).join(', ') + ' and ' + champs[champs.length - 1];
   const lines: NarrLine[] = [{ text: 'Bug report time!', tone: 'excited', pose: 'cheer', gap: 600 }];
   if (best >= BUG.tiers[1].min) {
-    lines.push({ text: `${champText} protected the startup best with ${plural(best, 'bug')} smashed.`, tone: 'cheer', pose: 'cheer', gap: 800 });
+    lines.push({ text: `${champText} smashed the most bugs, with ${plural(best, 'bug')}!`, tone: 'cheer', pose: 'cheer', gap: 800 });
   } else {
     lines.push({ text: 'Phew, lots of bugs got through this time. Customers were not happy.', tone: 'normal', pose: 'sad', gap: 800 });
   }
   lines.push({ text: 'Fewer bugs means happier customers and fewer customers leaving. Your meters have been updated!', tone: 'normal', pose: 'point' });
-  return { id: 'bugs-done', lines, summary: best >= BUG.tiers[1].min ? `${champText} protected their startup best. Fewer bugs = happier customers.` : 'Too many bugs got through. Fewer bugs = happier customers.' };
+  return { id: 'bugs-done', lines, summary: best >= BUG.tiers[1].min ? `${champText} smashed the most bugs. Fewer bugs = happier customers.` : 'Too many bugs got through. Fewer bugs = happier customers.' };
 }

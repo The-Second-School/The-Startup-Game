@@ -86,7 +86,7 @@ function boardNarr(s: GameState, stepId: string, act: number, recap: boolean): N
     return { id: `board-${stepId}`, lines, summary: `Welcome back! ${leaders} The real winner is a secret mix.` };
   }
 
-  lines.push({ text: `Act ${act} is done! Time for the leaderboards!`, tone: 'excited', pose: 'cheer', gap: 500 });
+  lines.push({ text: `Act ${act} is done! Time to see the scores!`, tone: 'excited', pose: 'cheer', gap: 500 });
   lines.push({ text: leaders, pose: 'point', gap: 600 });
 
   const moves = BOARD_FIELDS.flatMap(f => movesFor(s.teams, f, act));
@@ -105,7 +105,7 @@ function boardNarr(s: GameState, stepId: string, act: number, recap: boolean): N
   }
   if (fallers[0]) {
     const f = fallers[0];
-    lines.push({ text: `${teamName(f.team)} slipped down a little in ${FIELD_LABEL[f.field]}. Do not worry, you can climb back!`, tone: 'calm', pose: 'sad', gap: 700 });
+    lines.push({ text: `${teamName(f.team)} slipped down a little in ${FIELD_LABEL[f.field]}. Do not worry. You can climb back up!`, tone: 'calm', pose: 'sad', gap: 700 });
   }
   if (!risers[0] && !fallers[0]) {
     lines.push({ text: 'Everyone is just getting started, so anything can happen!', pose: 'talk', gap: 600 });

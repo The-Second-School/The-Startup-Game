@@ -3,7 +3,7 @@
 // the box right after him shows what matters. Narration: src/narration/lines/mic.ts.
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, type TargetAndTransition } from 'motion/react';
-import { Avatar, Confetti } from '../../ui';
+import { Avatar, Confetti, useStageH } from '../../ui';
 import { memberWithRole, randomMicTeam, micQuestionFor } from '../../game/helpers';
 import type { MicState, Team } from '../../game/types';
 import { sfx } from '../../audio';
@@ -30,6 +30,10 @@ function Mic({ st }: { st: MicState }) {
   const [spin, setSpin] = useState<{ index: number; id: number; teamId: string } | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [fire, setFire] = useState(0);
+  // The wheel grows with the frame (up to the width of its column) and sits centred between the title and the bottom.
+  const H = useStageH();
+  const wheelSize = Math.min(860, H - 300);
+  const wheelTop = 246 + Math.round((H - 32 - 246 - wheelSize) / 2);
   const act = micActOf(state);
   const team = st.teamId ? state.teams.find(t => t.id === st.teamId) ?? null : null;
   const speaker = team ? memberWithRole(team, 'speaker') : null;
@@ -83,14 +87,14 @@ function Mic({ st }: { st: MicState }) {
               <div className="sd2-mic-h1">Mic Time!</div>
               <div className="sd2-mic-sub">{micSpinText}</div>
             </motion.div>
-            <motion.div className="sd2-wheel" initial={{ x: -500, rotate: -40, opacity: 0 }} animate={{ x: 0, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 18 }}>
-              <Wheel slices={slices} size={780} spin={spin} onDone={onDone} duration={4.6} artRadius={0.66} />
+            <motion.div className="sd2-wheel" style={{ top: wheelTop, width: wheelSize, height: wheelSize }} initial={{ x: -500, rotate: -40, opacity: 0 }} animate={{ x: 0, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 18 }}>
+              <Wheel slices={slices} size={wheelSize} spin={spin} onDone={onDone} duration={4.6} artRadius={0.66} />
             </motion.div>
             <motion.div className="sd2-spin-right" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.3 }}>
               <div className="ui-float"><Microphone size={250} /></div>
               <div className="sd2-pick-pill">{spinning ? 'Who will it be?' : 'Who will speak?'}</div>
             </motion.div>
-            <BigButton id="mic-spin" onTap={doSpin} disabled={!live || spinning} bounce width={760} height={200} style={{ position: 'absolute', left: 1020, top: 790 }}>
+            <BigButton id="mic-spin" onTap={doSpin} disabled={!live || spinning} bounce width={760} height={200} style={{ position: 'absolute', left: 1020, top: H - 232 }}>
               {spinning ? 'Spinning...' : 'SPIN!'}
             </BigButton>
           </motion.div>
@@ -105,6 +109,8 @@ function Mic({ st }: { st: MicState }) {
 function MicPicked({ team, st, speaker, question, act, out }: { team: Team; st: MicState; speaker: { name: string } | null; question: string; act: number; out: TargetAndTransition }) {
   const c = teamColors(team);
   const done = st.phase === 'done';
+  const H = useStageH();
+  const avatarSize = 290 + Math.round((H - 1080) / 3);     // the speaker card grows with the frame
   const choice = micChoiceOf(team, act);
   const name = team.name.trim() || 'This team';
   return (
@@ -127,7 +133,7 @@ function MicPicked({ team, st, speaker, question, act, out }: { team: Team; st: 
             <motion.div key="q" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.1 } }} transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.25 }}>
               <div className="sd2-qchips">
                 <span className="sd2-chip">About {micTopic(act)}</span>
-                {choice && <span className={`sd2-chip ${choice.trap ? 'is-bad' : 'is-good'}`}>{choice.trap ? 'From a trick your team fell for' : 'From a good choice your team made'}</span>}
+                {choice && <span className={`sd2-chip ${choice.trap ? 'is-bad' : 'is-good'}`}>{choice.trap ? 'Your team fell for: ' : 'Your team chose: '}{choice.label}</span>}
               </div>
               <div className={`sd2-q${question.length > 95 ? ' is-long' : ''}`}>{question}</div>
             </motion.div>
@@ -142,7 +148,7 @@ function MicPicked({ team, st, speaker, question, act, out }: { team: Team; st: 
         animate={{ scale: 1, rotate: -1.5, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
       >
-        <Avatar seed={team.avatarSeed} colorIndex={team.colorIndex} shade={2} size={290} mood={done ? 'wow' : 'cool'} ring />
+        <Avatar seed={team.avatarSeed} colorIndex={team.colorIndex} shade={2} size={avatarSize} mood={done ? 'wow' : 'cool'} ring />
         <div className="sd2-pick-name" style={{ fontSize: name.length > 12 ? 60 : 76 }}>{name}</div>
         <div className="sd2-pick-pill">{speaker ? `Speaker: ${speaker.name}` : 'Your Speaker answers'}</div>
       </motion.div>

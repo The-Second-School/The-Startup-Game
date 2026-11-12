@@ -21,6 +21,9 @@ interface Props {
   onTap?: () => void;
   width: number;
   left: number;
+  /** Slot top / height (the views pass the free band between the card and the team bar). */
+  top?: number;
+  height?: number;
 }
 
 export const TILE_TOP = 560;
@@ -35,14 +38,14 @@ export function tileGeometry(n = 4) {
 /** Option colours are 10% lighter than the game palette so the shapes, icons and text read easily. */
 export const lightTile = (hex: string) => lighten(hex, 0.1);
 
-export function OptionTile({ index, icon, text, tag, detail, state, trap, empty, onTap, width, left }: Props) {
+export function OptionTile({ index, icon, text, tag, detail, state, trap, empty, onTap, width, left, top = TILE_TOP, height = TILE_H }: Props) {
   const os = optionStyle(index);
   const broke = state === 'broke';
   const revealedEmpty = state === 'revealed' && !!empty;
   return (
     <motion.div
       className="cx-tile-slot"
-      style={{ left, width, top: TILE_TOP, height: TILE_H }}
+      style={{ left, width, top, height }}
       initial={{ y: 80, opacity: 0, scale: 0.9 }}
       animate={{ y: state === 'picked' ? -14 : 0, opacity: 1, scale: state === 'picked' ? 1.03 : 1 }}
       exit={{ y: 50, opacity: 0, scale: 0.95, transition: { duration: 0.25, delay: index * 0.03 } }}

@@ -11,9 +11,9 @@ export function stepTitle(step: Step): string {
     case 'lobby': return 'Lobby';
     case 'setup_players': return 'Add players';
     case 'setup_teams': return 'Make teams';
+    case 'setup_names': return 'Name the teams';
     case 'setup_roles': return 'Pick roles';
     case 'setup_products': return 'Product wheel';
-    case 'setup_names': return 'Name the teams';
     case 'scene': return stripEmoji(SCENES[step.sceneId].title);
     case 'question': {
       const n = SCRIPT.filter(s => s.kind === 'question' && s.act === step.act).findIndex(s => s.id === step.id) + 1;
@@ -106,10 +106,10 @@ export function guide(state: GameState): Guide {
         notes: N({
           say: [
             'Welcome the kids to Techistan. The game is a startup race: build a company in 5 steps.',
-            'Fibbot is the villain: a fibbing, copying, cheating robot. Honest, smart startups beat him.',
+            'Jhootu is the naughty robot in the game. He tells lies and copies ideas. Honest, smart startups beat him.',
           ],
           ask: ['What do you think a startup does?'],
-          doubts: [{ q: 'Is Fibbot real?', a: 'No, he is a game character. The lesson about copying and cheating is real.' }],
+          doubts: [{ q: 'Is Jhootu real?', a: 'No, he is a game character. The lesson about copying and cheating is real.' }],
           watch: ['Kids who join late. They can add their name on the big screen.'],
           doNow: 'Start the game when the room is ready.',
         }),
@@ -164,9 +164,9 @@ export function guide(state: GameState): Guide {
           say: ['The teams are made. Each one has a mix of classes.', 'Shuffle if the kids want a different mix. Otherwise move on.'],
           ask: ['How many kids are in your team?'],
           watch: ['Kids who look unhappy with their team. Mixing is fair, so help them get on with it.'],
-          doNow: `Next: pick roles for the ${plural(teams.length, 'team')}.`,
+          doNow: `Next: name the ${plural(teams.length, 'team')}.`,
         }),
-        label: 'Next: pick roles',
+        label: 'Next: name the teams',
       };
     }
 
@@ -199,7 +199,7 @@ export function guide(state: GameState): Guide {
           watch: ['Teams that do not like their product. Remind them that every product has a chance.'],
           doNow: left ? `Spin for the ${plural(left, 'team')} still waiting.` : 'Move on, every team has a product.',
         }),
-        label: left ? `${plural(left, 'team')} still to spin` : 'Next: name the teams',
+        label: left ? `${plural(left, 'team')} still to spin` : goNext,
         disabled: left > 0 || teams.length === 0,
       };
     }
@@ -212,12 +212,12 @@ export function guide(state: GameState): Guide {
             'Ask each team for its name. The name shows on the big screen all game.',
             'The ideas are only there if a team is stuck. The name should be the team’s own.',
           ],
-          ask: ['What does your startup do? Does your name tell people?'],
+          ask: ['What do you want your startup to do? Does your name tell people?'],
           doubts: [{ q: 'Can we change our name later?', a: 'Yes. The host can rename the team at any time.' }],
           watch: ['Rude or silly names. Ask for a name everyone is happy to say out loud.'],
           doNow: named === teams.length ? 'Every team has a name. Move on.' : `Type each team’s name. ${named} of ${teams.length} named.`,
         }),
-        label: goNext,
+        label: 'Next: pick roles',
       };
     }
 
@@ -303,7 +303,7 @@ export function guide(state: GameState): Guide {
       if (st.phase === 'intro') return {
         notes: N({
           say: [
-            'Each team smashes Fibbot’s bugs for 15 seconds on the big screen.',
+            'Each team smashes Jhootu’s bugs for 15 seconds on the big screen.',
             'Smash more bugs, and fewer bugs reach customers. Under 10 bugs and customers get grumpy. 30 or more and customers love it.',
             'Teams that tested with 5 friends get 5 more seconds.',
           ],
@@ -342,12 +342,12 @@ export function guide(state: GameState): Guide {
     case 'auction': {
       if (st.type !== 'auction') break;
       const tk = st.tickets[st.ticket];
-      const top = st.bid.by === 'fibbot' ? 'Fibbot' : teamLabel(teamById(state, st.bid.by));
+      const top = st.bid.by === 'fibbot' ? 'Jhootu' : teamLabel(teamById(state, st.bid.by));
       const last = st.ticket + 1 >= st.tickets.length;
       const rules = [
         `Bidding starts at ${AUCTION_OPEN} coins and goes up in steps of ${AUCTION_STEP}.`,
         `Every team keeps ${AUCTION_RESERVE} coins in reserve. Nobody can bid their last ${AUCTION_RESERVE} coins.`,
-        'Fibbot bids too, by himself. He wins about half the tickets. Nobody knows his limit, not even you.',
+        'Jhootu bids too, by himself. He wins about half the tickets. Nobody knows his limit, not even you.',
       ];
       if (st.phase === 'intro') return {
         notes: N({
@@ -358,7 +358,7 @@ export function guide(state: GameState): Guide {
           ],
           ask: ['Why is it smart to keep some coins?', 'Which ticket brings the most customers?'],
           doubts: [
-            { q: 'Can Fibbot win?', a: 'Yes. Sometimes he wins. When he does not, a team can win for less than its limit.' },
+            { q: 'Can Jhootu win?', a: 'Yes. Sometimes he wins. When he does not, a team can win for less than its limit.' },
             { q: 'Can one team win two tickets?', a: 'No. Each team wins only one ticket.' },
           ],
           watch: ['Teams that spend everything on the first ticket. Ask what the next steps will cost.'],
@@ -370,7 +370,7 @@ export function guide(state: GameState): Guide {
         notes: N({
           say: [
             `Ticket “${tk.title}” is up for sale.`,
-            'A team says its bid out loud, then the host enters it. Fibbot may raise on his own after a team bids.',
+            'A team says its bid out loud, then the host enters it. Jhootu may raise on his own after a team bids.',
             ...rules.slice(0, 2),
           ],
           watch: ['Teams that are out of coins. They cannot bid any more.'],
@@ -381,7 +381,7 @@ export function guide(state: GameState): Guide {
       if (st.phase === 'sold') return {
         notes: N({
           say: [
-            st.bid.by === 'fibbot' ? 'Fibbot won this ticket. Nobody gets it.' : `${top} won the ticket and paid ${st.bid.amount} coins.`,
+            st.bid.by === 'fibbot' ? 'Jhootu won this ticket. Nobody gets it.' : `${top} won the ticket and paid ${st.bid.amount} coins.`,
             'The coins paid do not come back. That is how a real auction works.',
           ],
           doNow: last ? 'Then finish the auction.' : 'Then sell the next ticket.',

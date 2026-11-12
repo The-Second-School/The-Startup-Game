@@ -6,7 +6,7 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cx } from '../lib/game';
-import { DOCK_W } from '../lib/layout';
+import { DOCK_W, MINI_CARD_H } from '../lib/layout';
 import '../choice.css';
 
 type Pose = 'idle' | 'wave' | 'talk' | 'think' | 'cheer' | 'sad' | 'point' | 'shock';
@@ -41,7 +41,7 @@ const SUB_PX: Record<CardSize, number> = { main: 52, small: 42, mini: 36 };
 export function QuestionCard({ title, sub, right = 40, children, className, size = 'main', top = CARD_TOP, bottom = 476, height, left = CARD_LEFT }: Props) {
   const len = title.length;
   const px = TITLE_PX[size][len <= 34 ? 0 : len <= 54 ? 1 : 2];
-  const h = height ?? (size === 'main' ? bottom - top : size === 'small' ? Math.min(300, bottom - top) : 140);
+  const h = height ?? (size === 'main' ? bottom - top : size === 'small' ? Math.min(300, bottom - top) : MINI_CARD_H);
   const r = size === 'small' ? right + TIMER_SIZE + 24 : right;
   return (
     <motion.div

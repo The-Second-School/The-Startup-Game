@@ -25,9 +25,9 @@ function Panel({ state }: { state: GameState }): ReactNode {
   switch (step.kind) {
     case 'setup_players': return <PlayersPanel />;
     case 'setup_teams': return <TeamsPanel />;
+    case 'setup_names': return <NamesPanel />;
     case 'setup_roles': return <RolesPanel />;
     case 'setup_products': return <ProductsPanel />;
-    case 'setup_names': return <NamesPanel />;
     case 'question': case 'price': case 'megaorder': return <ChoicePanel />;
     case 'bugsmash': return <BugPanel />;
     case 'auction': return <AuctionPanel />;
@@ -111,7 +111,7 @@ export default function Shell({ state, send, room, connected, link = connected ?
   const act = actLabel(actOf(state.stepIndex));
   const progress = state.stepIndex / (SCRIPT.length - 1);
   const g = guide(state);
-  const blocked = g.disabled || !connected || cool;
+  const blocked = g.disabled || !connected || cool || state.paused;
 
   const press = () => {
     if (blocked) return;
@@ -140,7 +140,12 @@ export default function Shell({ state, send, room, connected, link = connected ?
 
         <div className="bottom">
           <Btn tone="soft" size="xl" className="morebtn" onClick={() => setMore(true)} label="More"><Dots /></Btn>
-          <Btn tone="sun" size="xl" className="primary" disabled={blocked} onClick={press}>{!connected ? 'Reconnecting' : g.label}</Btn>
+          <Btn tone={state.paused ? 'sun' : 'soft'} size="xl" className="morebtn pausebtn" disabled={!connected} onClick={() => send({ type: 'SET_PAUSED', on: !state.paused })} label={state.paused ? 'Resume the big screen' : 'Pause the big screen'}>
+            {state.paused
+              ? <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden><path d="M7 4.5 L20 12 L7 19.5Z" fill="currentColor" /></svg>
+              : <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden><rect x="5.5" y="4.5" width="4.5" height="15" rx="1.5" fill="currentColor" /><rect x="14" y="4.5" width="4.5" height="15" rx="1.5" fill="currentColor" /></svg>}
+          </Btn>
+          <Btn tone="sun" size="xl" className="primary" disabled={blocked} onClick={press}>{!connected ? 'Reconnecting' : state.paused ? 'Paused: tap ▶ to continue' : g.label}</Btn>
         </div>
 
         <MoreSheet open={more} onClose={() => setMore(false)} />

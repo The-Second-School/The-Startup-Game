@@ -28,14 +28,14 @@ function players(s: GameState): Narration {
   if (bestMilestone > 0) {
     return {
       id: `players-m${bestMilestone}`,
-      lines: [{ text: `Wow, more than ${bestMilestone} founders! Keep them coming!`, tone: 'cheer', pose: 'cheer' }],
+      lines: [{ text: `Wow, more than ${bestMilestone} players! Keep them coming!`, tone: 'cheer', pose: 'cheer' }],
     };
   }
   return {
     id: 'players-intro',
     lines: [
       { text: 'Who is playing? Add your name and your class!', tone: 'excited', pose: 'point', gap: 600 },
-      { text: 'Tell us your class so we can make fair, mixed teams! Class is never scored.', tone: 'normal', pose: 'talk', gap: 700 },
+      { text: 'Tell us your class, so we can make fair, mixed teams. Class is never scored.', tone: 'normal', pose: 'talk', gap: 700 },
     ],
     summary: 'Add your name and class. Class only helps make fair, mixed teams!',
   };

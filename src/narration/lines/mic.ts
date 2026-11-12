@@ -27,7 +27,7 @@ export function micChoiceOf(team: Team, act: number): { label: string; trap: boo
   return last ? { label: last.label, trap: !!last.trap } : null;
 }
 
-export const micSpinText = 'One team is picked at random. Its Speaker answers a question for the whole class. Everyone else listens.';
+export const micSpinText = 'One team is picked by chance. Its Speaker answers a question for the whole class. Everyone else listens.';
 export const MIC_CLAP = 'Great answer! Give them a big clap!';
 
 export function micNarration(s: GameState): Narration | null {
@@ -39,11 +39,11 @@ export function micNarration(s: GameState): Narration | null {
     return {
       id: `mic-${step.id}-spin`,
       lines: [
-        { text: 'Mic Time! One team is picked at random.', tone: 'excited', pose: 'point' },
+        { text: 'Mic Time! One team is picked by chance.', tone: 'excited', pose: 'point' },
         { text: 'Its Speaker answers a question for the whole class. Everyone else listens.', gap: 700 },
         { text: 'Tap SPIN to find out who!', tone: 'excited', pose: 'point' },
       ],
-      summary: 'One team is picked at random. Its Speaker answers, everyone else listens.',
+      summary: 'One team is picked by chance. Its Speaker answers, everyone else listens.',
       showText: false,
     };
   }

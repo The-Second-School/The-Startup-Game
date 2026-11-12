@@ -20,7 +20,7 @@ export function stageOf(t: Team) {
   const v = success(t);
   return STAGES.find(st => v >= st.min && v <= st.max) ?? STAGES[0];
 }
-// Banana Peel (lowest wins). Hidden from the screen. Coins scaled down so they don't drown the meters; each Fibbot trick costs 5.
+// Banana Peel (lowest wins). Hidden from the screen. Coins scaled down so they don't drown the meters; each Jhootu trick costs 5.
 export const startupHealth = (t: Team) => Math.round(t.coins / 8) + t.customers + t.happiness - 5 * t.history.filter(h => h.trap).length;
 
 export const teamById = (s: GameState, id: string | null | undefined) => s.teams.find(t => t.id === id) ?? null;
@@ -87,8 +87,8 @@ export function initialState(): GameState {
     settings: { teamCount: 4, sound: true, voice: true },
     progressView: false,
     progressPaused: false,
-    frozen: false,
-    frozenPaused: false,
+    paused: false,
+    pausedTimer: false,
     timer: { running: false, endsAt: null, remaining: 0, total: 0 },
     micPicked: [],
     votes: {},
@@ -224,11 +224,11 @@ export function moodFor(t: Team, upto: number): MoodResult {
   return { customers: c, kind: c < 0 ? 'left' : c > 0 ? 'joined' : 'same', gained, happy, why, acts };
 }
 
-// ---------- Auction: Fibbot bids by himself, by a fairness algorithm ----------
-// Goal: Fibbot wins about half the tickets. When he does NOT win, the keenest team wins while paying clearly less than its limit.
-// Fibbot has a secret walk-away price (cap) per ticket, decided once from what the teams can afford:
-//   "strong" Fibbot (cap above the richest team's limit): nobody can outbid him, he wins.
-//   "weak"   Fibbot (cap well below that limit): the keenest team wins and pays less than its limit.
+// ---------- Auction: Jhootu bids by himself, by a fairness algorithm ----------
+// Goal: Jhootu wins about half the tickets. When he does NOT win, the keenest team wins while paying clearly less than its limit.
+// Jhootu has a secret walk-away price (cap) per ticket, decided once from what the teams can afford:
+//   "strong" Jhootu (cap above the richest team's limit): nobody can outbid him, he wins.
+//   "weak"   Jhootu (cap well below that limit): the keenest team wins and pays less than its limit.
 // The coin flip is seeded (same state = same result) and nudged so he does not win every ticket or none.
 
 function hashStr(str: string) { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; }
@@ -239,7 +239,7 @@ export function planVillainCap(s: GameState, tickets: { id: string }[], ticketId
   const taken = new Set(Object.values(winners).map(w => w.by));
   const limits = s.teams.filter(t => !taken.has(t.id)).map(maxBid).filter(m => m >= AUCTION_OPEN + AUCTION_STEP).sort((a, b) => b - a);
   const top = limits[0] ?? 0;
-  if (top < AUCTION_OPEN + AUCTION_STEP) return AUCTION_OPEN;                 // nobody can bid: Fibbot keeps it
+  if (top < AUCTION_OPEN + AUCTION_STEP) return AUCTION_OPEN;                 // nobody can bid: Jhootu keeps it
   const rnd = rngFrom(`${tickets[ticketIdx]?.id}|${ticketIdx}|${s.teams.map(t => t.id + t.coins).join(',')}`);
   const wins = Object.values(winners).filter(w => w.by === 'fibbot').length;
   const played = Object.keys(winners).length;
@@ -250,7 +250,7 @@ export function planVillainCap(s: GameState, tickets: { id: string }[], ticketId
   return Math.max(AUCTION_OPEN + AUCTION_STEP, round10(cap));
 }
 
-/** Fibbot's answer to a team bid: a counter-bid of 10 to 30 coins more, never above his secret cap. null = he gives up. */
+/** Jhootu's answer to a team bid: a counter-bid of 10 to 30 coins more, never above his secret cap. null = he gives up. */
 export function villainCounter(cap: number, current: number, seed: string): number | null {
   if (current + AUCTION_STEP > cap) return null;
   const inc = [10, 10, 20, 30][Math.floor(rngFrom(seed)() * 4)];
@@ -315,7 +315,7 @@ export function computeAwards(s: GameState): AwardResult[] {
   const bananaWhy = (t: Team): string[] => {
     const lines: string[] = [];
     const traps = t.history.filter(h => h.trap).length;
-    if (traps) lines.push(`Trusted Fibbot ${traps === 1 ? 'once' : `${traps} times`} 😈`);
+    if (traps) lines.push(`Trusted Jhootu ${traps === 1 ? 'once' : `${traps} times`} 😈`);
     const worst = t.history.slice().sort((a, b) => (a.deltas.customers + a.deltas.happiness) - (b.deltas.customers + b.deltas.happiness))[0];
     if (worst && worst.deltas.customers + worst.deltas.happiness < 0) lines.push(`Biggest slip: “${worst.label}” (${worst.deltas.customers + worst.deltas.happiness} points)`);
     const spent = t.history.reduce((a, h) => a + Math.min(0, h.deltas.coins), 0);
@@ -522,16 +522,16 @@ export function reduce(s: GameState, a: Action): GameState {
 
 function reduceInner(s: GameState, a: Action): GameState {
   const st = s.step;
-  if (a.type === 'SET_FROZEN') {
-    if (a.on === s.frozen) return s;
+  if (a.type === 'SET_PAUSED') {
+    if (a.on === s.paused) return s;
     if (a.on) {
-      if (!s.timer.running || !s.timer.endsAt) return { ...s, frozen: true, frozenPaused: false };
-      return { ...s, frozen: true, frozenPaused: true, timer: { ...s.timer, running: false, remaining: Math.max(0, s.timer.endsAt - Date.now()), endsAt: null } };
+      if (!s.timer.running || !s.timer.endsAt) return { ...s, paused: true, pausedTimer: false };
+      return { ...s, paused: true, pausedTimer: true, timer: { ...s.timer, running: false, remaining: Math.max(0, s.timer.endsAt - Date.now()), endsAt: null } };
     }
-    if (s.frozenPaused && !s.timer.running) return { ...s, frozen: false, frozenPaused: false, timer: { ...s.timer, running: true, endsAt: Date.now() + s.timer.remaining } };
-    return { ...s, frozen: false, frozenPaused: false };
+    if (s.pausedTimer && !s.timer.running) return { ...s, paused: false, pausedTimer: false, timer: { ...s.timer, running: true, endsAt: Date.now() + s.timer.remaining } };
+    return { ...s, paused: false, pausedTimer: false };
   }
-  if (s.frozen) return s;   // frozen: nothing else may change until the host resumes
+  if (s.paused) return s;   // paused: nothing else may change until the host resumes
   switch (a.type) {
     case 'NEXT': {
       // First entry: lobby has no state yet
@@ -596,7 +596,7 @@ function reduceInner(s: GameState, a: Action): GameState {
       }));
     }
     case 'BID': {
-      // Only teams bid (the host enters it). Fibbot answers by himself using his secret cap.
+      // Only teams bid (the host enters it). Jhootu answers by himself using his secret cap.
       if (st.type !== 'auction' || st.phase !== 'bidding' || a.by === 'fibbot') return s;
       const team = teamById(s, a.by);
       if (!team || a.amount > maxBid(team)) return s;

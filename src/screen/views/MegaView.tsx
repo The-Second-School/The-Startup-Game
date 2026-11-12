@@ -1,7 +1,7 @@
 // Mega Order: partner teams talk, both Lock Masters pick a deal, reveal per pair (handshake or broken heart).
 // Same layout as the questions: Bolt (dock) then the card right after him, 4 deal tiles at y >= 560, minimal team bar.
 import { motion, AnimatePresence } from 'motion/react';
-import { Avatar, Confetti, OptionShape, useStageW } from '../../ui';
+import { Avatar, Confetti, OptionShape, useStageH, useStageW } from '../../ui';
 import { lighten } from '../../ui/palette';
 import { MEGA } from '../../game/content';
 import { teamById } from '../../game/engine';
@@ -10,14 +10,14 @@ import { sfx } from '../../audio';
 import { useEffect, useState } from 'react';
 import { useGame } from '../lib/ctx';
 import { cx, moodFor, optionStyle, teamColors } from '../lib/game';
-import { CONTENT_TOP } from '../lib/layout';
+import { CONTENT_TOP, GAP, KID_TOP, MINI_CARD_H } from '../lib/layout';
 import { stripOrder } from '../lib/order';
 import { DeltaRow } from '../components/DeltaRow';
 import { Handshake, Heart } from '../components/art';
 import { OptionTile, tileGeometry, type TileState } from '../components/OptionTile';
 import { CARD_TOP, QuestionCard, TIMER_SIZE, type CardSize } from '../components/QuestionCard';
 import { TeamStrip, stripLayout, type ChipFace } from '../components/TeamStrip';
-import { TimerBadge, useTimerLast } from '../components/TimerBadge';
+import { TimerBadge, useHoldTimerWhenLocked, useTimerLast } from '../components/TimerBadge';
 import { ReadyHint } from '../components/ReadyHint';
 import { ASLEEP, ChosenCards, DoneSummary, IntroStage, WaitBig, useChooser, useReadyAfter, useRevealLock, useTranscript } from '../components/ChoiceParts';
 
@@ -59,7 +59,7 @@ const faceFor = (i: number): ChipFace => {
 };
 
 function MegaBody({ st }: { st: MegaState }) {
-  const { state, live } = useGame();
+  const { state, live, dispatch } = useGame();
   const teams = stripOrder(state);
   const { pick, setPick, onChip } = useChooser(st);
   const sel = teamById(state, st.selectedTeamId);
@@ -68,7 +68,10 @@ function MegaBody({ st }: { st: MegaState }) {
   // The solo team has no partner and no deal to lock: it always shows as done, and tapping it does nothing.
   const lockedIds = [...Object.keys(st.locks), ...(soloTeam ? [soloTeam.id] : [])];
   const W = useStageW();
-  const strip = stripLayout(teams.length, true, W);
+  const H = useStageH();
+  const strip = stripLayout(teams.length, true, W, H);
+  // Everything between the card and the team bar belongs to the content. bottomY = where it must end.
+  const bottomY = strip.top - GAP;
   const transcript = useTranscript();
   const lastMinute = useTimerLast(state);
   useRevealLock(st.phase, 1800);
@@ -77,6 +80,8 @@ function MegaBody({ st }: { st: MegaState }) {
   const pairedCount = st.pairs.length * 2;
   const lockedPairs = Object.keys(st.locks).filter(id => id !== st.solo).length;
   const allLocked = pairedCount > 0 && lockedPairs >= pairedCount;
+  // Every pair locked: the clock stops (no timer badge either, see the show rule below).
+  useHoldTimerWhenLocked(state, dispatch, allLocked, live && open);
   const spotting = st.phase === 'spotlight';
   const pair = spotting ? st.pairs[st.spotlight] : undefined;
   const ready = useReadyAfter(`${st.phase}-${st.spotlight}-${allLocked}`, spotting ? 8000 : 1800);
@@ -89,14 +94,16 @@ function MegaBody({ st }: { st: MegaState }) {
   const cardTop = transcript ? CONTENT_TOP : CARD_TOP;
   const cardSize: CardSize = !open || allLocked ? 'mini' : lastMinute ? 'small' : 'main';
   const showTiles = open && !allLocked;
-  const barGap = 1080 - strip.top + 24;
+  // Below the mini card (once it is no longer the subject): the reveal title and the WaitBig start here.
+  const freeTop = cardTop + MINI_CARD_H + GAP;
+  const tileH = bottomY - KID_TOP;
   const tileState = (i: number): TileState => (!sel ? 'idle' : pick === i ? 'picked' : 'active');
   const sub = `Team up with your partner: share ${MEGA.prize.customers} customers + ${MEGA.prize.coins} coins. Talk, then both lock the same deal.${soloTeam ? ` ${soloTeam.name}: no partner this time, you get your own mini order. Just cheer!` : ''}`;
 
   return (
     <div className="scr-full">
       <AnimatePresence>
-        {(open || st.phase === 'revealed') && <QuestionCard key="q" title="Festival Mega Order!" sub={sub} size={cardSize} top={cardTop} bottom={520} />}
+        {(open || st.phase === 'revealed') && <QuestionCard key="q" title="Festival Mega Order!" sub={sub} size={cardSize} top={cardTop} bottom={KID_TOP - GAP} />}
       </AnimatePresence>
       <TimerBadge show={open && lastMinute && !allLocked} state={state} size={TIMER_SIZE} style={{ position: 'absolute', right: 40, top: cardTop }} />
 
@@ -114,21 +121,23 @@ function MegaBody({ st }: { st: MegaState }) {
               onTap={tappable ? () => { setPick(pick === i ? null : i); sfx.play('pop'); } : undefined}
               width={geo.width}
               left={geo.left(i)}
+              top={KID_TOP}
+              height={tileH}
             />
           );
         })}
       </AnimatePresence>
 
-      {open && allLocked && <WaitBig title="All set!" sub="Every pair locked its deal. Waiting for the reveal…" icon="🤝" top={300} />}
+      {open && allLocked && <WaitBig title="All set!" sub="Every pair locked its deal. Waiting for the reveal…" icon="🤝" top={freeTop + Math.max(0, Math.floor((bottomY - freeTop - 400) / 2))} />}
 
       {st.phase === 'revealed' && (
         <>
-          <div className="cx-reveal-title" style={{ top: 226 }}>Did the partners agree?</div>
-          <ChosenCards entries={teams.map(t => ({ team: t, face: faces[t.id] }))} top={316} bottom={barGap} paired />
+          <div className="cx-reveal-title" style={{ top: freeTop }}>Did the partners agree?</div>
+          <ChosenCards entries={teams.map(t => ({ team: t, face: faces[t.id] }))} top={freeTop + 76 + GAP} bottomY={bottomY} paired />
         </>
       )}
 
-      {pair && <PairStage key={st.spotlight} st={st} teams={state.teams} pair={pair} />}
+      {pair && <PairStage key={st.spotlight} st={st} teams={state.teams} pair={pair} height={bottomY - CONTENT_TOP} />}
 
       {st.phase === 'done' && (
         <DoneSummary title="The Festival order is done!">
@@ -157,7 +166,7 @@ function MegaBody({ st }: { st: MegaState }) {
 // both teams slide in, each choice pops, the deal appears (handshake or broken heart), the result line, then the gains.
 const T_CHOICE_A = 1.2, T_CHOICE_B = 2.1, T_ART = 3.4, T_TEXT = 4.5, T_DELTA = 5.6;
 
-function PairStage({ st, teams, pair }: { st: MegaState; teams: Team[]; pair: [string, string] }) {
+function PairStage({ st, teams, pair, height }: { st: MegaState; teams: Team[]; pair: [string, string]; height: number }) {
   const outcome = st.outcomes[st.spotlight];
   const [fire, setFire] = useState(0);
   useEffect(() => {
@@ -177,7 +186,7 @@ function PairStage({ st, teams, pair }: { st: MegaState; teams: Team[]; pair: [s
   const [a, b] = pair.map(id => teams.find(t => t.id === id)).filter((t): t is Team => !!t);
   if (!a || !b) return null;
   return (
-    <div className="scr-pair-stage" style={{ top: CONTENT_TOP, height: 692 }}>
+    <div className="scr-pair-stage" style={{ top: CONTENT_TOP, height }}>
       <PairHalf team={a} side="left" choice={st.locks[a.id]} deltas={st.pending[a.id] ?? ZERO} choiceDelay={T_CHOICE_A} />
       <div className="scr-pair-mid">
         <motion.div className="scr-pair-art" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: T_ART, type: 'spring', stiffness: 220, damping: 12 }}>

@@ -207,19 +207,15 @@ export function NamesPanel() {
   const [seed, setSeed] = useState(0);
   const { teams } = state;
   if (!teams.length) return null;
-  const ideas = (t: Team, i: number): string[] => {
-    const p = productById(t.productId);
-    const out = [FUN[(i * 3 + seed * 5) % FUN.length], FUN[(i * 3 + seed * 5 + 7) % FUN.length]];
-    if (p) out.unshift(`${p.name} Heroes`);
-    return out;
-  };
+  // Names come before products now, so there is no product to build an idea from yet.
+  const ideas = (i: number): string[] => [FUN[(i * 3 + seed * 5) % FUN.length], FUN[(i * 3 + seed * 5 + 7) % FUN.length]];
   return (
     <>
       {teams.map((t, i) => (
         <Card key={t.id}>
           <div className="row"><TeamDot team={t} /><div className="grow"><CommitInput value={isDefaultName(t.name) ? '' : t.name} placeholder={`Name for team ${i + 1}`} onCommit={v => v && send({ type: 'SET_TEAM_NAME', teamId: t.id, name: v })} /></div></div>
           <div className="chips" style={{ marginTop: 8 }}>
-            {ideas(t, i).map(n => <Chip key={n} onClick={() => send({ type: 'SET_TEAM_NAME', teamId: t.id, name: n })}>{n}</Chip>)}
+            {ideas(i).map(n => <Chip key={n} onClick={() => send({ type: 'SET_TEAM_NAME', teamId: t.id, name: n })}>{n}</Chip>)}
           </div>
         </Card>
       ))}

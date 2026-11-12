@@ -1,4 +1,4 @@
-// Welcome: sunny Techistan, the Mayor announces the Startup Festival, then Fibbot looms over the city.
+// Welcome: sunny Techistan, the Mayor announces the Startup Festival, then Jhootu looms over the city.
 import { AnimatePresence, motion } from 'motion/react';
 import type { CSSProperties } from 'react';
 import {
@@ -28,7 +28,7 @@ export default function Welcome({ beat }: SceneBodyProps) {
   const mayorPose = beat === 2 ? 'wave' : beat === 3 ? 'announce' : beat <= 5 ? 'gasp' : 'cheer';
   const rv = beat >= 4;
   const boss: { x: number; y: number; scale: number } = beat === 4 ? { x: 0, y: 0, scale: 0.85 } : beat === 5 ? { x: -100, y: 0, scale: 0.95 } : { x: 300, y: 120, scale: 0.5 };
-  // Main subjects: the Mayor while he announces (beats 2-3, once he has arrived), Fibbot when he looms (beats 4-5).
+  // Main subjects: the Mayor while he announces (beats 2-3, once he has arrived), Jhootu when he looms (beats 4-5).
   const mayorOn = (beat === 2 && sub >= 1) || beat === 3;
   const fibbotOn = beat === 4 || beat === 5;
   const focusOn = mayorOn || fibbotOn;
@@ -82,7 +82,7 @@ export default function Welcome({ beat }: SceneBodyProps) {
           </Mv>
         </Subject>
 
-        {/* the trophy (beat 3) and Fibbot (beats 4-5): Fibbot is the subject while he looms over the city */}
+        {/* the trophy (beat 3) and Jhootu (beats 4-5): Jhootu is the subject while he looms over the city */}
         <Mv left={1140} top={760} bc to={{ y: beat === 3 ? 0 : 140, scale: beat === 3 ? 1 : 0, opacity: beat === 3 ? 1 : 0 }} from={{ y: 140, scale: 0, opacity: 0 }} spring={SPRING.hero}>
           <div className="k-hero" style={{ ['--bob' as string]: '-12px' } as CSSProperties}><Trophy size={210} /></div>
         </Mv>

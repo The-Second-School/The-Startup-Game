@@ -2,10 +2,11 @@
 import { motion } from 'motion/react';
 import { memo, type CSSProperties } from 'react';
 import {
-  Bush, Burst, Clouds, FarSkyline, Ground, HUE, INK, Kid, Layer, Lightbulb, NearSkyline, FlyingRickshaw, RecipeTrack, SPRING, Shape,
+  Bush, Burst, Clouds, FarSkyline, Ground, HUE, INK, Kid, Layer, Lightbulb, NearSkyline, FlyingRickshaw, SPRING, Shape,
   Sky, Slab, Svg, ThoughtCloud, Tiffin, Tree, World, full, soft, useSubstep, type KidPose, type KidMood,
 } from '../kit';
 import { Backdrop as Dim, Focus, Subject } from '../kit/focus';
+import { ProgressScreen } from '../../screen/views/ProgressView';
 import { Mv, Show } from '../shared/bits';
 import type { SceneBodyProps } from '../types';
 
@@ -159,8 +160,8 @@ export default function Act1({ beat }: SceneBodyProps) {
       </Show>
 
       {/* beat 4: step 1 of the recipe */}
-      <Show when={beat === 4} k="recipe" y={40}>
-        <div style={{ position: 'absolute', left: 80, top: 400 }}><RecipeTrack active={1} /></div>
+      <Show when={beat === 4} k="recipe" y={40} style={{ zIndex: 9 }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><ProgressScreen act={1} overlay intro /></div>
         <Burst fire={2} x={960} y={640} count={60} />
       </Show>
     </div>

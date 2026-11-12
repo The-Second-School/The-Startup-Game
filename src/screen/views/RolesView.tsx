@@ -14,6 +14,7 @@ import { bus } from '../lib/bus';
 import { ROLE_SHORT, roleCycle, teamColors, teamName } from '../lib/game';
 import { Tap } from '../components/Tap';
 import { useStableCallback } from '../hooks/useStableCallback';
+import { useDockAt } from '../../narration/useDockAt';
 
 const ROLE_ORDER: RoleId[] = ['ceo', 'money', 'lock', 'speaker', 'time'];
 const ROLE_COLORS: Record<RoleId, [string, string]> = {
@@ -41,7 +42,9 @@ const freeFor = (t: Team, m: Member) => {
 };
 
 export function RolesView() {
+  useDockAt(56, 136, 940);
   const { state, dispatch, live } = useGame();
+  const [hover, setHover] = useState<RoleId | null>(null);
   const rolesTeam = useUi(s => s.rolesTeam);
   const setRolesTeam = useUi(s => s.setRolesTeam);
   const team = state.teams.find(t => t.id === rolesTeam) ?? null;
@@ -101,12 +104,26 @@ export function RolesView() {
           {ROLE_ORDER.map(r => {
             const mood = have.has(r) ? 'is-taken' : plan.has(r) ? 'is-open' : 'is-off';
             return (
-              <div key={r} className={`s2-r-badge ${mood}`} style={{ '--rc': ROLE_COLORS[r][0], '--re': ROLE_COLORS[r][1] } as React.CSSProperties}>
+              <div key={r} tabIndex={0} className={`s2-r-badge ${mood}${hover === r ? ' is-hover' : ''}`} style={{ '--rc': ROLE_COLORS[r][0], '--re': ROLE_COLORS[r][1] } as React.CSSProperties}
+                onPointerEnter={() => setHover(r)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(r)} onBlur={() => setHover(null)}>
                 <span>{ROLES[r].icon}</span>{ROLE_SHORT[r]}{have.has(r) && <b>✓</b>}
               </div>
             );
           })}
         </div>
+      </div>
+
+      <div className="s2-r-hint">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={hover ?? 'none'} className="s2-r-hint-in" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.15 }}>
+            {hover ? (
+              <>
+                <div className="s2-r-hint-name"><span>{ROLES[hover].icon}</span>{ROLES[hover].name}</div>
+                <div className="s2-r-hint-job">{ROLES[hover].job}</div>
+              </>
+            ) : <div className="s2-r-hint-job">Hover or hold a job badge to see what it does</div>}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <div className="s2-r-banner">

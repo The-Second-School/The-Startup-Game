@@ -1,15 +1,16 @@
-// Bug Smash: Fibbot's bugs make customers grumpy. One team at a time smashes them (tap only) to protect its startup.
+// Bug Smash: Jhootu's bugs make customers grumpy. One team at a time smashes them (tap only) to protect its startup.
 // Intro (why + rules + what your score does) -> per team: ready (START) -> countdown -> playing -> result (real changes) -> wrap-up.
 // Layout: Bolt (dock, drawn by ScreenApp) top-left, the team box right after him, the arena band from y 552 (kids reach y >= 560).
 import { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'motion/react';
-import { Avatar, DeltaPill, Fibbot, MeterIcon, Num, TimerRing } from '../../ui';
+import { Avatar, DeltaPill, Fibbot, MeterIcon, Num, TimerRing, useStageH } from '../../ui';
 import { BUG } from '../../game/content';
 import { bugSeconds, timerRemaining } from '../../game/engine';
 import { memberWithRole } from '../../game/helpers';
 import type { BugState, Deltas, Team } from '../../game/types';
 import { sfx } from '../../audio';
 import { BUG_PENALTY, bugStats } from '../../narration/lines/bug';
+import { useDockAt } from '../../narration/useDockAt';
 import { useGame } from '../lib/ctx';
 import { bus } from '../lib/bus';
 import { acceptTap } from '../lib/tap';
@@ -141,11 +142,18 @@ type Kind = BugKind | 'friend';
 interface Bug { id: number; kind: Kind; x: number; y: number; way: number[]; dur: number; size: number; pal: number; rot: number; hp: number; hits: number }
 interface Pop { id: number; x: number; y: number; color: string; text?: string }
 
-const BAND = { x0: 70, x1: 1850, y0: 576, y1: 1028 };
+const BAND = { x0: 70, x1: 1850, y0: 576, y1: 1028 };     // y1 is set from the real frame height on every render (Turn)
 let nextId = 1;
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Splits `avail` px into n rows: each at most `cap` tall, gaps 24-40px, so the rows fill the space exactly. */
+function fillRows(avail: number, n: number, cap: number) {
+  const h = Math.max(1, Math.min(cap, Math.floor((avail - (n - 1) * 40) / Math.max(1, n))));
+  const gap = n > 1 ? Math.max(24, Math.floor((avail - n * h) / (n - 1))) : 0;
+  return { h, gap };
+}
 
 const SIZE: Record<Kind, number> = { bug: 160, mama: 210, zig: 130, armor: 190, friend: 150 };
 
@@ -287,11 +295,11 @@ function Arena({ running, paused, progress, onSmash, onFriend }: { running: bool
 }
 
 const SLEEPERS = [[120, 640, 0], [420, 880, 3], [1720, 620, 6], [1660, 860, 9], [260, 760, 5], [1380, 900, 8], [900, 700, 2]] as const;
-function Sleepers() {
+function Sleepers({ dy }: { dy: number }) {
   return (
     <>
       {SLEEPERS.map(([x, y, p], i) => (
-        <div key={i} className="v2-sleeper" style={{ left: x, top: y, ['--d' as string]: `${-i * 0.4}s` }}>
+        <div key={i} className="v2-sleeper" style={{ left: x, top: y + dy, ['--d' as string]: `${-i * 0.4}s` }}>
           <BugArt pal={p} size={130} />
         </div>
       ))}
@@ -326,6 +334,10 @@ function Legend({ compact }: { compact?: boolean }) {
 // ---------- one team's turn ----------
 function Turn({ st, team, index, total }: { st: BugState; team: Team; index: number; total: number }) {
   const { state, dispatch, live } = useGame();
+  // The arena band runs down to the real bottom of the frame; the bugs roam all of it. Bottom-anchored things follow H.
+  const H = useStageH();
+  const X = H - 1080;
+  BAND.y1 = H - 44;
   const secs = bugSeconds(team);
   const tested = secs > BUG.seconds;
   const playing = st.turnPhase === 'playing';
@@ -444,7 +456,7 @@ function Turn({ st, team, index, total }: { st: BugState; team: Team; index: num
 
       <AnimatePresence>
         {playing && !go && (
-          <motion.div key={`cd${beat}`} className="sd-countdown" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.4, opacity: 0, transition: { duration: 0.15 } }} transition={{ type: 'spring', stiffness: 500, damping: 16 }}>
+          <motion.div key={`cd${beat}`} className="sd-countdown" style={{ top: 690 + X / 2 }} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.4, opacity: 0, transition: { duration: 0.15 } }} transition={{ type: 'spring', stiffness: 500, damping: 16 }}>
             {cd}
           </motion.div>
         )}
@@ -453,13 +465,14 @@ function Turn({ st, team, index, total }: { st: BugState; team: Team; index: num
       <AnimatePresence>
         {ready && (
           <motion.div key="ready" className="v2-arena" exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}>
-            <Sleepers />
+            <Sleepers dy={X * 0.4} />
             <motion.div className="v2-bug-prompt" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div>Lock Master: tap START, then smash the bugs!</div>
               {tested && <div className="sd-bonus">+{BUG.testedBonusSeconds} seconds: you tested early, so there are fewer bugs to fix</div>}
             </motion.div>
             <div style={{ pointerEvents: 'auto' }}>
-              <BigButton id="bug-start" onTap={start} disabled={!live} color="var(--good)" edge="var(--good-edge)" width={560} height={170} bounce style={{ position: 'absolute', left: 680, top: 840 }}>
+              {/* START sits at the bottom of the band, 32px above the real frame bottom */}
+              <BigButton id="bug-start" onTap={start} disabled={!live} color="var(--good)" edge="var(--good-edge)" width={560} height={170} bounce style={{ position: 'absolute', left: 680, top: H - 242 }}>
                 START!
               </BigButton>
             </div>
@@ -469,7 +482,7 @@ function Turn({ st, team, index, total }: { st: BugState; team: Team; index: num
 
       <AnimatePresence>
         {result && (
-          <motion.div key="result" className="sd-box sd-result" initial={{ scale: 0.5, opacity: 0, rotate: -4 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.6, opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 380, damping: 20 }}>
+          <motion.div key="result" className="sd-box sd-result" style={{ top: 580 + X / 2 }} initial={{ scale: 0.5, opacity: 0, rotate: -4 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.6, opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 380, damping: 20 }}>
             <div className="sd-result-score">
               <div className="sd-result-label">{hits > 0 ? 'Score' : 'Bugs smashed'}</div>
               <div className="sd-result-num"><Num value={final} duration={900} /></div>
@@ -490,7 +503,7 @@ function Turn({ st, team, index, total }: { st: BugState; team: Team; index: num
       </AnimatePresence>
 
       <AnimatePresence>
-        {playing && !go && <motion.div key="hint" className="sd-countdown-sub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Get your finger ready!</motion.div>}
+        {playing && !go && <motion.div key="hint" className="sd-countdown-sub" style={{ top: 940 + X / 2 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Get your finger ready!</motion.div>}
       </AnimatePresence>
       <ReadyHint show={!!result} text={index + 1 < total ? 'Next team' : 'Finish'} />
     </>
@@ -500,18 +513,23 @@ function Turn({ st, team, index, total }: { st: BugState; team: Team; index: num
 // ---------- intro ----------
 function Intro({ teams }: { teams: Team[] }) {
   const beat = useNarrBeat('bugs-intro');
+  const H = useStageH();
+  const X = H - 1080;
   const bonus = teams.filter(t => bugSeconds(t) > BUG.seconds);
   const show = (k: number) => beat >= k;
   const card = { initial: { y: 50, opacity: 0, scale: 0.9 }, animate: { y: 0, opacity: 1, scale: 1 }, transition: { type: 'spring' as const, stiffness: 340, damping: 22 } };
+  // Top row (three steps) grows by 40% of the extra height; the bottom row takes the rest down to the real frame bottom.
+  const lowTop = 516 + X * 0.4;
+  const tierH = Math.floor((H - 32 - lowTop - 108) / BUG.tiers.length);
   return (
     <>
-      <div className="sd-intro-row" style={{ top: CONTENT_TOP }}>
+      <div className="sd-intro-row" style={{ top: CONTENT_TOP, height: 300 + X * 0.4 }}>
         <AnimatePresence>
           {show(0) && (
             <motion.div key="s1" className="sd-box sd-step" {...card}>
               <div className="sd-step-no">1</div>
               <div className="sd-step-art"><Fibbot mood="sneaky" size={150} /><BugArt pal={0} size={120} /><BugArt pal={8} size={140} kind="armor" /></div>
-              <div className="sd-step-text">Fibbot hides bugs in your app</div>
+              <div className="sd-step-text">Jhootu hides bugs in your app</div>
             </motion.div>
           )}
           {show(1) && (
@@ -531,13 +549,13 @@ function Intro({ teams }: { teams: Team[] }) {
         </AnimatePresence>
       </div>
 
-      <div className="sd-intro-bottom">
+      <div className="sd-intro-bottom" style={{ top: lowTop, height: H - 32 - lowTop }}>
         <AnimatePresence>
           {show(2) && (
             <motion.div key="tiers" className="sd-box sd-tiers" {...card}>
               <div className="sd-box-title">Your score decides what happens</div>
               {BUG.tiers.map((t, i) => (
-                <div key={i} className="sd-tier">
+                <div key={i} className="sd-tier" style={{ height: tierH }}>
                   <div className="sd-tier-range"><b>{tierRange(i)}</b> bugs</div>
                   <div className="sd-tier-name">{TIER_NAME[i]}</div>
                   <div className="sd-tier-pills">
@@ -552,7 +570,7 @@ function Intro({ teams }: { teams: Team[] }) {
         <div className="sd-intro-right">
           <AnimatePresence>
             {show(3) && (
-              <motion.div key="legend" className="sd-box sd-legend-box" {...card}>
+              <motion.div key="legend" className="sd-box sd-legend-box" style={{ height: 270 + X * 0.4 }} {...card}>
                 <div className="sd-box-title">Watch out!</div>
                 <Legend />
                 
@@ -578,17 +596,20 @@ function Intro({ teams }: { teams: Team[] }) {
 
 // ---------- wrap-up ----------
 function Done({ st, teams }: { st: BugState; teams: Team[] }) {
+  const H = useStageH();
+  const X = H - 1080;
+  // The heading is at the top and Bolt sits right under it; the team rows fill the rest of the frame.
+  useDockAt(40, 136, 1840);
   const rows = teams.map((t, i) => ({ t, i, n: st.results[t.id] ?? 0 })).sort((a, b) => b.n - a.n || a.i - b.i);
   const best = rows[0]?.n ?? 0;
-  const avail = 1040 - (CONTENT_TOP + 112);
-  const h = Math.min(132, Math.floor((avail - (rows.length - 1) * 12) / Math.max(1, rows.length)));
+  const { h, gap } = fillRows(H - 32 - 292, rows.length, 260 + X * 0.6);
   return (
     <>
-      <motion.div className="sd-box sd-done-head" style={{ top: CONTENT_TOP }} initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+      <motion.div className="sd-box sd-done-head" style={{ top: 16 }} initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
         <span className="sd-done-title">Bug report!</span>
         <span className="v2-sub">Who protected their startup best?</span>
       </motion.div>
-      <div className="sd-done-rows" style={{ top: CONTENT_TOP + 112 }}>
+      <div className="sd-done-rows" style={{ top: 292, gap }}>
         {rows.map(({ t, n }, r) => {
           const d = bugDeltas(t, n);
           const top = n === best && n > 0;

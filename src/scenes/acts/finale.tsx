@@ -1,4 +1,4 @@
-// Finale: Fibbot's tricks fail, he gets dizzy, goes POOF, runs away; Techistan celebrates and the Golden Trophy rises.
+// Finale: Jhootu's tricks fail, he gets dizzy, goes POOF, runs away; Techistan celebrates and the Golden Trophy rises.
 import { C, Abs, Root, Sun, Cloud, Person, Bunting, Burst, Puff, Star, Sparkle, Coin, cssVars } from '../artb/core';
 import { Copier, FakeSheet } from '../artb/props';
 import { Trophy } from '../artb/stage';
@@ -15,12 +15,12 @@ export default function Finale({ beat, teams }: SceneBodyProps) {
   const gap = Math.min(300, 1500 / n);
   const x0 = 960 - ((n - 1) * gap) / 2;
   const win = beat >= 4;
-  // Fibbot is the main subject on beats 0-2 (his tricks, his shock, his dizziness). Beat 3 (POOF and the sign) is a tableau.
+  // Jhootu is the main subject on beats 0-2 (his tricks, his shock, his dizziness). Beat 3 (POOF and the sign) is a tableau.
   const fibbotOn = beat <= 2;
   return (
     <Root bg={win ? C.bg3 : C.sky}>
       <Focus active={fibbotOn}>
-        {/* the city, the heroes and the crowd: dimmed while Fibbot has focus */}
+        {/* the city, the heroes and the crowd: dimmed while Jhootu has focus */}
         <Dim blur={0} dim={0.55}>
           <Show when={!win} k="sun" y={0}><Abs x={1600} y={300}><Sun s={200} /></Abs></Show>
           <Abs x={160} y={320} className="drift" style={cssVars({ '--d': '60s', '--dx': '400px' })}><Cloud w={300} /></Abs>
@@ -30,7 +30,7 @@ export default function Finale({ beat, teams }: SceneBodyProps) {
           <div style={{ position: 'absolute', left: -400, top: GROUND - 30, width: 2720, height: 24, background: C.grass }} />
           <Abs x={-400} y={280} z={2}><Bunting w={2720} sag={50} n={14} seed={win ? 3 : 0} /></Abs>
 
-          {/* beat 0: Fibbot's tricks: copy, cheat, trick */}
+          {/* beat 0: Jhootu's tricks: copy, cheat, trick */}
           <Mv beat={beat} z={3} to={[V(110, 520), H(110, 520), H(110, 520), H(110, 520), H(110, 520)]} stiff={120}><Copier s={420} mood="sneaky" /></Mv>
           <Mv beat={beat} z={3} to={[V(560, 760, 1, -10), H(560, 760), H(560, 760), H(560, 760), H(560, 760)]}><FakeSheet s={120}><Star s={70} color={C.rv} edge={C.rvEdge} hi={C.rvHi} /></FakeSheet></Mv>
           <Show when={beat === 0} k="tricks" y={0} style={{ zIndex: 4 }}>
@@ -55,7 +55,7 @@ export default function Finale({ beat, teams }: SceneBodyProps) {
           ))}
         </Dim>
 
-        {/* Fibbot: sneaky, then dizzy, then runs away. His Subject sits inside his moving box, so the halo travels with him. */}
+        {/* Jhootu: sneaky, then dizzy, then runs away. His Subject sits inside his moving box, so the halo travels with him. */}
         <Mv beat={beat} z={4} stiff={70} damp={12} origin="50% 80%"
           to={[V(1200, 400, 1), V(1250, 420, 0.8, 4), V(1020, 400, 1.1), V(2300, 640, 0.5, 20), H(2300, 640, 0.3)]} from={H(1900, 400, 0.8)}>
           <div style={{ position: 'relative', width: 560, height: 560 }}>
@@ -74,7 +74,7 @@ export default function Finale({ beat, teams }: SceneBodyProps) {
         </Abs>
       ))}</Show>
 
-      {/* beat 3: POOF and "I'll be back" (a tableau: Fibbot has gone, nothing is dimmed) */}
+      {/* beat 3: POOF and "I'll be back" (a tableau: Jhootu has gone, nothing is dimmed) */}
       <Show when={beat === 3} k="poof" y={0} style={{ zIndex: 7 }}>
         <Abs x={1300} y={640} z={7}><Burst n={22} r={340} d={1.8} colors={[C.rv, C.rvHi, '#fff', C.rvEdge]} /></Abs>
         {[0, 1, 2, 3, 4].map(i => <Abs key={i} x={1000 + i * 90} y={820} z={7}><Puff s={110} color="#fff" d={1.2} dl={i * 0.15} dy={-120} dx={i * 30} /></Abs>)}

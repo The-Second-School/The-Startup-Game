@@ -17,7 +17,7 @@ export const moodSpanText = (upto: number) => (upto <= 2 ? 'Acts 1 and 2' : 'all
 export function moodIntroText(upto: number): string {
   const tail = upto <= 2
     ? 'Let us see how each startup did over Acts 1 and 2.'
-    : 'This time we look at all 5 acts, and the later acts count double.';
+    : 'This time we look at all 5 acts. The later acts count double.';
   return `Customer Mood check! Customers who are not happy get bored and leave. Very happy ones bring their friends. ${tail}`;
 }
 

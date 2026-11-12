@@ -4,7 +4,7 @@ import '../views2.css';
 import '../board.css';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, Building, Confetti, CountUp, MeterIcon } from '../../ui';
+import { Avatar, Building, Confetti, CountUp, MeterIcon, useStageH } from '../../ui';
 import { AWARDS } from '../../game/content';
 import { stageOf, success } from '../../game/engine';
 import type { AwardResult, AwardsState, Team } from '../../game/types';
@@ -119,6 +119,7 @@ function Intro() {
 function AwardCard({ res, team, n }: { res: AwardResult; team: Team; n: number }) {
   const meta = AWARDS[res.id];
   const flipped = n >= 1;
+  const trophySize = 290 + Math.round((useStageH() - 1080) * 0.5);   // the trophy grows with the extra height
   const lines = Math.max(0, n - 1);
   const champ = res.id === 'champion';
   const banana = res.id === 'banana';
@@ -131,7 +132,7 @@ function AwardCard({ res, team, n }: { res: AwardResult; team: Team; n: number }
           animate={flipped ? (banana ? { rotate: [0, -24, 18, -8, 0], y: [0, -20, 0] } : { scale: [1, 1.18, 1], rotate: [0, -6, 4, 0] }) : { rotate: [-3, 3, -3] }}
           transition={flipped ? { duration: 0.7 } : { duration: 0.25, repeat: Infinity }}
         >
-          <Trophy id={res.id} size={290} covered={!flipped} />
+          <Trophy id={res.id} size={trophySize} covered={!flipped} />
         </motion.div>
         </motion.div>
         <div className="v2-award-text">
@@ -173,14 +174,19 @@ function AwardCard({ res, team, n }: { res: AwardResult; team: Team; n: number }
 
 function SuccessBoard({ teams, championId }: { teams: Team[]; championId: string }) {
   const list = [...teams].sort((a, b) => success(b) - success(a) || teams.indexOf(a) - teams.indexOf(b));
-  const rowH = Math.min(140, Math.floor(560 / Math.max(1, list.length)));
+  const H = useStageH();
+  // Rows share the card below the title: each at most ~110-200px tall, with 24-40px gaps, so the card is full at any height.
+  const n = Math.max(1, list.length);
+  const avail = H - 386;                                               // card (H - 188) minus its padding and the title row
+  const rowH = Math.min(200 + Math.round((H - 1080) * 0.2), Math.floor((avail - (n - 1) * 40) / n));
+  const rowGap = n > 1 ? Math.max(24, Math.floor((avail - n * rowH) / (n - 1))) : 0;
   return (
     <motion.div className="v2-card v2-award-main v2-success" initial={{ scale: 0.6, opacity: 0, rotate: -4 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 260, damping: 18 }}>
       <div className="v2-success-head">
         <motion.span initial={{ rotate: -40, scale: 0 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 10, delay: 0.3 }}>🔓</motion.span>
         <span className="v2-top-title" style={{ fontSize: 80 }}>Success board unlocked!</span>
       </div>
-      <div className="v2-success-rows">
+      <div className="v2-success-rows" style={{ gap: rowGap }}>
         {list.map((t, i) => {
           const s = success(t);
           const champ = t.id === championId;

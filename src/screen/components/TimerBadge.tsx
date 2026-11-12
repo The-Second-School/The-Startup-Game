@@ -1,10 +1,31 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { TimerRing } from '../../ui';
 import { timerRemaining } from '../../game/engine';
 import { TIMER_SHOW_MS } from '../../game/content';
-import type { GameState } from '../../game/types';
+import type { Action, GameState } from '../../game/types';
 import { useNow } from '../hooks/useNow';
+
+/** Everybody has locked in: the talk clock stops (paused, not reset) and starts again only if a team unlocks.
+ *  Pass `enabled` only on the device that should drive it (the live big screen, or the phone's choice panel).
+ *  The timer lives in the shared game state, so every screen and phone then shows the same stopped clock. */
+export function useHoldTimerWhenLocked(state: GameState, send: (a: Action) => void, allLocked: boolean, enabled: boolean) {
+  const { running, remaining, total } = state.timer;
+  const { paused, progressView } = state;
+  const heldHere = useRef(false);
+  useEffect(() => {
+    if (!enabled) return;
+    if (allLocked) {
+      if (running) { heldHere.current = true; send({ type: 'TIMER_PAUSE', now: Date.now() }); }
+      return;
+    }
+    if (total === 0) { heldHere.current = false; return; }
+    if (heldHere.current && !running && remaining > 0 && !paused && !progressView) {
+      heldHere.current = false;
+      send({ type: 'TIMER_RESUME', now: Date.now() });
+    }
+  }, [allLocked, enabled, running, remaining, total, paused, progressView, send]);
+}
 
 /** True only while a talk timer exists AND the last minute (TIMER_SHOW_MS) has begun. Use it to decide when to pop the badge in. */
 export function useTimerLast(state: GameState): boolean {

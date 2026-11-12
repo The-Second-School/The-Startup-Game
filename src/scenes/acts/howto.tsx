@@ -1,5 +1,5 @@
 // How to play. Beats (see SCENES.howto): 0 the three scores, 1-2 Coins, 3-4 Customers, 5-6 Happiness, 7 why both,
-// 8 how Success is made, 9 the growth ladder, 10 locking answers, 11 the reveal, 12 Fibbot's tricks, 13 summary tableau.
+// 8 how Success is made, 9 the growth ladder, 10 locking answers, 11 the reveal, 12 Jhootu's tricks, 13 summary tableau.
 // Every number on screen is a real one: the start values and Success formula from content.ts, and the "Ask 10 people" option.
 import { AnimatePresence, motion } from 'motion/react';
 import type { CSSProperties, ReactNode } from 'react';
@@ -201,7 +201,7 @@ export default function HowTo({ beat, teams }: SceneBodyProps) {
         </AnimatePresence>
       </div>
 
-      {/* 12: Fibbot's tempting tricks */}
+      {/* 12: Jhootu's tempting tricks */}
       <Mv left={1450} top={900} bc to={{ x: beat === 12 ? 0 : 500, opacity: beat === 12 ? 1 : 0, scale: 0.85 }} from={{ x: 500, opacity: 0 }} spring={{ type: 'spring', stiffness: 70, damping: 14 }}>
         <Fibbot size={520} angry smoke />
       </Mv>

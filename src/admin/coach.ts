@@ -14,11 +14,11 @@ export const SCENE_COACH: Record<SceneId, Coach> = {
     say: [
       'Bolt is the friendly guide. Techistan is a city full of ideas, and today the Startup Festival begins.',
       'The goal: build a startup in 5 steps and win the Golden Trophy.',
-      'Fibbot is a fibbing, copying, cheating robot. He wants startups to copy him, cheat, or sell to him.',
+      'Jhootu is a naughty robot who tells lies and copies other people’s ideas. He wants every startup to copy him or sell to him.',
       'Honest, smart startups always beat him. That is the big message of the game.',
     ],
     ask: ['What would you build if you could start any business?', 'Why is cheating a bad way to win a race?'],
-    doubts: [{ q: 'Is Fibbot real?', a: 'No, he is a robot character in the game. The lesson is real: copying and cheating hurt a business.' }],
+    doubts: [{ q: 'Is Jhootu real?', a: 'No, he is a robot character in the game. The lesson is real: copying and cheating hurt a business.' }],
     watch: ['Shy kids. Ask them to say one idea for their startup.'],
   },
   howto: {
@@ -27,7 +27,7 @@ export const SCENE_COACH: Record<SceneId, Coach> = {
       'Success needs all three. Lots of coins alone is not enough, and customers need to stay happy.',
       'Success = (customers + happiness) x coins / 280, capped at 100. The stages are Tiny Stall, Busy Shop, Big Office and Sky Tower.',
       'Every question: the team talks, then the Lock Master locks its choice. Then the results are shown one team at a time.',
-      'Some options are Fibbot tricks. They look great, but check what they cost in happiness.',
+      'Some options are Jhootu tricks. They look great, but check what they cost in happiness.',
     ],
     ask: ['What is success if the team has 50 customers but 0 coins?', 'Why do unhappy customers walk away?'],
     doubts: [{ q: 'We have lots of customers, so why are we not winning?', a: 'Success multiplies customers and happiness by coins. Every meter counts.' }],
@@ -48,7 +48,7 @@ export const SCENE_COACH: Record<SceneId, Coach> = {
     say: [
       'Act 2 is about building version 1, so the product can be tested.',
       'Testing with 5 friends first costs 20 coins. It finds problems early, and it gives 5 extra seconds in Bug Smash.',
-      'Copying Fibbot’s design is quick, but people spot the copy and stop trusting you.',
+      'Copying Jhootu’s design is quick, but people spot the copy and stop trusting you.',
       'Bugs never really run out. New ones keep coming, so testing never fully ends. Bug Smash is where teams fight them.',
     ],
     ask: ['Why is it cheaper to find problems before launch?', 'What did the team learn from testing?'],
@@ -80,13 +80,13 @@ export const SCENE_COACH: Record<SceneId, Coach> = {
   act5: {
     say: [
       'Act 5 is about growing bigger. Startups that work well grow fast, and Techistan loves them.',
-      'Fibbot is furious. He copies your products and sells them at half price.',
+      'Jhootu is furious. He copies your products and sells them at half price.',
       'The Mayor has a huge order for the Festival. Pairs can share it fairly, or the deal can break.',
       'Step 5 of the Startup Recipe: grow bigger and stronger!',
     ],
     ask: ['Why does cutting your price not always help?', 'Why is a lie a bad way to fight back?'],
     doubts: [{ q: 'If we cut the price to half, don’t we win?', a: 'You may get more customers, but every sale earns half. Check the profit, not just the customer count.' }],
-    watch: ['Teams that want to tell a lie about Fibbot’s copy. Explain why it always gets found out.'],
+    watch: ['Teams that want to tell a lie about Jhootu’s copy. Explain why it always gets found out.'],
   },
   showday: {
     say: [
@@ -101,7 +101,7 @@ export const SCENE_COACH: Record<SceneId, Coach> = {
   },
   finale: {
     say: [
-      'Fibbot tried copying, cheating and tricking. But Techistan’s startups were smarter, kinder and more honest.',
+      'Jhootu tried copying, cheating and tricking. But Techistan’s startups were smarter, kinder and more honest.',
       'He runs away shouting that he will be back next year. It is a joke, so enjoy it.',
       'Now the awards: who wins the Golden Trophy?',
     ],
@@ -131,10 +131,10 @@ export const QUESTION_COACH: Record<string, Coach> = {
     say: [
       'Asking 10 real people costs 10 coins. They tell you what they need, so happiness goes up a lot.',
       'Guessing at home is free, but you only half know what people need. Some customers come, not many are happy.',
-      'Fibbot’s Secret Wish List costs 10 coins. It looks like a shortcut, but the list is fake, so people are unhappy.',
+      'Jhootu’s Secret Wish List costs 10 coins. It looks like a shortcut, but the list is fake, so people are unhappy.',
       'An idea box at school costs 20 coins and fills with ideas. New customers come and happiness goes up.',
     ],
-    ask: ['Why is asking real people better than guessing?', 'What did Fibbot’s list promise? Was it true?'],
+    ask: ['Why is asking real people better than guessing?', 'What did Jhootu’s list promise? Was it true?'],
     doubts: [
       { q: 'Why spend coins if guessing is free?', a: 'Free is not always cheap. A wrong guess can cost lots of customers later.' },
       { q: 'Is the idea box better than asking 10 people?', a: 'Both can work. The idea box costs more coins but collects lots of ideas.' },
@@ -143,19 +143,19 @@ export const QUESTION_COACH: Record<string, Coach> = {
   },
   a1q2: {
     say: [
-      'Joining Fibbot gives 20 coins. But he bosses the team around all day, so happiness goes down a lot.',
+      'Joining Jhootu gives 20 coins. But he bosses the team around all day, so happiness goes down a lot.',
       'Showing the notebook is free, but the spy-bot copies the idea and runs off. The copy takes customers.',
       'A strong box costs 10 coins. Ideas stay safe, customers trust you, and the team feels calm.',
       'Telling everyone first costs 20 coins. Flyers show who had the idea first, and lots of new customers come.',
     ],
     ask: ['Why is copying someone’s idea bad for the person who had it first?', 'How can you protect your ideas?'],
-    doubts: [{ q: 'If Fibbot pays coins, isn’t that good?', a: 'Coins help, but being bossed around makes the team unhappy. Unhappy teams lose customers.' }],
+    doubts: [{ q: 'If Jhootu pays coins, isn’t that good?', a: 'Coins help, but being bossed around makes the team unhappy. Unhappy teams lose customers.' }],
     watch: ['Teams that show the notebook because the spy-bot looks friendly.'],
   },
   a2q1: {
     say: [
       'Testing with 5 friends costs 20 coins. They find problems before launch, customers are very happy, and the team gets 5 extra seconds in Bug Smash.',
-      'Copying Fibbot’s design is free and brings customers, but people spot the copy and happiness goes down.',
+      'Copying Jhootu’s design is free and brings customers, but people spot the copy and happiness goes down.',
       'Building super fast is free. Lots of customers come, but the product is wobbly, so happiness goes down a bit.',
       'Twenty features cost 20 coins. Customers are curious, but too many buttons confuse them.',
     ],
@@ -164,7 +164,7 @@ export const QUESTION_COACH: Record<string, Coach> = {
       { q: 'Is building super fast a bad idea?', a: 'It gets customers quickly, but a wobbly product costs happiness. Test a little, then launch.' },
       { q: 'Do more features mean a better product?', a: 'Not always. Too many buttons confuse people.' },
     ],
-    watch: ['Teams that copy Fibbot without thinking. Ask: what did you make yourself?'],
+    watch: ['Teams that copy Jhootu without thinking. Ask: what did you make yourself?'],
   },
   a3q1: {
     say: [
@@ -183,13 +183,13 @@ export const QUESTION_COACH: Record<string, Coach> = {
   a4q2: {
     say: [
       'The Kind Mentor gives 50 coins and good advice. The team feels supported, so happiness goes up a little.',
-      'Fibbot Ventures gives 120 coins, the most. But he sells the customers’ secrets: customers and happiness both go down.',
+      'Jhootu Ventures gives 120 coins, the most. But he sells the customers’ secrets: customers and happiness both go down.',
       'The Pushy Boss gives 100 coins but wants results right now. The team is stressed, so happiness goes down.',
       'The Mama-Mami Fund gives 30 coins and tells the whole family. A few new customers come.',
     ],
     ask: ['What did each investor want back?', 'Why is the biggest pile of coins not always the best?'],
     doubts: [
-      { q: '120 coins is more than 50. Why not pick Fibbot?', a: 'He takes customers and happiness. Losing those hurts success more than the extra coins help.' },
+      { q: '120 coins is more than 50. Why not pick Jhootu?', a: 'He takes customers and happiness. Losing those hurts success more than the extra coins help.' },
     ],
     watch: ['Teams that pick the biggest number without reading what it costs.'],
   },

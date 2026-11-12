@@ -63,12 +63,12 @@ function choiceNarration(s: GameState, qId: string, stepId: string, st: Question
       const ask = q.sub && !tip ? ` ${q.sub}` : '';
       const lines: NarrLine[] = [{ text: `${q.title}${ask}`, pose: 'talk', gap: tip ? 700 : 450 }];
       if (tip) lines.push({ text: tip, say: `Psst. ${tip}`, tone: 'whisper', pose: 'think' });
-      if (isSecretStep(stepId)) lines.push({ text: 'This one is secret! Talk quietly in your team, then send your Lock Master to whisper the answer to the host.', tone: 'whisper', pose: 'think' });
+      if (isSecretStep(stepId)) lines.push({ text: 'This one is secret! Talk quietly in your team. Then send your Lock Master to whisper the answer to the host.', tone: 'whisper', pose: 'think' });
       const first = qId === 'a1q1';
       if (first) {
-        lines.push({ text: 'Some choices cost coins. Coins are your money: you spend them, you earn them back, and you need them to win.', pose: 'point', gap: 800 });
+        lines.push({ text: 'Some choices cost coins. Coins are your money. You spend them, earn them back, and need them to win.', pose: 'point', gap: 800 });
         lines.push({ text: 'Customers and Happiness are your two main goals. Customers means how many people use your startup. Happiness means how much they love it.', pose: 'point', gap: 800 });
-        return { id: `${stepId}-open`, showText: true, lines, summary: 'Coins are your money. Customers (people using your startup) and Happiness (how much they love it) are your two main goals.' };
+        return { id: `${stepId}-open`, showText: true, lines, summary: 'Coins are your money. Customers and Happiness are your two main goals.' };
       }
       return { id: `${stepId}-open`, showText: false, lines, summary: isSecretStep(stepId) ? 'Secret choice: whisper your answer to the host.' : tip ?? q.title };
     }
@@ -99,7 +99,7 @@ function choiceNarration(s: GameState, qId: string, stepId: string, st: Question
     }
 
     case 'done':
-      return { id: `${stepId}-done`, showText: false, lines: [{ text: 'That is it for this question. Keep an eye on Customers and Happiness!', tone: 'calm', pose: 'idle' }] };
+      return { id: `${stepId}-done`, showText: false, lines: [{ text: 'That is it for this question. Watch your Customers and Happiness!', tone: 'calm', pose: 'idle' }] };
   }
   return null;
 }
@@ -119,8 +119,8 @@ function megaNarration(s: GameState, stepId: string, st: MegaState): Narration |
         return { id: `${stepId}-locked`, showText: false, lines: [{ text: 'All set! Every pair has locked its deal. Waiting for the reveal.', tone: 'calm', pose: 'think' }] };
       }
       const lines: NarrLine[] = [
-        { text: 'Festival time! A giant order is too big for one team, so team up with your partner.', pose: 'talk', gap: 600 },
-        { text: 'You can share fairly, take more, or go alone. Talk it out in your own team, and keep it super secret from your partner!', pose: 'point' },
+        { text: 'Festival time! A giant order is too big for one team. So team up with your partner.', pose: 'talk', gap: 600 },
+        { text: 'You can share fairly, take more, or go alone. Talk it out in your own team. Keep it super secret from your partner!', pose: 'point' },
         { text: 'Whisper your choice to the host. Nobody else may hear it.', tone: 'whisper', pose: 'think' },
       ];
       if (st.solo) lines.push({ text: `${nameOf(st.solo)} has no partner this time, so you get your own mini order. Just cheer!`, pose: 'wave' });

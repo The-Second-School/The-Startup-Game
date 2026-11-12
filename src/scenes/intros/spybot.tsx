@@ -1,4 +1,4 @@
-// Intro (Act 1, question 2): Fibbot tiptoes to a nervous idea notebook, freezes when he feels watched, then gets caught.
+// Intro (Act 1, question 2): Jhootu tiptoes to a nervous idea notebook, freezes when he feels watched, then gets caught.
 import { motion } from 'motion/react';
 import { C, Abs, Root, Svg, Dots, Cloud } from '../artb/core';
 import { Fibbot } from '../../ui';
@@ -7,7 +7,7 @@ import { Splash, useBeat } from './beats';
 
 const TIMES = [0, 1200, 2800, 4200, 5600, 7000];
 const MOOD = ['sneaky', 'sneaky', 'shock', 'sneaky', 'angry', 'angry'] as const;
-const X = [-600, 0, 0, 420, 420, 420];  // Fibbot's walk, relative to his stop at x 760
+const X = [-600, 0, 0, 420, 420, 420];  // Jhootu's walk, relative to his stop at x 760
 const SUBJECT_X = 760, SUBJECT_Y = 700;
 
 function Notebook({ scared }: { scared: boolean }) {
@@ -49,7 +49,7 @@ export default function SpyBotIntro() {
           <Abs x={1300} y={680}><div style={{ width: 520, height: 60, borderRadius: 24, background: C.wood, border: '5px solid #fff' }} /></Abs>
           <Abs x={1380} y={400}><Notebook scared={beat === 2 || caught} /></Abs>
         </Backdrop>
-        {/* Fibbot walks in, sneaks up to the notebook, then is caught */}
+        {/* Jhootu walks in, sneaks up to the notebook, then is caught */}
         <motion.div initial={false} animate={{ x: X[beat], opacity: beat ? 1 : 0 }}
           transition={{ x: { duration: 1.2, ease: 'easeInOut' }, opacity: { duration: 0.4 } }}
           style={{ position: 'absolute', left: 0, top: 0 }}>

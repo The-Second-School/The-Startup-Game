@@ -44,6 +44,7 @@
 /* ---------- bottom ---------- */
 .bottom{flex:none;position:sticky;bottom:0;z-index:5;display:flex;gap:12px;padding:12px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--a-bg) 70%,rgba(251,246,228,0))}
 .morebtn{align-self:flex-end;height:76px;flex:none;width:84px;flex-direction:column;gap:0;font-size:16px;padding:6px 0}
+.pausebtn{width:76px}
 .primary{flex:1;font-size:23px;line-height:1.1;text-align:center;padding:10px 14px}
 
 /* ---------- buttons: even white border, flat fill, springy press ---------- */

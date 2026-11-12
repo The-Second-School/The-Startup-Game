@@ -12,12 +12,12 @@ import { useNarrator } from '../narration/useNarrator';
 import { NarrationDock } from '../narration/NarrationDock';
 import { VoiceChip } from '../narration/VoiceChip';
 import '../narration/narration.css';
-import { setFrozen, onFreeze } from './lib/freeze';
 import { Ctx, type Dispatch } from './lib/ctx';
 import { actOf } from './lib/game';
 import { installPointerGuard } from './lib/tap';
 import { useUi } from './lib/ui';
 import { useKeyboard } from './hooks/useKeyboard';
+import { usePause } from './hooks/usePause';
 import { useGameSounds } from './hooks/useGameSounds';
 import { ProgressScreen } from './views/ProgressView';
 import { ViewFor } from './views';
@@ -44,9 +44,7 @@ export default function ScreenApp() {
     ui.setPick(null); ui.setKbTeam(null); ui.setTyping('');
   }, [state.stepIndex]);
 
-  // Host "Freeze": stop everything in place (clock, timers, frames, animations) and pause speech + sound.
-  useEffect(() => { onFreeze(on => { try { if (on) window.speechSynthesis?.pause(); else window.speechSynthesis?.resume(); } catch { /* ignore */ } sfx.freeze(on); }); }, []);
-  useEffect(() => { setFrozen(state.frozen); }, [state.frozen]);
+  usePause(state.paused);
 
   useKeyboard();
   useGameSounds(state);
@@ -66,7 +64,7 @@ export default function ScreenApp() {
           <NarrationDock visible />
           <VoiceChip on={state.settings.voice} />
         </div>
-        {state.frozen && <div className="scr-frozen" aria-hidden><span>❚❚ Paused</span></div>}
+        {state.paused && <div className="scr-paused" aria-hidden><span>❚❚ Paused</span></div>}
         {/* Host-controlled full-screen progress (More menu in the admin). The step's own view stays underneath. */}
         <AnimatePresence>
           {state.progressView && (

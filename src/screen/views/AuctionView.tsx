@@ -1,17 +1,17 @@
 // Billboard Auction. Intro explains it step by step (revealed in step with Bolt's voice), then one ticket at a time:
-// the host enters each team's bid on the phone, Fibbot answers by himself, and the screen plays it out in beats
-// (team bid -> "Fibbot is thinking..." -> his counter, or "Fibbot gives up!"). SOLD is timed to the spoken "SOLD!".
+// the host enters each team's bid on the phone, Jhootu answers by himself, and the screen plays it out in beats
+// (team bid -> "Jhootu is thinking..." -> his counter, or "Jhootu gives up!"). SOLD is timed to the spoken "SOLD!".
 // Layout: Bolt (dock, drawn by ScreenApp) top-left, the ticket title box right after him; two calm columns below.
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'motion/react';
-import { Avatar, Confetti, DeltaPill, Fibbot, MeterIcon, Num } from '../../ui';
+import { Avatar, Confetti, DeltaPill, Fibbot, MeterIcon, Num, useStageH } from '../../ui';
 import { AUCTION_OPEN, AUCTION_RESERVE, AUCTION_STEP } from '../../game/content';
 import { maxBid } from '../../game/engine';
 import type { AuctionState, AuctionTicket, Team } from '../../game/types';
 import { sfx } from '../../audio';
 import { useGame } from '../lib/ctx';
 import { teamBase, teamName } from '../lib/game';
-import { CONTENT_TOP } from '../lib/layout';
+import { useDockAt } from '../../narration/useDockAt';
 import { ReadyHint } from '../components/ReadyHint';
 import { Gavel } from '../components/art';
 import { useNarrBeat } from '../hooks/useNarrBeat';
@@ -20,6 +20,23 @@ import '../side.css';
 type Bid = { by: string; amount: number };
 const FIB = 'fibbot';
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+/** Splits `avail` px into n rows: each at most `cap` tall, gaps 24-40px, so the rows fill the space exactly. */
+function fillRows(avail: number, n: number, cap: number) {
+  const h = Math.max(1, Math.min(cap, Math.floor((avail - (n - 1) * 40) / Math.max(1, n))));
+  const gap = n > 1 ? Math.max(24, Math.floor((avail - n * h) / (n - 1))) : 0;
+  return { h, gap };
+}
+
+/** Bidding and sold screens: the hero + stage column on the left (taller with the frame) and the team rows on the right,
+ *  which fill down to the real frame bottom. */
+function auctionLayout(H: number, rows: number) {
+  const X = H - 1080;
+  const heroH = 364 + Math.round(X * 0.4);
+  const stageTop = 156 + heroH + 20;
+  const { h, gap } = fillRows(H - 32 - 156, rows, 200 + X * 0.25);
+  return { heroH, stageTop, stageH: H - 32 - stageTop, rowH: h, rowGap: gap };
+}
 
 function Billboard({ icon, size = 220 }: { icon: string; size?: number }) {
   return (
@@ -65,10 +82,16 @@ export function AuctionView() {
 function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
   const beat = useNarrBeat('auction-intro');
   const show = (k: number) => beat >= k;
-  const rowH = Math.min(66, Math.floor(300 / Math.max(1, teams.length)));
+  const H = useStageH();
+  const X = H - 1080;
+  // The heading is at the top and Bolt sits right under it; the ticket row and the two calm panels fill the rest.
+  useDockAt(40, 136, 1840);
+  const ticketsH = 240 + Math.round(X * 0.3);
+  const lowTop = 292 + ticketsH + 20;
+  const rowH = Math.min(66 + X * 0.1, Math.floor((H - 32 - lowTop - 120) / Math.max(1, teams.length)));
   return (
     <>
-      <div className="sd-intro-head" style={{ top: CONTENT_TOP }}>
+      <div className="sd-intro-head" style={{ top: 16 }}>
         <AnimatePresence>
           {show(0) && (
             <motion.div key="h" className="sd-box sd-intro-title" {...card}>
@@ -80,7 +103,7 @@ function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
         </AnimatePresence>
       </div>
 
-      <div className="sd-tickets" style={{ top: CONTENT_TOP + 116 }}>
+      <div className="sd-tickets" style={{ top: 292, height: ticketsH }}>
         <AnimatePresence>
           {show(1) && st.tickets.map((tk, i) => (
             <motion.div key={tk.id} className="sd-box sd-mini-ticket" initial={{ y: 60, opacity: 0, rotate: -3 }} animate={{ y: 0, opacity: 1, rotate: 0 }} transition={{ ...spring, delay: i * 0.12 }}>
@@ -94,7 +117,7 @@ function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
         </AnimatePresence>
       </div>
 
-      <div className="sd-intro-low">
+      <div className="sd-intro-low" style={{ top: lowTop, height: H - 32 - lowTop }}>
         <AnimatePresence>
           {show(2) && (
             <motion.div key="how" className="sd-box sd-how" {...card}>
@@ -105,7 +128,7 @@ function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
               <AnimatePresence>
                 {show(3) && (
                   <motion.div key="fib" className="sd-how-step is-fibbot" initial={{ x: 80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={spring}>
-                    <span className="sd-how-ico"><Fibbot mood="sneaky" size={86} /></span><span>Fibbot bids too! If he wins, nobody gets the ad</span>
+                    <span className="sd-how-ico"><Fibbot mood="sneaky" size={86} /></span><span>Jhootu bids too! If he wins, nobody gets the ad</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -137,7 +160,7 @@ function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
 // ---------- bidding ----------
 type Stage = 'idle' | 'bid' | 'thinking' | 'counter' | 'gaveup';
 
-/** Plays st.bidLog back in beats. The engine appends the team's bid and Fibbot's counter in ONE update, so the screen reveals
+/** Plays st.bidLog back in beats. The engine appends the team's bid and Jhootu's counter in ONE update, so the screen reveals
  *  them one at a time. Starts from what is already in the log (a reload never replays old bids). */
 function useStagedBids(log: Bid[]) {
   const [shown, setShown] = useState(log.length);
@@ -187,12 +210,13 @@ function useStagedBids(log: Bid[]) {
 
 function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; teams: Team[] }) {
   const { shown, stage, out } = useStagedBids(st.bidLog);
+  const H = useStageH();
   const seen = st.bidLog.slice(0, shown);
   const top: Bid = seen.length ? seen[seen.length - 1] : { by: FIB, amount: AUCTION_OPEN };
   const hasBid = seen.length > 0;
   const topTeam = top.by === FIB ? null : teams.find(t => t.id === top.by) ?? null;
   const n = teams.length + 1;
-  const h = Math.min(128, Math.floor((836 - (n - 1) * 10) / n));
+  const { heroH, stageTop, stageH, rowH: h, rowGap } = auctionLayout(H, n);
   const bump = useAnimationControls();
   useEffect(() => { if (shown > 0) bump.start({ scale: [1.18, 1], rotate: [-3, 0], transition: { duration: 0.3, ease: 'easeOut' } }); }, [shown, bump]);
 
@@ -201,9 +225,9 @@ function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicke
   let say = hasBid ? 'Any higher bids?' : `Bids start at ${AUCTION_OPEN} coins`;
   let mood: 'laugh' | 'sneaky' | 'dizzy' | 'shock' = 'sneaky';
   if (stage === 'bid' && lastTeam && lastTeamBid) say = `${teamName(lastTeam)} bids ${lastTeamBid.amount}!`;
-  if (stage === 'thinking') { say = 'Fibbot is thinking…'; mood = 'shock'; }
-  if (stage === 'counter') { say = `Fibbot says ${top.amount}!`; mood = 'laugh'; }
-  if (stage === 'gaveup' || (stage === 'idle' && out && hasBid)) { say = stage === 'gaveup' ? 'Fibbot gives up!' : 'Fibbot is out! Any higher bids?'; mood = 'dizzy'; }
+  if (stage === 'thinking') { say = 'Jhootu is thinking…'; mood = 'shock'; }
+  if (stage === 'counter') { say = `Jhootu says ${top.amount}!`; mood = 'laugh'; }
+  if (stage === 'gaveup' || (stage === 'idle' && out && hasBid)) { say = stage === 'gaveup' ? 'Jhootu gives up!' : 'Jhootu is out! Any higher bids?'; mood = 'dizzy'; }
 
   return (
     <>
@@ -215,7 +239,7 @@ function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicke
         <div className="sd-title-prize"><Prize tk={ticket} /></div>
       </motion.div>
 
-      <motion.div className="sd-box sd-hero" initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={spring}>
+      <motion.div className="sd-box sd-hero" style={{ height: heroH }} initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={spring}>
         <Billboard icon={ticket.icon} size={250} />
         <div className="sd-hero-bid">
           <div className="sd-hero-label">{hasBid ? 'Top bid' : 'Opening price'}</div>
@@ -223,13 +247,13 @@ function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicke
           {hasBid && (
             <div className="sd-hero-who">
               {topTeam ? <Avatar seed={topTeam.avatarSeed} colorIndex={topTeam.colorIndex} shade={2} size={72} mood="wow" /> : <Fibbot mood="laugh" size={80} />}
-              <span>{topTeam ? teamName(topTeam) : 'Fibbot'}</span>
+              <span>{topTeam ? teamName(topTeam) : 'Jhootu'}</span>
             </div>
           )}
         </div>
       </motion.div>
 
-      <motion.div className="sd-box sd-stage" initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ...spring, delay: 0.08 }}>
+      <motion.div className="sd-box sd-stage" style={{ top: stageTop, height: stageH }} initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ...spring, delay: 0.08 }}>
         <div className="sd-stage-main">
           <motion.div key={`${stage}-${shown}`} initial={{ scale: 0.8, rotate: stage === 'counter' ? -8 : 0 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 520, damping: 13 }}>
             <Fibbot mood={mood} size={260} />
@@ -246,14 +270,14 @@ function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicke
             const t = b.by === FIB ? null : teams.find(x => x.id === b.by);
             return (
               <motion.span key={`${shown - 4 + i}`} className={`sd-hist${b.by === FIB ? ' is-fib' : ''}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>
-                {t ? teamName(t) : 'Fibbot'} <b>{b.amount}</b>
+                {t ? teamName(t) : 'Jhootu'} <b>{b.amount}</b>
               </motion.span>
             );
           })}
         </div>
       </motion.div>
 
-      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px` }}>
+      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px`, gap: rowGap }}>
         {teams.map(t => {
           const won = wonTicket(st, t.id);
           const isTop = top.by === t.id && hasBid;
@@ -273,10 +297,11 @@ function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicke
 }
 
 function TeamRow({ team, rival, h, status, hot, grey, coins }: { team?: Team; rival?: boolean; h: number; status: string; hot?: boolean; grey?: boolean; coins?: number }) {
+  const face = Math.min(h - 8, 128);                 // rows can be taller than the face: the face stays a sensible size
   return (
     <motion.div layout="position" className={`sd-row${hot ? ' is-hot' : ''}${grey ? ' is-grey' : ''}${rival ? ' is-rival' : ''}`} style={{ height: h, ['--c' as string]: rival ? '#7B4BC9' : teamBase(team!) }} initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1, scale: hot ? 1.015 : 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }}>
-      <div className="sd-row-face">{rival ? <Fibbot mood={hot ? 'laugh' : 'sneaky'} size={h - 8} /> : <Avatar seed={team!.avatarSeed} colorIndex={team!.colorIndex} shade={2} size={h - 8} mood={hot ? 'wow' : grey ? 'cool' : 'happy'} />}</div>
-      <div className="sd-row-name">{rival ? 'Fibbot' : teamName(team)}{rival && <span className="sd-rival-tag">rival</span>}</div>
+      <div className="sd-row-face">{rival ? <Fibbot mood={hot ? 'laugh' : 'sneaky'} size={face} /> : <Avatar seed={team!.avatarSeed} colorIndex={team!.colorIndex} shade={2} size={face} mood={hot ? 'wow' : grey ? 'cool' : 'happy'} />}</div>
+      <div className="sd-row-name">{rival ? 'Jhootu' : teamName(team)}{rival && <span className="sd-rival-tag">rival</span>}</div>
       <div className="sd-row-coins"><MeterIcon kind="coins" size={44} />{rival ? <b>∞</b> : <b><Num value={coins ?? 0} duration={700} /></b>}</div>
       <div className={`sd-row-status${hot ? ' is-hot' : ''}`}>{status}</div>
     </motion.div>
@@ -285,6 +310,7 @@ function TeamRow({ team, rival, h, status, hot, grey, coins }: { team?: Team; ri
 
 // ---------- sold ----------
 function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; teams: Team[] }) {
+  const H = useStageH();
   const w = st.winners[ticket.id];
   const winTeam = w && w.by !== FIB ? teams.find(t => t.id === w.by) ?? null : null;
   const beat = useNarrBeat(`auction-sold-${st.ticket}`);
@@ -304,7 +330,7 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
   }, [beat, winTeam]);
 
   const n = teams.length + 1;
-  const h = Math.min(128, Math.floor((836 - (n - 1) * 10) / n));
+  const { heroH, stageTop, stageH, rowH: h, rowGap } = auctionLayout(H, n);
   const sold = b >= 2;
   const paid = b >= 3;
 
@@ -319,7 +345,7 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
         <div className="sd-title-prize"><Prize tk={ticket} /></div>
       </motion.div>
 
-      <div className="sd-box sd-hero is-sold">
+      <div className="sd-box sd-hero is-sold" style={{ height: heroH }}>
         <Billboard icon={ticket.icon} size={250} />
         <div className="sd-hero-bid">
           <div className="sd-hero-label">Final price</div>
@@ -330,7 +356,7 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
         </AnimatePresence>
       </div>
 
-      <div className="sd-box sd-stage is-sold">
+      <div className="sd-box sd-stage is-sold" style={{ top: stageTop, height: stageH }}>
         <div className="sd-stage-main">
           <motion.div key={Math.min(b, 2)} className="sd-gavel" initial={{ rotate: -40 }} animate={{ rotate: 0 }} transition={{ type: 'spring', stiffness: 700, damping: 12 }}><Gavel size={230} /></motion.div>
           <AnimatePresence mode="wait" initial={false}>
@@ -348,7 +374,7 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
                 ) : (
                   <>
                     <Fibbot mood="laugh" size={170} />
-                    <div className="sd-winner-text"><b>Fibbot keeps it!</b><span>Nobody gets this ad</span></div>
+                    <div className="sd-winner-text"><b>Jhootu keeps it!</b><span>Nobody gets this ad</span></div>
                   </>
                 )}
               </motion.div>
@@ -366,7 +392,7 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
         </AnimatePresence>
       </div>
 
-      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px` }}>
+      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px`, gap: rowGap }}>
         {teams.map(t => {
           const isWin = !!winTeam && winTeam.id === t.id;
           const won = wonTicket(st, t.id);
@@ -385,20 +411,23 @@ function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; 
 // ---------- done: who won what ----------
 function Done({ st, teams }: { st: AuctionState; teams: Team[] }) {
   const beat = useNarrBeat('auction-done');
+  const H = useStageH();
+  const X = H - 1080;
+  // The heading is at the top and Bolt sits right under it; the billboard rows fill the rest of the frame.
+  useDockAt(40, 136, 1840);
   const n = st.tickets.length;
   const kept = st.tickets.filter(tk => !st.winners[tk.id] || st.winners[tk.id].by === FIB).length;
-  const avail = 1040 - (CONTENT_TOP + 112);
-  const h = Math.min(250, Math.floor((avail - (n - 1) * 16) / Math.max(1, n)));
+  const { h, gap } = fillRows(H - 32 - 292, n, 250 + X * 0.5);
   return (
     <>
-      <motion.div className="sd-box sd-done-head" style={{ top: CONTENT_TOP }} initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+      <motion.div className="sd-box sd-done-head" style={{ top: 16 }} initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
         <span className="sd-done-title">Sold, sold, sold!</span>
         <span className="v2-sub">Who won each billboard</span>
         <span className="sd-done-tally">
-          <span><b><Num value={n - kept} duration={500} /></b> won by teams</span><span><b><Num value={kept} duration={500} /></b> kept by Fibbot</span>
+          <span><b><Num value={n - kept} duration={500} /></b> won by teams</span><span><b><Num value={kept} duration={500} /></b> kept by Jhootu</span>
         </span>
       </motion.div>
-      <div className="sd-done-list" style={{ top: CONTENT_TOP + 112 }}>
+      <div className="sd-done-list" style={{ top: 292, gap }}>
         <AnimatePresence>
           {st.tickets.map((tk, i) => {
             if (beat < i + 1) return null;
@@ -420,7 +449,7 @@ function Done({ st, teams }: { st: AuctionState; teams: Team[] }) {
                 ) : (
                   <div className="sd-won-who">
                     <Fibbot mood="laugh" size={Math.min(130, h - 30)} />
-                    <div className="sd-won-text"><b>Fibbot kept it</b><span>Nobody got this ad</span></div>
+                    <div className="sd-won-text"><b>Jhootu kept it</b><span>Nobody got this ad</span></div>
                   </div>
                 )}
               </motion.div>

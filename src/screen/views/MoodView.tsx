@@ -2,9 +2,9 @@
 // the team's name + avatar big, a simple balance picture (customers won vs happiness earned), then the outcome
 // (customers walking out / dancing in / staying) with one friendly sentence, the delta pill and the meter update.
 // No maths symbols on screen. The narration (src/narration/lines/mood.ts) speaks every team; the reveal follows the voice.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, Building, CountUp, MeterIcon } from '../../ui';
+import { Avatar, Building, CountUp, MeterIcon, useStageW } from '../../ui';
 import { currentStep, stageOf } from '../../game/engine';
 import type { MoodResult, MoodState, Team } from '../../game/types';
 import { sfx } from '../../audio';
@@ -15,7 +15,7 @@ import { teamColors } from '../lib/game';
 import { Crowd, type CrowdMode } from '../components/Crowd';
 import { Heart, Person, RainCloud, Sparkle } from '../components/art';
 import { ReadyHint } from '../components/ReadyHint';
-import { TeamStrip } from '../components/TeamStrip';
+import { stripLayout, TeamStrip } from '../components/TeamStrip';
 import { IntroStage } from '../components/ChoiceParts';
 import '../side2.css';
 
@@ -35,6 +35,7 @@ export function MoodView() {
 
 function MoodBody({ st }: { st: MoodState }) {
   const { state } = useGame();
+  const W = useStageW();
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const upto = moodActOf(state);
   const teams = state.teams;
@@ -47,8 +48,11 @@ function MoodBody({ st }: { st: MoodState }) {
   const m = moodResult(st, team, upto);
   const narrId = moodNarrId(currentStep(state).id, st.index, team.id);
   const revealed = revealedId === team.id;
+  // The area between the team head and the bottom strip: the balance and the shop fill it (see side2.css --mood-h).
+  // Base (1080) value: the frame adds --fx on top of it. The strip's own top depends on the real frame width (TeamStrip).
+  const moodH = stripLayout(teams.length, false, W, 1080).top - 256;
   return (
-    <div className="scr-full">
+    <div className="scr-full" style={{ ['--mood-h' as string]: `${moodH}px` } as CSSProperties}>
       <AnimatePresence mode="wait" initial={false}>
         <MoodTeam key={team.id} team={team} m={m} upto={upto} narrId={narrId} last={st.index + 1 >= teams.length} onReveal={setRevealedId} />
       </AnimatePresence>
