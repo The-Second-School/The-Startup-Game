@@ -7,8 +7,9 @@ import type { AuctionTicket, RoleId, SceneId, Step } from './types';
 export const START = { customers: 5, happiness: 5, coins: 200 };
 export const METER_MAX = 50;
 export const SUCCESS_DIVISOR = 280;     // Success = (Customers + Happiness) x Coins / 280, capped at 100 (see docs/REVIEW.md)
-export const TALK_MS = 60_000;
-export const PAIR_TALK_MS = 90_000;
+export const TALK_MS = 300_000;          // team talk time: 5 minutes
+export const PAIR_TALK_MS = 300_000;
+export const TIMER_SHOW_MS = 60_000;     // the timer only appears on screen when this much time is left
 export const PITCH_MS = 45_000;
 
 export const STAGES = [
@@ -57,28 +58,42 @@ export const ROLE_PLAN: Record<number, RoleId[][]> = {
 };
 
 // ---------- Products (10 on the wheel) ----------
+export const PRICE_MIN = 10, PRICE_MAX = 100, PRICE_STEP = 10;
 export interface Product {
   id: string;
   name: string;
   icon: string;
-  does: string;
-  unit: string;
-  hint: string;
-  bestPrice: number;
+  does: string;      // one clear sentence: what the startup sells
+  unit: string;      // WHAT one sale is ("one tiffin box"): the price you set is for exactly this
+  cost: number;      // what it costs the team to make ONE unit
+  fair: number;      // what a customer thinks one unit is worth (drives the demand curve)
+  rival: number;     // what Fibbot charges for his copy: shown as the reference price
+  hint: string;      // one line to help kids guess a price
   color: string;
 }
-export const PRODUCTS: Product[] = [
-  { id: 'tiffingo', name: 'TiffinGo', icon: '🍱', does: 'Hot lunch delivered to school', unit: 'per tiffin', hint: 'Vada pav costs ₹20. A full thali costs ₹80.', bestPrice: 40, color: '#FF9600' },
-  { id: 'cycleshare', name: 'CycleShare', icon: '🚲', does: 'Rent a cycle by the hour', unit: 'per hour', hint: 'An auto ride costs ₹30.', bestPrice: 20, color: '#1CB0F6' },
-  { id: 'mathmagic', name: 'MathMagic', icon: '🧮', does: 'A game that makes maths fun', unit: 'per month', hint: 'A comic book costs ₹50.', bestPrice: 50, color: '#CE82FF' },
-  { id: 'farmfriend', name: 'FarmFriend', icon: '🌾', does: 'Tells farmers when to water crops', unit: 'per month', hint: 'It saves a farmer ₹500 a month. Farmers watch every rupee, so ask for a small slice.', bestPrice: 60, color: '#58CC02' },
-  { id: 'petpal', name: 'PetPal', icon: '🐶', does: 'Walks and feeds your pet', unit: 'per walk', hint: 'A plate of samosa costs ₹30.', bestPrice: 30, color: '#FF86D0' },
-  { id: 'homeworkbuddy', name: 'HomeworkBuddy', icon: '🤖', does: 'A robot that reminds you about homework', unit: 'per month', hint: 'Tuition costs ₹500 a month. Your robot only reminds, so charge much less.', bestPrice: 80, color: '#00CD9C' },
-  { id: 'sipbottle', name: 'SipBottle', icon: '💧', does: 'A bottle that reminds you to drink water', unit: 'one bottle', hint: 'A normal bottle costs ₹80.', bestPrice: 100, color: '#1CB0F6' },
-  { id: 'roombot', name: 'RoomBot', icon: '🧹', does: 'A robot that tidies your room', unit: 'per month', hint: 'A big pizza costs ₹300. Would you pay a third of that to never tidy up?', bestPrice: 90, color: '#FF4B4B' },
-  { id: 'bookswap', name: 'BookSwap', icon: '📚', does: 'Swap old books with friends', unit: 'per swap', hint: 'A new storybook costs ₹200, but a swap is just a small favour between friends. Kids only have pocket money.', bestPrice: 10, color: '#FF9600' },
-  { id: 'partypal', name: 'PartyPal', icon: '🎂', does: 'Plans your birthday party', unit: 'per party', hint: 'A birthday cake costs ₹500. Planning is a nice extra, not the cake.', bestPrice: 70, color: '#FF6FB5' },
+const RAW_PRODUCTS: Product[] = [
+  { id: 'tiffingo', name: 'TiffinGo', icon: '🍱', does: 'Delivers a hot lunch box to your school', unit: 'one tiffin box', cost: 25, fair: 50, rival: 35, hint: 'A school canteen meal costs about ₹40 to ₹60.', color: '#FF9600' },
+  { id: 'cycleshare', name: 'CycleShare', icon: '🚲', does: 'Rent a smart cycle by the hour', unit: 'one hour of riding', cost: 5, fair: 20, rival: 10, hint: 'An auto ride costs about ₹30.', color: '#1CB0F6' },
+  { id: 'mathmagic', name: 'MathMagic', icon: '🧮', does: 'An A.I. maths coach that turns practice into a game', unit: 'one month of the game', cost: 15, fair: 50, rival: 30, hint: 'A comic book costs about ₹50.', color: '#CE82FF' },
+  { id: 'farmfriend', name: 'FarmFriend', icon: '🌾', does: 'A phone buddy that tells farmers exactly when to water crops', unit: 'one farmer for one month', cost: 20, fair: 60, rival: 40, hint: 'It saves a farmer ₹500 a month. Farmers watch every rupee, so ask for a small slice.', color: '#58CC02' },
+  { id: 'petpal', name: 'PetPal', icon: '🐶', does: 'Walks and feeds pets while their families are busy', unit: 'one pet walk', cost: 10, fair: 30, rival: 20, hint: 'A plate of samosas costs about ₹30.', color: '#FF86D0' },
+  { id: 'homeworkbuddy', name: 'HomeworkBuddy', icon: '🤖', does: 'A robot that plans your homework and exam revision', unit: 'one month with the robot', cost: 25, fair: 70, rival: 50, hint: 'Tuition costs ₹500 a month. A reminder robot should cost much less.', color: '#00CD9C' },
+  { id: 'sipbottle', name: 'SipBottle', icon: '💧', does: 'A smart bottle that lights up to remind you to drink water', unit: 'one bottle', cost: 30, fair: 60, rival: 45, hint: 'A plain bottle costs about ₹50.', color: '#1CB0F6' },
+  { id: 'roombot', name: 'RoomBot', icon: '🧹', does: 'A robot that tidies your room while you play', unit: 'one month of tidying', cost: 30, fair: 70, rival: 55, hint: 'A big pizza costs ₹300. Would you pay a third of that to never tidy up?', color: '#FF4B4B' },
+  { id: 'solarbuddy', name: 'SolarBuddy', icon: '☀️', does: 'Rents small solar lamps to homes that face power cuts', unit: 'one lamp for one month', cost: 30, fair: 70, rival: 50, hint: 'Candles and batteries cost a family about ₹100 a month.', color: '#FFC800' },
+  { id: 'cleanstreet', name: 'CleanStreet', icon: '♻️', does: 'Neighbours sort their waste and we collect it for recycling', unit: 'one street pickup', cost: 10, fair: 40, rival: 25, hint: 'A neighbour would happily pay the price of a cup of chai to keep the street clean.', color: '#46A302' },
 ];
+
+/** Customers per 10 interested people who actually buy at `price`. Cheap sells to everyone, too expensive sells to nobody. */
+export const buyersAt = (p: { fair: number }, price: number) => Math.round(10 * Math.max(0, Math.min(1, (1.8 * p.fair - price) / (1.2 * p.fair))));
+export const profitAt = (p: { fair: number; cost: number }, price: number) => buyersAt(p, price) * (price - p.cost);
+/** The price (₹10 steps) that earns the team the most. */
+function bestFor(p: { fair: number; cost: number }) {
+  let best = PRICE_MIN, top = -Infinity;
+  for (let price = PRICE_MIN; price <= PRICE_MAX; price += PRICE_STEP) { const v = profitAt(p, price); if (v > top) { top = v; best = price; } }
+  return best;
+}
+export const PRODUCTS: (Product & { bestPrice: number })[] = RAW_PRODUCTS.map(p => ({ ...p, bestPrice: bestFor(p) }));
 export const productById = (id: string | null) => PRODUCTS.find(p => p.id === id) ?? null;
 
 // ---------- Questions ----------
@@ -88,7 +103,7 @@ export interface Option {
   coins: number;          // negative = cost, positive = gain
   customers: number;
   happiness: number;
-  trap?: boolean;         // rAIvan's trick (shown with 😈 only after reveal)
+  trap?: boolean;         // Fibbot's trick (shown with 😈 only after reveal)
   story: string;
   label: string;          // short label for the story strip
   // Word of mouth: happiness at or above `ifHappinessAtLeast` gives customers = `customers`, else `elseCustomers`
@@ -115,17 +130,17 @@ export const QUESTIONS: Record<string, Question> = {
     options: [
       { text: 'Ask 10 people at the market', icon: '🗣️', coins: -10, customers: 3, happiness: 7, label: 'Asked 10 people', story: '{team} asked 10 real people. Now they know exactly what Techistan wants! 💡' },
       { text: 'Guess it at home', icon: '🏠', coins: 0, customers: 3, happiness: 2, label: 'Guessed at home', story: '{team} guessed at home. Some guesses were right... some were not 🤔' },
-      { text: 'Buy rAIvan’s “Secret Wish List”', icon: '📜', coins: -10, customers: 8, happiness: -5, trap: true, label: 'Bought rAIvan’s list', story: 'rAIvan’s list was FAKE! {team} made things nobody really wanted 😱' },
+      { text: 'Buy Fibbot’s “Secret Wish List”', icon: '📜', coins: -10, customers: 8, happiness: -5, trap: true, label: 'Bought Fibbot’s list', story: 'Fibbot’s list was FAKE! {team} made things nobody really wanted 😱' },
       { text: 'Put an idea box at school', icon: '📦', coins: -20, customers: 6, happiness: 5, label: 'Idea box at school', story: '{team}’s idea box filled up with 100 notes! 📦' },
     ],
   },
   a1q2: {
     id: 'a1q2', act: 1, introAnim: 'spybot',
-    title: 'rAIvan’s spy-bot wants to peek at your idea notebook!',
+    title: 'Fibbot’s spy-bot wants to peek at your idea notebook!',
     sub: 'What do you do?',
     boltIntro: 'Uh oh! A sneaky spy-bot is knocking at your door. It wants to see your ideas!',
     options: [
-      { text: 'Join rAIvan’s team for coins', icon: '🤝', coins: 20, customers: 0, happiness: -10, trap: true, label: 'Joined rAIvan', story: 'rAIvan paid {team}... then bossed them around all day 😩' },
+      { text: 'Join Fibbot’s team for coins', icon: '🤝', coins: 20, customers: 0, happiness: -10, trap: true, label: 'Joined Fibbot', story: 'Fibbot paid {team}... then bossed them around all day 😩' },
       { text: 'Show it, he looks friendly', icon: '📖', coins: 0, customers: -7, happiness: 0, label: 'Showed the notebook', story: 'Oops! The spy-bot copied {team}’s idea and zoomed away 🏃' },
       { text: 'Lock it in a strong box', icon: '🔒', coins: -10, customers: 2, happiness: 2, label: 'Locked the notebook', story: '{team} bought a strong box with a lock. The ideas are safe! 🔒' },
       { text: 'Tell everyone your idea first!', icon: '📢', coins: -20, customers: 7, happiness: 1, label: 'Told everyone first', story: '{team} printed flyers for the whole town. Everyone knows who had the idea first! 📢' },
@@ -137,7 +152,7 @@ export const QUESTIONS: Record<string, Question> = {
     boltIntro: 'You know what people need. Now let’s build it! But how?',
     options: [
       { text: 'Build small, test with 5 friends', icon: '🧪', coins: -20, customers: 3, happiness: 9, label: 'Tested with friends', story: '{team}’s 5 friends found 3 problems. All fixed! 🔧', bonus: '+5 seconds in Bug Smash' },
-      { text: 'Copy rAIvan’s design', icon: '📋', coins: 0, customers: 6, happiness: -8, trap: true, label: 'Copied rAIvan', story: 'People spotted the copy right away. “Hey, that’s rAIvan’s!” 😬' },
+      { text: 'Copy Fibbot’s design', icon: '📋', coins: 0, customers: 6, happiness: -8, trap: true, label: 'Copied Fibbot', story: 'People spotted the copy right away. “Hey, that’s Fibbot’s!” 😬' },
       { text: 'Build super fast, launch tomorrow', icon: '⚡', coins: 0, customers: 8, happiness: -2, label: 'Built super fast', story: '{team} launched in one night! A bit wobbly though 🫨' },
       { text: 'Add 20 cool features', icon: '✨', coins: -20, customers: 6, happiness: 0, label: 'Added 20 features', story: '20 features! Customers are a little confused about which button does what 🤯' },
     ],
@@ -155,27 +170,27 @@ export const QUESTIONS: Record<string, Question> = {
     ],
   },
   a4q2: {
-    id: 'a4q2', act: 4, introAnim: 'sharks',
+    id: 'a4q2', act: 4, introAnim: 'investors',
     title: 'Investors want to give you money! Who do you pick?',
     sub: 'Investors give money, but they always want something back.',
-    boltIntro: 'Look at the harbour! Investors have arrived with bags of coins!',
+    boltIntro: 'Look! Investors are walking through the Techistan market with bags of coins. Each one wants a piece of your startup!',
     options: [
-      { text: 'Friendly Dolphin', icon: '🐬', coins: 50, customers: 0, happiness: 3, label: 'Friendly Dolphin', story: 'The Dolphin gave {team} coins AND great advice 🐬' },
-      { text: 'rAIvan Ventures', icon: '💼', coins: 120, customers: -12, happiness: -8, trap: true, label: 'rAIvan Ventures', story: 'rAIvan gave lots of coins... then sold {team}’s customer secrets! 😡' },
-      { text: 'Big Shark', icon: '🦈', coins: 100, customers: 0, happiness: -6, label: 'Big Shark', story: 'The Big Shark wants results NOW. The team is stressed 😰' },
+      { text: 'Kind Mentor', icon: '🧑‍🏫', coins: 50, customers: 0, happiness: 3, label: 'Kind Mentor', story: 'The Kind Mentor gave {team} coins AND great advice 🧑‍🏫' },
+      { text: 'Fibbot Ventures', icon: '💼', coins: 120, customers: -12, happiness: -8, trap: true, label: 'Fibbot Ventures', story: 'Fibbot gave lots of coins... then sold {team}’s customer secrets! 😡' },
+      { text: 'Pushy Boss', icon: '🕴️', coins: 100, customers: 0, happiness: -6, label: 'Pushy Boss', story: 'The Pushy Boss wants results NOW. The team is stressed 😰' },
       { text: 'Mama-Mami Fund', icon: '👨‍👩‍👧', coins: 30, customers: 4, happiness: 0, label: 'Mama-Mami Fund', story: 'Mama-Mami gave coins and told the whole family! 👨‍👩‍👧' },
     ],
   },
   a5q1: {
     id: 'a5q1', act: 5, introAnim: 'copier',
-    title: 'rAIvan copied ALL your products and sells them at half price!',
+    title: 'Fibbot copied ALL your products and sells them at half price!',
     sub: 'How do you fight back?',
-    boltIntro: 'rAIvan is furious! His copy machine is printing fake products everywhere!',
+    boltIntro: 'Fibbot is furious! His copy machine is printing fake products everywhere!',
     options: [
       { text: 'Give old customers a loyalty card', icon: '💳', coins: -20, customers: 6, happiness: 5, label: 'Loyalty cards', story: 'Old customers love their loyalty cards and stayed! 💳' },
       { text: 'Cut our price to half too', icon: '✂️', coins: 0, customers: 6, happiness: -2, label: 'Cut price', story: 'Cheaper! More customers... but every sale earns half as much 🪙' },
       { text: 'Say his copy is dangerous (it isn’t)', icon: '🤥', coins: 0, customers: 8, happiness: -10, trap: true, label: 'Told a lie', story: 'People found out it was a lie. Not cool! 🙅' },
-      { text: 'Make ours even better', icon: '💪', coins: -40, customers: 3, happiness: 10, label: 'Made it better', story: '{team}’s product got SO good, rAIvan’s copy looks silly now ✨' },
+      { text: 'Make ours even better', icon: '💪', coins: -40, customers: 3, happiness: 10, label: 'Made it better', story: '{team}’s product got SO good, Fibbot’s copy looks silly now ✨' },
     ],
   },
 };
@@ -185,28 +200,30 @@ export const BUG = {
   seconds: 15,
   testedBonusSeconds: 5,
   testedOption: { qId: 'a2q1', index: 0 },
+  // Bugs smashed -> what the customers feel. Fewer bugs left = a smoother product = happier customers (and more of them stay).
   tiers: [
-    { min: 0, max: 9, happiness: -5, text: 'The bugs won this time' },
-    { min: 10, max: 19, happiness: 0, text: 'Phew! Bugs under control' },
-    { min: 20, max: 29, happiness: 4, text: 'Bug buster! Customers are happy' },
-    { min: 30, max: 999, happiness: 7, text: 'BUG LEGEND! Not a single bug left' },
+    { min: 0, max: 9, happiness: -5, customers: -2, text: 'Too many bugs got through. Customers hit glitches and got grumpy' },
+    { min: 10, max: 19, happiness: 0, customers: 0, text: 'Phew! The bugs are under control. Customers noticed nothing wrong' },
+    { min: 20, max: 29, happiness: 4, customers: 2, text: 'Bug buster! A smooth product makes customers happy and brings new ones' },
+    { min: 30, max: 999, happiness: 7, customers: 3, text: 'BUG LEGEND! Super smooth. Customers love it and tell their friends' },
   ],
 };
 
 // ---------- Price It Right ----------
+// 10 interested people look at the product. A price that is low sells to all 10, a price that is too high sells to none.
+// Every sale earns (price - cost). Coins gained = 80 x (your profit / the best possible profit), so every product pays the same for its best price.
+// Customers gained = buyers - 4. Happiness depends on fairness.
 export const PRICE = {
-  min: 10, max: 100, step: 10,
-  tiers: [
-    { off: 0, coins: 80, happiness: 3, verdict: 'right' as const },
-    { off: 10, coins: 60, happiness: 0, verdict: 'close' as const },
-    { off: 20, coins: 40, happiness: 0, verdict: 'close' as const },
-    { off: 999, coins: 20, happiness: 0, verdict: null },
-  ],
+  min: PRICE_MIN, max: PRICE_MAX, step: PRICE_STEP,
+  interested: 10,
+  /** The best possible price always pays this many coins; other prices pay in proportion to their profit. */
+  bestCoins: 80,
+  customersBase: 4,
   text: {
-    right: 'Perfect price! A happy crowd is buying',
-    close: 'Nearly right! Good sales 👍',
-    high: 'Too expensive! Few people bought, so the cash box stayed small 🚶',
-    low: 'So cheap the shop is packed... but each sale earns almost nothing',
+    right: 'Perfect price! Lots of people bought AND every sale earned a good profit',
+    close: 'Nearly right! Good sales and a decent profit',
+    high: 'Too expensive! Many people walked away, so the coin box stayed small',
+    low: 'So cheap that everyone bought... but each sale earned almost nothing',
   },
 };
 
@@ -247,13 +264,19 @@ export const MEGA = {
 };
 
 // ---------- Customer Mood ----------
-// Plain plus/minus. Never shown as maths on screen.
+// Only twice: after Act 2 (looks at acts 1 to 2) and after Act 5 (looks at all 5 acts). Later acts count double.
+// Rule in one line: customers who are NOT happy leave, and very happy customers bring friends.
+// gap = weighted average over the acts of (customers won - happiness earned). Big positive gap = unhappy crowd.
 export const MOOD = {
+  weights: { 1: 1, 2: 1, 3: 2, 4: 2, 5: 2 } as Record<number, number>,
+  checkActs: [2, 5],
+  // gap thresholds -> customers change
   rules: [
-    { when: 'happyBehind10', customers: -5 },
-    { when: 'happyBehind1', customers: -2 },
-    { when: 'happyAhead10', customers: 3 },
-  ],
+    { minGap: 6, customers: -6 },
+    { minGap: 3, customers: -3 },
+    { maxGap: -5, customers: 4 },
+    { maxGap: -2, customers: 2 },
+  ] as { minGap?: number; maxGap?: number; customers: number }[],
   text: {
     left: (n: number) => `${n} customers got bored and left`,
     joined: (n: number) => `${n} happy customers brought their friends!`,
@@ -281,7 +304,9 @@ export const RECIPE = [
 ];
 
 // Bolt's narration beats for each big scene. The scene component animates one beat at a time.
-export const SCENES: Record<SceneId, { title: string; beats: string[] }> = {
+// Art indices follow beat indices: keep the art file in step when a beat is added, moved or removed.
+// `summary` is the one-line "In short" shown and spoken after the last beat (scenes with 2+ beats).
+export const SCENES: Record<SceneId, { title: string; beats: string[]; summary?: string }> = {
   welcome: {
     title: 'Welcome to Techistan!',
     beats: [
@@ -289,89 +314,106 @@ export const SCENES: Record<SceneId, { title: string; beats: string[] }> = {
       'Techistan is a city full of ideas. Flying buses, singing streetlights, robot chaiwalas!',
       'Today the Mayor has a big announcement...',
       '“The Startup Festival begins! Build a startup in 5 steps and win the Golden Trophy!”',
-      'But wait... who is THAT?! 😱',
-      'It’s rAIvan, the 10-headed AI! He wants every startup to copy him, cheat, or sell to him.',
+      'But wait... who is that?! 😱',
+      'It’s Fibbot, a fibbing, copying, cheating robot! He wants every startup to copy him, cheat, or sell to him.',
       'Don’t worry. Smart, honest startups always beat him. Let’s build yours!',
     ],
+    summary: 'Build a startup in 5 steps, win the Golden Trophy, and beat Fibbot the cheat!',
   },
   howto: {
     title: 'How to play',
     beats: [
-      'Your startup has 3 things: 👥 Customers, 😊 Happiness and 🪙 Coins.',
-      'Success needs ALL three. Lots of happy customers AND money in the box! Unhappy customers walk away, so keep them smiling.',
+      'How to play! Your startup has 3 things: 👥 Customers, 😊 Happiness and 🪙 Coins.',
+      'Let’s start with Coins. Coins are your money. You spend coins to make and buy things, and you earn coins when customers buy from you.',
+      'Spend too much and your coin box runs empty. Earn more and your startup can grow bigger!',
+      'Next, Customers. Customers are the people who buy from you. More customers means more sales.',
+      'Customers change after every choice. A good idea brings new customers. A bad choice or a trick makes them walk away.',
+      'Next, Happiness. Happiness is how much your customers like you. Happy customers come back and tell their friends. 😊',
+      'Happiness goes up with good products and fair prices. It goes down with bugs and tricks.',
+      'Why both? Customers bring the sales. Happiness keeps them coming back. You need both!',
+      'Your Success score mixes customers and happiness, then multiplies by your coins. Grow all three!',
       'As you grow, your startup grows too: Tiny Stall, Busy Shop, Big Office, Sky Tower!',
       'Every question: talk with your team, then your Lock Master taps your choice and locks it 🔒',
       'When everyone has locked, I reveal what happened to each team, one by one! Sometimes I pick a team for Mic Time too 🎤',
-      'Careful: some options are rAIvan’s tricks. They look great... but are they? 😈',
+      'Careful: some options are Fibbot’s tricks. They look great... but are they? 😈',
+      'So the whole game: coins, customers and happiness, then lock your choices and watch the reveal. Keep all three growing and win!',
     ],
+    summary: 'Coins are your money, customers and happiness make Success, and all three must grow.',
   },
   act1: {
     title: 'Step 1: The Problem 🔍',
     beats: [
-      'Every great startup starts with a PROBLEM.',
-      'Like this kid. Cold lunch AGAIN. Yuck! 🥶',
+      'Act 1: The Problem. Every great startup starts with a problem.',
+      'Like this kid. Cold lunch again. Yuck! 🥶',
       'One day she thought: “What if hot lunch came to school?” 💡 That’s how a startup is born!',
-      'You have your products. But WHO needs them? And what do they really want?',
+      'You have your products. But who needs them? And what do they really want?',
       'Step 1 of the Startup Recipe: find the problem!',
     ],
+    summary: 'Find a real problem first: ask who needs help and what they really want.',
   },
   act2: {
     title: 'Step 2: Build it 🛠️',
     beats: [
       'Here’s what happened last time... (story so far)',
-      'You know what people need. Now it’s time to BUILD!',
+      'Act 2: Build it. You know what people need. Now it’s time to build!',
       'Welcome to the Techistan Workshop. Hammers, screws and a lot of glue! 🔨',
-      'But psst... rAIvan’s Bug Head is hiding in the corner. He loves breaking things',
+      'But psst... Fibbot’s bug is hiding in the corner. It loves breaking things!',
       'Step 2 of the Startup Recipe: build version 1!',
     ],
+    summary: 'Build version 1 of your product, and watch out for bugs.',
   },
   act3: {
     title: 'Step 3: Launch it 📣',
     beats: [
       'Here’s what happened last time... (story so far)',
-      'Your product works! But look at your shop... empty. Crickets chirping 🦗',
+      'Act 3: Launch it. Your product works! But look at your shop... empty. Crickets chirping 🦗',
       'A great product nobody knows about is like a party with no guests!',
-      'Step 3 of the Startup Recipe: tell Techistan about it!',
+      'Step 3 of the Startup Recipe: tell Techistan about it! Billboards, megaphones and customers come running!',
     ],
+    summary: 'A great product needs customers, so launch it loudly.',
   },
   act4: {
     title: 'Step 4: Money 💰',
     beats: [
       'Here’s what happened last time... (story so far)',
-      'Customers are coming! Now your startup must EARN money.',
+      'Act 4: Money. Customers are coming to your market stall! Now your startup must earn money.',
       'Too expensive and people walk away. Too cheap and you earn nothing. Tricky! 🤔',
-      'And later today... strange boats will sail into Techistan harbour. 🦈',
+      'Later today, investors will walk through the market. They want to see which stalls are winning! 💼',
       'Step 4 of the Startup Recipe: money!',
     ],
+    summary: 'Price fairly: too high loses customers, too low earns no money.',
   },
   act5: {
     title: 'Step 5: Grow 🚀',
     beats: [
       'Here’s what happened last time... (story so far)',
-      'Your startups are growing fast! Techistan loves you!',
-      'But rAIvan is FURIOUS. Smoke is coming out of all 10 heads 😤',
+      'Act 5: Grow. Your startups are growing fast! Techistan loves you!',
+      'But Fibbot is furious. Smoke is coming out of his antennas! 😤',
       'He’s up to something big. And the Mayor has a huge order for the Festival...',
       'Step 5 of the Startup Recipe: grow bigger and stronger!',
     ],
+    summary: 'Keep growing and stay honest. Fibbot is plotting, and a huge Festival order is coming.',
   },
   showday: {
     title: 'Show Day',
     beats: [
-      'The Startup Festival is here! All of Techistan has come to watch 🎪',
+      'Show Day! The Startup Festival is here, and all of Techistan has come to watch 🎪',
       'Every startup will tell its story on the big stage.',
       'Then every team gives stars. Be fair, real founders cheer each other on!',
-      'And then... the Golden Trophy!',
+      'And then... the Golden Trophy! 🏆',
     ],
+    summary: 'Tell your story, give fair stars, and see who takes the Golden Trophy.',
   },
   finale: {
-    title: 'The end of rAIvan?',
+    title: 'The end of Fibbot?',
     beats: [
-      'rAIvan tried copying, cheating and tricking...',
+      'Fibbot tried copying, cheating and tricking...',
       'But Techistan’s startups were smarter, kinder and more honest!',
-      'One by one, his heads got dizzy... and POOF! 💥',
-      'rAIvan runs away shouting “I’ll be back next year!” 😂',
+      'One by one, his circuits got dizzy... and poof! 💥',
+      'Fibbot runs away shouting “I’ll be back next year!” 😂',
       'Now... who wins the Golden Trophy?',
     ],
+    summary: 'Honest startups beat Fibbot. Now let’s find the winner!',
   },
 };
 
@@ -385,51 +427,53 @@ export const AWARDS = {
 };
 
 // ---------- The script ----------
+// Rhythm of every act: story scene -> main choice(s) -> at most ONE or TWO side activities -> leaderboard -> progress.
 export const SCRIPT: Step[] = [
   { kind: 'lobby', id: 'lobby' },
   { kind: 'scene', id: 'welcome', sceneId: 'welcome', act: 0 },
   { kind: 'setup_players', id: 'players' },
   { kind: 'setup_teams', id: 'teams' },
+  { kind: 'setup_names', id: 'names' },
   { kind: 'setup_roles', id: 'roles' },
   { kind: 'setup_products', id: 'products' },
-  { kind: 'setup_names', id: 'names' },
   { kind: 'scene', id: 'howto', sceneId: 'howto', act: 0 },
   // Act 1 Problem
   { kind: 'scene', id: 'act1', sceneId: 'act1', act: 1 },
   { kind: 'question', id: 'a1q1', qId: 'a1q1', act: 1 },
   { kind: 'question', id: 'a1q2', qId: 'a1q2', act: 1 },
-  { kind: 'mood', id: 'mood1', act: 1 },
   { kind: 'mic', id: 'mic1', act: 1 },
   { kind: 'board', id: 'board1', act: 1 },
+  { kind: 'progress', id: 'progress1', act: 1 },
   // Act 2 Build
   { kind: 'scene', id: 'act2', sceneId: 'act2', act: 2 },
   { kind: 'question', id: 'a2q1', qId: 'a2q1', act: 2 },
   { kind: 'bugsmash', id: 'bugs', act: 2 },
   { kind: 'mood', id: 'mood2', act: 2 },
-  { kind: 'mic', id: 'mic2', act: 2 },
   { kind: 'board', id: 'board2', act: 2 },
+  { kind: 'progress', id: 'progress2', act: 2 },
   // Act 3 Launch
   { kind: 'scene', id: 'act3', sceneId: 'act3', act: 3 },
   { kind: 'question', id: 'a3q1', qId: 'a3q1', act: 3 },
   { kind: 'auction', id: 'auction', act: 3 },
-  { kind: 'mood', id: 'mood3', act: 3 },
   { kind: 'mic', id: 'mic3', act: 3 },
   { kind: 'board', id: 'board3', act: 3 },
+  { kind: 'progress', id: 'progress3', act: 3 },
   { kind: 'break', id: 'break' },
+  { kind: 'board', id: 'recap', act: 3, recap: true },
   // Act 4 Money
   { kind: 'scene', id: 'act4', sceneId: 'act4', act: 4 },
   { kind: 'price', id: 'price', act: 4 },
   { kind: 'question', id: 'a4q2', qId: 'a4q2', act: 4 },
-  { kind: 'mood', id: 'mood4', act: 4 },
   { kind: 'mic', id: 'mic4', act: 4 },
   { kind: 'board', id: 'board4', act: 4 },
+  { kind: 'progress', id: 'progress4', act: 4 },
   // Act 5 Grow
   { kind: 'scene', id: 'act5', sceneId: 'act5', act: 5 },
   { kind: 'question', id: 'a5q1', qId: 'a5q1', act: 5 },
   { kind: 'megaorder', id: 'mega', act: 5 },
   { kind: 'mood', id: 'mood5', act: 5 },
-  { kind: 'mic', id: 'mic5', act: 5 },
   { kind: 'board', id: 'board5', act: 5 },
+  { kind: 'progress', id: 'progress5', act: 5 },
   // Show Day
   { kind: 'scene', id: 'showday', sceneId: 'showday', act: 6 },
   { kind: 'pitch', id: 'pitch' },
@@ -437,3 +481,63 @@ export const SCRIPT: Step[] = [
   { kind: 'awards', id: 'awards' },
   { kind: 'end', id: 'end' },
 ];
+
+/**
+ * Decisions that must stay SECRET: the team's Lock Master whispers the answer to the host, who enters it on the phone
+ * (4 shape buttons + Lock). The big screen shows the options but nobody taps them there, so nothing leaks.
+ * Needs secrecy: temptations and trade-offs other teams could copy (a1q2, a3q1, a4q2, a5q1) and the partner deal in Mega Order
+ * (partners must not see each other's pick). Open on screen: a1q1 and a2q1 (harmless method choices) and Price It Right (slider).
+ */
+export const SECRET_STEPS = ['a1q2', 'a3q1', 'a4q2', 'a5q1', 'mega'];
+export const isSecretStep = (id: string) => SECRET_STEPS.includes(id);
+
+/** Index of the first act scene: the header and progress rail only show from here on ("the game has started"). */
+export const GAME_START_ID = 'act1';
+
+// ---------- Why each choice does what it does (kid-friendly; spoken at the reveal) ----------
+// Order = the question's options. Explains the direction of each change (coin costs are exact; customer and happiness
+// numbers are NOT repeated here because meters stop at 0 and 50: the pills on screen show the real change).
+export const WHY: Record<string, string[]> = {
+  a1q1: [
+    'Asking real people cost 10 coins. They told you exactly what they need, so you built something they love: happiness goes up a lot, and a few of them became your first customers.',
+    'Guessing is free. But you only half know what people need, so a few customers came and some were happy, but not many.',
+    'The fake list cost 10 coins. It made big promises, so lots of people came to look. But the product was wrong for them, so they were unhappy: happiness goes down.',
+    'The idea box cost 20 coins. Lots of kids wrote what they want, and people noticed you: new customers came and happiness goes up.',
+  ],
+  a1q2: [
+    'Fibbot paid you 20 coins, so your coins go up. But he bossed your team around all day, so everyone felt unhappy: happiness goes down a lot.',
+    'Showing it was free, but the spy-bot copied your idea and ran off. Fibbot’s copy took some of your customers away.',
+    'The strong box cost 10 coins. Your ideas stayed safe, so customers trusted you and your team felt calm: a few more customers and a little more happiness.',
+    'The flyers cost 20 coins, but the whole town heard about you first: lots of new customers. Nobody could say you copied, so happiness goes up a little.',
+  ],
+  a2q1: [
+    'Testing cost 20 coins. Your friends found problems before launch, so customers are very happy and some came. Bonus: fewer bugs means 5 extra seconds in Bug Smash!',
+    'Copying is free and fast, so customers came. But people spotted the copy and stopped trusting you: happiness goes down.',
+    'Launching fast is free and lots of customers came to see. But the product was a bit wobbly, so happiness goes down a little.',
+    'Twenty features cost 20 coins. Customers were curious and came, but too many buttons confused them, so happiness stayed the same.',
+  ],
+  a3q1: [
+    'Posters cost 20 coins, but everyone in Techistan saw them: lots of new customers. Posters do not change how happy people are.',
+    'This is free. Happy customers love to tell their friends, so lots of new customers came!',
+    'The fake reviews cost 10 coins and looked great, so many customers came. Then the Techistan Times found out. Everybody felt tricked: happiness goes down a lot.',
+    'The free samples cost 40 coins. Kids loved trying it first: new customers came and happiness goes up.',
+  ],
+  a4q2: [
+    'The Kind Mentor gave you 50 coins and good advice. Good advice makes the team feel supported: happiness goes up a little.',
+    'Fibbot gave the most coins, 120! But he sold your customers’ secrets. You lost customers and happiness went down.',
+    'The Pushy Boss gave 100 coins but wants results right now. The team is stressed: happiness goes down.',
+    'Mama-Mami gave only 30 coins, but told the whole family about you: a few new customers came.',
+  ],
+  a5q1: [
+    'Loyalty cards cost 20 coins. Old customers felt special and stayed: more customers and more happiness.',
+    'Cutting your price is free and cheap things bring customers. But you earn less on every sale, so the team feels uneasy: happiness goes down a little.',
+    'Lying is free and scared people into coming. But people found out it was a lie and felt cheated: happiness goes down a lot.',
+    'Making your product better cost 40 coins. Customers loved it: happiness goes up a lot and a few more customers came.',
+  ],
+};
+/** Explanation for the word-of-mouth option when customers were NOT happy enough to talk. */
+export const WHY_ELSE: Record<string, string> = {
+  a3q1_1: 'This is free, but your customers were not happy enough to talk about you, so only a few new customers came. Happy customers tell friends. Unhappy ones stay quiet.',
+};
+/** One line explaining the Bug Smash time bonus. */
+export const BONUS_WHY = 'Because your team tested early, there are fewer bugs to fix. That gives you 5 extra seconds in Bug Smash!';

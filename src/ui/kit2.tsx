@@ -1,9 +1,10 @@
-// DeltaPill, TimerRing, Confetti, SpeechBubble, RecipeBar.
+// DeltaPill, TimerRing, Confetti, SpeechBubble, RecipeBar. Every changing number here goes through <Num> (fixed-width rolling digits).
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { MeterIcon, RecipeIcon, CheckBadge } from './icons';
 import { RECIPE } from '../game/content';
 import { rng } from './svg';
+import { Num } from './primitives';
 
 // ---------------------------------------------------------------------------
 export function DeltaPill({ value, kind, size = 'md' }: { value: number; kind: 'customers' | 'happiness' | 'coins'; size?: 'md' | 'lg' }) {
@@ -30,7 +31,7 @@ export function DeltaPill({ value, kind, size = 'md' }: { value: number; kind: '
         <span style={{ display: 'grid', placeItems: 'center', width: big ? 76 : 56, height: big ? 76 : 56, borderRadius: 99, background: '#fff' }}>
           <MeterIcon kind={kind} size={big ? 62 : 46} />
         </span>
-        <span style={{ color: edge, paddingTop: 6 }}>{good ? '+' : '−'}{Math.abs(value)}</span>
+        <span style={{ color: edge, paddingTop: 6 }}><Num value={`${good ? '+' : '−'}${Math.abs(value)}`} duration={500} /></span>
       </span>
     </span>
   );
@@ -55,7 +56,7 @@ export function TimerRing({ remainingMs, totalMs, size = 200 }: { remainingMs: n
           strokeDasharray={`${C * frac} ${C}`} transform="rotate(-90 50 50)" style={{ transition: 'stroke-dasharray 0.25s linear, stroke 0.3s' }} />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: size * 0.34, color: low ? '#D93636' : '#4A3613', paddingTop: size * 0.05 }}>
-        {secs}
+        <Num value={secs} duration={300} />
       </div>
     </motion.div>
   );

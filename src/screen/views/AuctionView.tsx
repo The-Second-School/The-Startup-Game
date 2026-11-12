@@ -1,21 +1,29 @@
-// Billboard Auction: one ticket at a time. The host enters bids on the phone; the top bid glows and bounces.
-// SOLD: "Going once... twice... SOLD!" with a hammer, then the ticket flies to the winner's paddle.
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, Bolt, Confetti, CountUp, DeltaPill, MeterIcon, Raivan } from '../../ui';
-import type { AuctionState, AuctionTicket, Team } from '../../game/types';
+// Billboard Auction. Intro explains it step by step (revealed in step with Bolt's voice), then one ticket at a time:
+// the host enters each team's bid on the phone, Fibbot answers by himself, and the screen plays it out in beats
+// (team bid -> "Fibbot is thinking..." -> his counter, or "Fibbot gives up!"). SOLD is timed to the spoken "SOLD!".
+// Layout: Bolt (dock, drawn by ScreenApp) top-left, the ticket title box right after him; two calm columns below.
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useAnimationControls } from 'motion/react';
+import { Avatar, Confetti, DeltaPill, Fibbot, MeterIcon, Num } from '../../ui';
+import { AUCTION_OPEN, AUCTION_RESERVE, AUCTION_STEP } from '../../game/content';
 import { maxBid } from '../../game/engine';
+import type { AuctionState, AuctionTicket, Team } from '../../game/types';
 import { sfx } from '../../audio';
 import { useGame } from '../lib/ctx';
-import { teamBase, teamName, teamShade } from '../lib/game';
+import { teamBase, teamName } from '../lib/game';
+import { CONTENT_TOP } from '../lib/layout';
 import { ReadyHint } from '../components/ReadyHint';
-import { Gavel, TicketShape } from '../components/art';
-import { useLaggedTeams } from '../hooks/useLaggedTeams';
-import { useTimeline } from '../hooks/useTimeline';
+import { Gavel } from '../components/art';
+import { useNarrBeat } from '../hooks/useNarrBeat';
+import '../side.css';
+
+type Bid = { by: string; amount: number };
+const FIB = 'fibbot';
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 function Billboard({ icon, size = 220 }: { icon: string; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 240 240" style={{ overflow: 'visible' }}>
+    <svg width={size} height={size} viewBox="0 0 240 240" style={{ overflow: 'visible' }} aria-hidden>
       <rect x={70} y={150} width={22} height={86} rx={8} fill="#8A6F3E" /><rect x={148} y={150} width={22} height={86} rx={8} fill="#8A6F3E" />
       <rect x={14} y={30} width={212} height={130} rx={28} fill="#fff" />
       <rect x={24} y={42} width={192} height={118} rx={22} fill="#5A2F9E" />
@@ -27,219 +35,400 @@ function Billboard({ icon, size = 220 }: { icon: string; size?: number }) {
   );
 }
 
-function TicketCard({ ticket, index, total }: { ticket: AuctionTicket; index: number; total: number }) {
-  const gains = ([['customers', ticket.deltas.customers], ['happiness', ticket.deltas.happiness]] as const).filter(([, v]) => v !== 0);
-  return (
-    <div className="v2-ticket">
-      <TicketShape width={1000} height={330} />
-      <div className="v2-ticket-stub"><Billboard icon={ticket.icon} size={210} /></div>
-      <div className="v2-ticket-body">
-        <div className="v2-pill">Billboard {index + 1} of {total}</div>
-        <div className="v2-ticket-title">{ticket.title}</div>
-        <div className="v2-ticket-gains">
-          <span className="v2-sub">You get</span>
-          {gains.map(([k, v]) => <DeltaPill key={k} value={v} kind={k} />)}
-        </div>
-      </div>
-    </div>
-  );
-}
+const Prize = ({ tk, size }: { tk: AuctionTicket; size?: 'md' | 'lg' }) => (
+  <>
+    {tk.deltas.customers !== 0 && <DeltaPill value={tk.deltas.customers} kind="customers" size={size} />}
+    {tk.deltas.happiness !== 0 && <DeltaPill value={tk.deltas.happiness} kind="happiness" size={size} />}
+  </>
+);
 
-const PAD = { top: 596, margin: 60, gap: 24 };
-const paddleW = (n: number) => Math.floor((1920 - 2 * PAD.margin - (n - 1) * PAD.gap) / n);
-const paddleX = (i: number, n: number) => PAD.margin + i * (paddleW(n) + PAD.gap);
+const wonTicket = (st: AuctionState, id: string) => st.tickets.find(tk => st.winners[tk.id]?.by === id) ?? null;
+const spring = { type: 'spring' as const, stiffness: 340, damping: 22 };
+const card = { initial: { y: 50, opacity: 0, scale: 0.92 }, animate: { y: 0, opacity: 1, scale: 1 }, transition: spring };
 
 export function AuctionView() {
   const { state } = useGame();
   if (state.step.type !== 'auction') return null;
-  return <Auction st={state.step} />;
-}
-
-function Auction({ st }: { st: AuctionState }) {
-  const { state } = useGame();
-  const sold = st.phase === 'sold';
-  const teams = useLaggedTeams(state.teams, sold ? 3600 : 0);
+  const st = state.step;
   const ticket = st.tickets[st.ticket];
-  const winner = ticket ? st.winners[ticket.id] : undefined;
-  const winTeam = winner && winner.by !== 'raivan' ? state.teams.find(t => t.id === winner.by) ?? null : null;
-  const n = useTimeline(`${st.ticket}-${st.phase}`, sold ? [1100, 2300, 3500] : []);
-  const [fire, setFire] = useState(0);
-  const showTicket = (st.phase === 'bidding' || sold) && !!ticket;
-  const count = teams.length + 1;
-  const W = paddleW(count);
-
-  useEffect(() => {
-    if (!sold) return;
-    if (n === 1) sfx.play('tick');
-    if (n === 2) { sfx.play(winTeam ? 'fanfare' : 'evil'); if (winTeam) setFire(f => f + 1); }
-    if (n === 3) sfx.play('whoosh');
-  }, [n, sold, winTeam]);
-
-  const flyIdx = winner ? (winner.by === 'raivan' ? teams.length : Math.max(0, teams.findIndex(t => t.id === winner.by))) : 0;
-  const flight = { x: paddleX(flyIdx, count) + W / 2 - (60 + 500), y: PAD.top + 90 - (120 + 165) };
-
-  const wonBy = (id: string) => st.tickets.find(tk => st.winners[tk.id]?.by === id) ?? null;
-
-  const rows: { id: string; team: Team | null }[] = [...teams.map(t => ({ id: t.id, team: t })), { id: 'raivan', team: null }];
-
   return (
     <div className="v2-root">
-      <Confetti fire={fire} />
-
-      <AnimatePresence>
-        {st.phase === 'intro' && (
-          <motion.div key="intro" className="v2-card v2-top" initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0, transition: { duration: 0.22 } }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
-            <div className="v2-top-bolt"><Bolt pose="point" size={250} talking /></div>
-            <div className="v2-top-body">
-              <div className="v2-top-title">Billboard Auction!</div>
-              <div className="v2-sub">Bid your coins. The highest bid wins the billboard! Each team can win only one. Keep 50 coins safe: your Max bid is your coins minus 50. Watch out, rAIvan bids too!</div>
-            </div>
-          </motion.div>
-        )}
-        {st.phase === 'done' && (
-          <motion.div key="done" className="v2-card v2-top" initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0, transition: { duration: 0.22 } }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
-            <div className="v2-top-bolt"><Bolt pose="cheer" size={250} /></div>
-            <div className="v2-top-body"><div className="v2-top-title">Sold, sold, sold!</div><div className="v2-sub">Here is who won each billboard.</div></div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence mode="popLayout">
-        {showTicket && ticket && (
-          <motion.div
-            key={ticket.id}
-            className="v2-ticket-wrap"
-            initial={{ x: -700, rotate: -8, opacity: 0 }}
-            animate={sold && n >= 3 ? { x: flight.x, y: flight.y, scale: 0.18, rotate: 10, opacity: 0.0 } : { x: 0, y: 0, scale: 1, rotate: -1.5, opacity: 1 }}
-            exit={{ x: 500, rotate: 6, opacity: 0, transition: { duration: 0.25 } }}
-            transition={sold && n >= 3 ? { duration: 0.8, ease: [0.5, 0, 0.8, 0.4] } : { type: 'spring', stiffness: 260, damping: 18 }}
-          >
-            <motion.div animate={sold ? { y: 0 } : { y: [0, -7, 0] }} transition={sold ? { duration: 0.2 } : { duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}>
-              <TicketCard ticket={ticket} index={st.ticket} total={st.tickets.length} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence mode="wait">
-        {showTicket && !sold && (
-          <motion.div key="bid" className="v2-bidpanel" initial={{ x: 120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 120, opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
-            <BidPanel st={st} teams={state.teams} />
-          </motion.div>
-        )}
-        {showTicket && sold && (
-          <motion.div key="sold" className="v2-bidpanel" initial={{ x: 120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 120, opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
-            <div className="v2-card v2-sold">
-                <motion.div key={n} className="v2-gavel" initial={{ rotate: -34 }} animate={{ rotate: 0 }} transition={{ type: 'spring', stiffness: 700, damping: 12 }}><Gavel size={210} /></motion.div>
-                <AnimatePresence mode="wait">
-                  <motion.div key={Math.min(n, 2)} className="v2-sold-text" initial={{ scale: 0.4, opacity: 0, rotate: -6 }} animate={{ scale: 1, opacity: 1, rotate: n >= 2 ? -3 : 0 }} exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.1 } }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}>
-                    {n === 0 && <div className="v2-going">Going once...</div>}
-                    {n === 1 && <div className="v2-going">Going twice...</div>}
-                    {n >= 2 && (
-                      <>
-                        <div className="v2-soldstamp">SOLD!</div>
-                        {winTeam ? (
-                          <div className="v2-sold-who"><Avatar seed={winTeam.avatarSeed} colorIndex={winTeam.colorIndex} shade={2} size={84} mood="wow" /><div className="v2-sold-lines"><b>{teamName(winTeam)}</b><span>paid {winner?.amount} <MeterIcon kind="coins" size={44} /></span></div></div>
-                        ) : (
-                          <div className="v2-sold-who"><Raivan mood="laugh" size={90} /><span>rAIvan keeps it!</span></div>
-                        )}
-                      </>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence mode="wait">
-      {st.phase === 'done' ? (
-        <motion.div key="winrow" className="v2-winrow" exit={{ opacity: 0, y: 80, transition: { duration: 0.22 } }}>
-          {st.tickets.map((tk, i) => {
-            const w = st.winners[tk.id];
-            const t = w && w.by !== 'raivan' ? state.teams.find(x => x.id === w.by) : null;
-            return (
-              <motion.div key={tk.id} className="v2-card v2-win" initial={{ y: 80, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.15 + i * 0.12 }}>
-                <Billboard icon={tk.icon} size={150} />
-                <div className="v2-win-title">{tk.title}</div>
-                {t ? (
-                  <div className="v2-win-who"><Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={78} mood="wow" /><span>{teamName(t)}<br />{w?.amount} coins</span></div>
-                ) : (
-                  <div className="v2-win-who"><Raivan mood="laugh" size={78} /><span>rAIvan kept it</span></div>
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      ) : (
-        <motion.div key="paddles" className="v2-paddles" exit={{ opacity: 0, y: 120, transition: { duration: 0.22 } }}>
-          {rows.map(({ id, team }, i) => {
-            const isRaivan = id === 'raivan';
-            const top = st.phase !== 'intro' && st.bid.by === id && (isRaivan || st.bidLog.length > 0);
-            const isWinner = sold && winner?.by === id;
-            const won = isRaivan ? null : wonBy(id);
-            const greyed = !!won && !isWinner && !(sold && winner?.by === id);
-            const cap = !isRaivan && team ? maxBid(team) : 0;
-            const low = !isRaivan && team && !won && cap < st.bid.amount + 10;
-            const base = isRaivan ? '#7B4BC9' : teamBase(team!);
-            const edge = isRaivan ? '#5A2F9E' : teamShade(team!, 4);
-            let status = 'Ready!';
-            if (isWinner) status = 'Winner!';
-            else if (top && !sold) status = 'Top bid!';
-            else if (won) status = 'Won one';
-            else if (isRaivan) status = 'Sneaky!';
-            else if (low && st.phase === 'bidding') status = 'Low coins';
-            else if (!isRaivan && st.phase === 'bidding') status = `Max bid ${cap}`;
-            return (
-              <motion.div
-                key={id}
-                className={`v2-paddle${greyed ? ' is-grey' : ''}${top || isWinner ? ' is-top' : ''}`}
-                style={{ left: paddleX(i, count), width: W, ['--c' as string]: greyed ? '#CDBE97' : base, ['--e' as string]: greyed ? '#B3A57F' : edge }}
-                initial={{ y: 300, opacity: 0 }}
-                exit={{ y: 200, opacity: 0 }}
-                animate={{ y: top || isWinner ? -34 : 0, opacity: 1, scale: top || isWinner ? 1.05 : 1 }}
-                transition={{ type: 'spring', stiffness: top ? 520 : 300, damping: top ? 12 : 22, delay: st.phase === 'intro' ? i * 0.07 : 0 }}
-              >
-                <AnimatePresence>{(top || isWinner) && <motion.div key="glow" className="v2-glow-wrap" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }}><div className="v2-glow" /></motion.div>}</AnimatePresence>
-                <motion.div key={top ? `${id}-${st.bid.amount}` : id} className="v2-paddle-face" initial={top ? { scale: 0.8, rotate: -8 } : false} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 12 }}>
-                  {isRaivan ? <Raivan mood={top ? 'laugh' : 'sneaky'} size={150} /> : <Avatar seed={team!.avatarSeed} colorIndex={team!.colorIndex} shade={2} size={140} mood={isWinner ? 'wow' : top ? 'wow' : greyed ? 'cool' : 'happy'} />}
-                </motion.div>
-                <div className="v2-paddle-stick" />
-                <div className="v2-paddle-card">
-                  <div className="v2-paddle-name">{isRaivan ? 'rAIvan' : teamName(team)}</div>
-                  <div className="v2-paddle-coins">
-                    <MeterIcon kind="coins" size={46} />
-                    {isRaivan ? <b>∞</b> : <b><CountUp value={team!.coins} /></b>}
-                  </div>
-                  <div className={`v2-paddle-status${top || isWinner ? ' is-hot' : ''}`}>{status}</div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      )}
-      </AnimatePresence>
-
-      <ReadyHint bottom={486} show={st.phase === 'intro' || st.phase === 'done' || (sold && n >= 3)} />
+      {st.phase === 'intro' && <Intro st={st} teams={state.teams} />}
+      {st.phase === 'bidding' && ticket && <Bidding key={ticket.id} st={st} ticket={ticket} teams={state.teams} />}
+      {st.phase === 'sold' && ticket && <Sold key={ticket.id} st={st} ticket={ticket} teams={state.teams} />}
+      {st.phase === 'done' && <Done st={st} teams={state.teams} />}
     </div>
   );
 }
 
-function BidPanel({ st, teams }: { st: AuctionState; teams: Team[] }) {
-  const by = st.bid.by;
-  const team = by === 'raivan' ? null : teams.find(t => t.id === by) ?? null;
-  const key = `${by}-${st.bid.amount}`;
+// ---------- intro: explain it, step by step ----------
+function Intro({ st, teams }: { st: AuctionState; teams: Team[] }) {
+  const beat = useNarrBeat('auction-intro');
+  const show = (k: number) => beat >= k;
+  const rowH = Math.min(66, Math.floor(300 / Math.max(1, teams.length)));
   return (
-    <div className="v2-card v2-bid">
-      <div className="v2-bid-label">{st.bidLog.length ? 'Top bid' : 'Opening bid'}</div>
-      <motion.div key={key} className="v2-bid-main" initial={{ scale: 0.55, rotate: -6 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 11 }}>
-        <MeterIcon kind="coins" size={120} />
-        <span className="v2-bid-num"><CountUp value={st.bid.amount} duration={300} /></span>
+    <>
+      <div className="sd-intro-head" style={{ top: CONTENT_TOP }}>
+        <AnimatePresence>
+          {show(0) && (
+            <motion.div key="h" className="sd-box sd-intro-title" {...card}>
+              <Billboard icon="📣" size={110} />
+              <span>Billboard Auction!</span>
+              <span className="v2-sub">Win an ad for your startup</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="sd-tickets" style={{ top: CONTENT_TOP + 116 }}>
+        <AnimatePresence>
+          {show(1) && st.tickets.map((tk, i) => (
+            <motion.div key={tk.id} className="sd-box sd-mini-ticket" initial={{ y: 60, opacity: 0, rotate: -3 }} animate={{ y: 0, opacity: 1, rotate: 0 }} transition={{ ...spring, delay: i * 0.12 }}>
+              <Billboard icon={tk.icon} size={150} />
+              <div className="sd-mini-body">
+                <div className="sd-mini-title">{tk.title}</div>
+                <div className="sd-pillrow"><Prize tk={tk} /></div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div className="sd-intro-low">
+        <AnimatePresence>
+          {show(2) && (
+            <motion.div key="how" className="sd-box sd-how" {...card}>
+              <div className="sd-box-title">How bidding works</div>
+              <div className="sd-how-step"><span className="sd-how-ico">💰</span><span>Your Money Manager says a number</span></div>
+              <div className="sd-how-step"><span className="sd-how-ico">⌨️</span><span>The host types it in</span></div>
+              <div className="sd-how-step"><span className="sd-how-ico"><MeterIcon kind="coins" size={64} /></span><span>Highest bid wins and pays that many coins</span></div>
+              <AnimatePresence>
+                {show(3) && (
+                  <motion.div key="fib" className="sd-how-step is-fibbot" initial={{ x: 80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={spring}>
+                    <span className="sd-how-ico"><Fibbot mood="sneaky" size={86} /></span><span>Fibbot bids too! If he wins, nobody gets the ad</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {show(4) && (
+            <motion.div key="coins" className="sd-box sd-coins" {...card}>
+              <div className="sd-box-title">Keep {AUCTION_RESERVE} coins safe</div>
+              <div className="sd-coins-sub">You can bid up to your coins minus {AUCTION_RESERVE}. One billboard per team.</div>
+              {teams.map(t => (
+                <div key={t.id} className="sd-coin-row" style={{ height: rowH }}>
+                  <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={Math.min(60, rowH - 6)} mood="happy" />
+                  <span className="sd-coin-name">{teamName(t)}</span>
+                  <span className="sd-coin-have"><MeterIcon kind="coins" size={40} /><Num value={t.coins} duration={600} /></span>
+                  <span className="sd-coin-max">up to <b><Num value={maxBid(t)} duration={600} /></b></span>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <ReadyHint text="Start bidding" show={beat >= 5} />
+    </>
+  );
+}
+
+// ---------- bidding ----------
+type Stage = 'idle' | 'bid' | 'thinking' | 'counter' | 'gaveup';
+
+/** Plays st.bidLog back in beats. The engine appends the team's bid and Fibbot's counter in ONE update, so the screen reveals
+ *  them one at a time. Starts from what is already in the log (a reload never replays old bids). */
+function useStagedBids(log: Bid[]) {
+  const [shown, setShown] = useState(log.length);
+  const [stage, setStage] = useState<Stage>('idle');
+  const [out, setOut] = useState(log.length > 0 && log[log.length - 1].by !== FIB);
+  const shownRef = useRef(log.length);
+  const outRef = useRef(out);
+  const logRef = useRef(log);
+  logRef.current = log;
+  const runId = useRef(0);
+  const running = useRef(false);
+
+  useEffect(() => () => { runId.current++; running.current = false; }, []);
+  useEffect(() => {
+    if (running.current || shownRef.current >= log.length) return;
+    running.current = true;
+    const id = ++runId.current;
+    const alive = () => runId.current === id;
+    (async () => {
+      while (alive() && shownRef.current < logRef.current.length) {
+        const i = shownRef.current;
+        const e = logRef.current[i];
+        if (e.by === FIB) {
+          setStage('thinking'); sfx.play('drumroll', { duration: 1.4 });
+          await sleep(1500); if (!alive()) return;
+        }
+        shownRef.current = i + 1; setShown(i + 1);
+        if (e.by === FIB) { setStage('counter'); sfx.play('evil'); await sleep(1500); }
+        else {
+          setStage('bid');
+          const next = logRef.current[i + 1];
+          await sleep(next ? 900 : 700); if (!alive()) return;
+          if (!next && shownRef.current >= logRef.current.length && !outRef.current) {
+            setStage('thinking'); sfx.play('drumroll', { duration: 1.6 });
+            await sleep(1900); if (!alive()) return;
+            outRef.current = true; setOut(true); setStage('gaveup'); sfx.play('cheer');
+            await sleep(1100);
+          }
+        }
+        if (!alive()) return;
+      }
+      if (alive()) { setStage(s => (s === 'thinking' ? 'idle' : s)); running.current = false; }
+    })();
+  }, [log.length]);
+  return { shown, stage, out };
+}
+
+function Bidding({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; teams: Team[] }) {
+  const { shown, stage, out } = useStagedBids(st.bidLog);
+  const seen = st.bidLog.slice(0, shown);
+  const top: Bid = seen.length ? seen[seen.length - 1] : { by: FIB, amount: AUCTION_OPEN };
+  const hasBid = seen.length > 0;
+  const topTeam = top.by === FIB ? null : teams.find(t => t.id === top.by) ?? null;
+  const n = teams.length + 1;
+  const h = Math.min(128, Math.floor((836 - (n - 1) * 10) / n));
+  const bump = useAnimationControls();
+  useEffect(() => { if (shown > 0) bump.start({ scale: [1.18, 1], rotate: [-3, 0], transition: { duration: 0.3, ease: 'easeOut' } }); }, [shown, bump]);
+
+  const lastTeamBid = [...seen].reverse().find(b => b.by !== FIB);
+  const lastTeam = lastTeamBid ? teams.find(t => t.id === lastTeamBid.by) : null;
+  let say = hasBid ? 'Any higher bids?' : `Bids start at ${AUCTION_OPEN} coins`;
+  let mood: 'laugh' | 'sneaky' | 'dizzy' | 'shock' = 'sneaky';
+  if (stage === 'bid' && lastTeam && lastTeamBid) say = `${teamName(lastTeam)} bids ${lastTeamBid.amount}!`;
+  if (stage === 'thinking') { say = 'Fibbot is thinking…'; mood = 'shock'; }
+  if (stage === 'counter') { say = `Fibbot says ${top.amount}!`; mood = 'laugh'; }
+  if (stage === 'gaveup' || (stage === 'idle' && out && hasBid)) { say = stage === 'gaveup' ? 'Fibbot gives up!' : 'Fibbot is out! Any higher bids?'; mood = 'dizzy'; }
+
+  return (
+    <>
+      <motion.div className="sd-box sd-title" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+        <div className="sd-title-main">
+          <div className="v2-pill">Billboard {st.ticket + 1} of {st.tickets.length}</div>
+          <div className="sd-title-name">{ticket.title}</div>
+        </div>
+        <div className="sd-title-prize"><Prize tk={ticket} /></div>
       </motion.div>
-      <motion.div key={`w-${key}`} className="v2-bid-who" initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-        {team ? <Avatar seed={team.avatarSeed} colorIndex={team.colorIndex} shade={2} size={86} mood="wow" /> : <Raivan mood="sneaky" size={96} />}
-        <span>{team ? teamName(team) : 'rAIvan'}</span>
+
+      <motion.div className="sd-box sd-hero" initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={spring}>
+        <Billboard icon={ticket.icon} size={250} />
+        <div className="sd-hero-bid">
+          <div className="sd-hero-label">{hasBid ? 'Top bid' : 'Opening price'}</div>
+          <motion.div className="sd-hero-num" animate={bump}><MeterIcon kind="coins" size={104} /><Num value={top.amount} duration={500} /></motion.div>
+          {hasBid && (
+            <div className="sd-hero-who">
+              {topTeam ? <Avatar seed={topTeam.avatarSeed} colorIndex={topTeam.colorIndex} shade={2} size={72} mood="wow" /> : <Fibbot mood="laugh" size={80} />}
+              <span>{topTeam ? teamName(topTeam) : 'Fibbot'}</span>
+            </div>
+          )}
+        </div>
       </motion.div>
-    </div>
+
+      <motion.div className="sd-box sd-stage" initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ...spring, delay: 0.08 }}>
+        <div className="sd-stage-main">
+          <motion.div key={`${stage}-${shown}`} initial={{ scale: 0.8, rotate: stage === 'counter' ? -8 : 0 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 520, damping: 13 }}>
+            <Fibbot mood={mood} size={260} />
+          </motion.div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={`${stage}-${say}`} className={`sd-say${stage === 'counter' ? ' is-hot' : ''}`} initial={{ scale: 0.7, opacity: 0, x: 30 }} animate={{ scale: 1, opacity: 1, x: 0 }} exit={{ opacity: 0, transition: { duration: 0.1 } }} transition={{ type: 'spring', stiffness: 460, damping: 20 }}>
+              {say}
+              {stage === 'thinking' && <span className="sd-dots"><i /><i /><i /></span>}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <div className="sd-history">
+          {seen.slice(-4).map((b, i) => {
+            const t = b.by === FIB ? null : teams.find(x => x.id === b.by);
+            return (
+              <motion.span key={`${shown - 4 + i}`} className={`sd-hist${b.by === FIB ? ' is-fib' : ''}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>
+                {t ? teamName(t) : 'Fibbot'} <b>{b.amount}</b>
+              </motion.span>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px` }}>
+        {teams.map(t => {
+          const won = wonTicket(st, t.id);
+          const isTop = top.by === t.id && hasBid;
+          const bidBefore = seen.some(b => b.by === t.id);
+          const cap = maxBid(t);
+          let status = `Max bid ${cap}`;
+          if (won) status = `Won ${won.icon}`;
+          else if (isTop) status = 'Top bidder!';
+          else if (cap < top.amount + AUCTION_STEP) status = bidBefore ? 'Outbid' : 'Can’t go higher';
+          else if (bidBefore) status = `Outbid · max ${cap}`;
+          return <TeamRow key={t.id} team={t} h={h} status={status} hot={isTop} grey={!!won} coins={t.coins} />;
+        })}
+        <TeamRow rival h={h} status={stage === 'thinking' ? 'Thinking…' : top.by === FIB && hasBid ? 'Top bid!' : out ? 'Out of this one' : 'Sneaky rival'} hot={top.by === FIB && hasBid} />
+      </div>
+    </>
+  );
+}
+
+function TeamRow({ team, rival, h, status, hot, grey, coins }: { team?: Team; rival?: boolean; h: number; status: string; hot?: boolean; grey?: boolean; coins?: number }) {
+  return (
+    <motion.div layout="position" className={`sd-row${hot ? ' is-hot' : ''}${grey ? ' is-grey' : ''}${rival ? ' is-rival' : ''}`} style={{ height: h, ['--c' as string]: rival ? '#7B4BC9' : teamBase(team!) }} initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1, scale: hot ? 1.015 : 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }}>
+      <div className="sd-row-face">{rival ? <Fibbot mood={hot ? 'laugh' : 'sneaky'} size={h - 8} /> : <Avatar seed={team!.avatarSeed} colorIndex={team!.colorIndex} shade={2} size={h - 8} mood={hot ? 'wow' : grey ? 'cool' : 'happy'} />}</div>
+      <div className="sd-row-name">{rival ? 'Fibbot' : teamName(team)}{rival && <span className="sd-rival-tag">rival</span>}</div>
+      <div className="sd-row-coins"><MeterIcon kind="coins" size={44} />{rival ? <b>∞</b> : <b><Num value={coins ?? 0} duration={700} /></b>}</div>
+      <div className={`sd-row-status${hot ? ' is-hot' : ''}`}>{status}</div>
+    </motion.div>
+  );
+}
+
+// ---------- sold ----------
+function Sold({ st, ticket, teams }: { st: AuctionState; ticket: AuctionTicket; teams: Team[] }) {
+  const w = st.winners[ticket.id];
+  const winTeam = w && w.by !== FIB ? teams.find(t => t.id === w.by) ?? null : null;
+  const beat = useNarrBeat(`auction-sold-${st.ticket}`);
+  const b = Math.max(0, beat);
+  const [fire, setFire] = useState(0);
+  const played = useRef(new Set<number>());
+  useEffect(() => {
+    if (beat < 0 || beat > 3 || played.current.has(beat)) return;
+    played.current.add(beat);
+    if (beat === 0 || beat === 1) sfx.play('tick');
+    if (beat === 2) {
+      sfx.play('gavel');
+      setTimeout(() => sfx.play(winTeam ? 'fanfare' : 'evil'), 260);
+      if (winTeam) { setFire(f => f + 1); setTimeout(() => sfx.play('clap'), 700); }
+    }
+    if (beat === 3 && winTeam) sfx.play('coin');
+  }, [beat, winTeam]);
+
+  const n = teams.length + 1;
+  const h = Math.min(128, Math.floor((836 - (n - 1) * 10) / n));
+  const sold = b >= 2;
+  const paid = b >= 3;
+
+  return (
+    <>
+      <Confetti fire={fire} />
+      <motion.div className="sd-box sd-title" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+        <div className="sd-title-main">
+          <div className="v2-pill">Billboard {st.ticket + 1} of {st.tickets.length}</div>
+          <div className="sd-title-name">{ticket.title}</div>
+        </div>
+        <div className="sd-title-prize"><Prize tk={ticket} /></div>
+      </motion.div>
+
+      <div className="sd-box sd-hero is-sold">
+        <Billboard icon={ticket.icon} size={250} />
+        <div className="sd-hero-bid">
+          <div className="sd-hero-label">Final price</div>
+          <div className="sd-hero-num"><MeterIcon kind="coins" size={104} /><Num value={w?.amount ?? AUCTION_OPEN} duration={500} /></div>
+        </div>
+        <AnimatePresence>
+          {sold && <motion.div key="stamp" className="sd-stamp" initial={{ scale: 2.4, opacity: 0, rotate: -18 }} animate={{ scale: 1, opacity: 1, rotate: -8 }} transition={{ type: 'spring', stiffness: 600, damping: 14 }}>SOLD!</motion.div>}
+        </AnimatePresence>
+      </div>
+
+      <div className="sd-box sd-stage is-sold">
+        <div className="sd-stage-main">
+          <motion.div key={Math.min(b, 2)} className="sd-gavel" initial={{ rotate: -40 }} animate={{ rotate: 0 }} transition={{ type: 'spring', stiffness: 700, damping: 12 }}><Gavel size={230} /></motion.div>
+          <AnimatePresence mode="wait" initial={false}>
+            {!sold ? (
+              <motion.div key={`g${b}`} className="sd-going" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }} transition={{ type: 'spring', stiffness: 520, damping: 15 }}>
+                {b === 0 ? 'Going once…' : 'Going twice…'}
+              </motion.div>
+            ) : (
+              <motion.div key="who" className="sd-winner" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 460, damping: 18 }}>
+                {winTeam && w ? (
+                  <>
+                    <Avatar seed={winTeam.avatarSeed} colorIndex={winTeam.colorIndex} shade={2} size={150} mood="wow" />
+                    <div className="sd-winner-text"><b>{teamName(winTeam)}</b><span>won it for <b>{w.amount}</b> coins!</span></div>
+                  </>
+                ) : (
+                  <>
+                    <Fibbot mood="laugh" size={170} />
+                    <div className="sd-winner-text"><b>Fibbot keeps it!</b><span>Nobody gets this ad</span></div>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <AnimatePresence>
+          {paid && winTeam && w && (
+            <motion.div key="gains" className="sd-gains" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={spring}>
+              <span className="v2-sub">{teamName(winTeam)} gets</span>
+              <Prize tk={ticket} />
+              <DeltaPill value={-w.amount} kind="coins" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="sd-rows" style={{ ['--rh' as string]: `${h}px` }}>
+        {teams.map(t => {
+          const isWin = !!winTeam && winTeam.id === t.id;
+          const won = wonTicket(st, t.id);
+          // coins drop on the beat when the winner pays, not before
+          const coins = isWin && w && !paid ? t.coins + w.amount : t.coins;
+          const status = isWin ? (sold ? 'Winner!' : 'Top bidder!') : won ? `Won ${won.icon}` : 'Not this time';
+          return <TeamRow key={t.id} team={t} h={h} status={status} hot={isWin && sold} grey={!isWin && !!won} coins={coins} />;
+        })}
+        <TeamRow rival h={h} status={sold && !winTeam ? 'Keeps it!' : 'Sneaky rival'} hot={sold && !winTeam} />
+      </div>
+      <ReadyHint text={st.ticket + 1 < st.tickets.length ? 'Next billboard' : 'See results'} show={beat >= 99 || beat >= 4} />
+    </>
+  );
+}
+
+// ---------- done: who won what ----------
+function Done({ st, teams }: { st: AuctionState; teams: Team[] }) {
+  const beat = useNarrBeat('auction-done');
+  const n = st.tickets.length;
+  const kept = st.tickets.filter(tk => !st.winners[tk.id] || st.winners[tk.id].by === FIB).length;
+  const avail = 1040 - (CONTENT_TOP + 112);
+  const h = Math.min(250, Math.floor((avail - (n - 1) * 16) / Math.max(1, n)));
+  return (
+    <>
+      <motion.div className="sd-box sd-done-head" style={{ top: CONTENT_TOP }} initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+        <span className="sd-done-title">Sold, sold, sold!</span>
+        <span className="v2-sub">Who won each billboard</span>
+        <span className="sd-done-tally">
+          <span><b><Num value={n - kept} duration={500} /></b> won by teams</span><span><b><Num value={kept} duration={500} /></b> kept by Fibbot</span>
+        </span>
+      </motion.div>
+      <div className="sd-done-list" style={{ top: CONTENT_TOP + 112 }}>
+        <AnimatePresence>
+          {st.tickets.map((tk, i) => {
+            if (beat < i + 1) return null;
+            const w = st.winners[tk.id];
+            const t = w && w.by !== FIB ? teams.find(x => x.id === w.by) : null;
+            return (
+              <motion.div key={tk.id} className={`sd-box sd-won${t ? '' : ' is-fib'}`} style={{ height: h }} initial={{ x: 140, opacity: 0, scale: 0.94 }} animate={{ x: 0, opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 22 }}>
+                <Billboard icon={tk.icon} size={Math.min(170, h - 30)} />
+                <div className="sd-won-item">
+                  <div className="sd-won-title">{tk.title}</div>
+                  <div className="sd-pillrow"><Prize tk={tk} /></div>
+                </div>
+                <div className="sd-won-arrow">→</div>
+                {t && w ? (
+                  <div className="sd-won-who">
+                    <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={Math.min(120, h - 40)} mood="wow" />
+                    <div className="sd-won-text"><b>{teamName(t)}</b><span>paid <MeterIcon kind="coins" size={40} /><b><Num value={w.amount} duration={700} /></b></span></div>
+                  </div>
+                ) : (
+                  <div className="sd-won-who">
+                    <Fibbot mood="laugh" size={Math.min(130, h - 30)} />
+                    <div className="sd-won-text"><b>Fibbot kept it</b><span>Nobody got this ad</span></div>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+      <ReadyHint show={beat >= n + 1} />
+    </>
   );
 }

@@ -1,7 +1,14 @@
-// Intro: a red toolbox pops open and tools bounce out with squash and stretch.
-import { animate, motion, useMotionValue, useTransform } from 'motion/react';
-import { useEffect, useState, type CSSProperties } from 'react';
-import { C, Abs, Root, Svg, Dots, Sparkle, Star } from '../artb/core';
+// Intro (Act 2, question 1): a red toolbox drops in and opens; each tool pops up on its own, then settles on the floor.
+import { motion } from 'motion/react';
+import { C, Abs, Root, Svg, Dots } from '../artb/core';
+import { Focus, Backdrop, Subject } from '../kit/focus';
+import { useBeat } from './beats';
+
+const TIMES = [0, 900, 2000, 3000, 3900, 4800, 5700, 6600, 7500, 8600];
+const TOOL_COUNT = 6;
+// where each tool lands on the floor (centre x, y), around the box
+const SPOTS = [[330, 690], [540, 860], [1390, 690], [1600, 860], [1500, 420], [400, 420]];
+const BOX_X = 680, BOX_Y = 493;      // box top-left on the floor (560 wide, ends at y 900)
 
 const Sil = ({ children }: { children: React.ReactNode }) => <g fill="#fff" stroke="#fff" strokeWidth={14}>{children}</g>;
 function Tool({ k, s = 200 }: { k: number; s?: number }) {
@@ -37,38 +44,11 @@ function Tool({ k, s = 200 }: { k: number; s?: number }) {
   );
 }
 
-// landing spots relative to the box centre, and how high each flies
-const SPOTS = [{ x: -560, r: -18, h: 320 }, { x: -380, r: 12, h: 300 }, { x: -210, r: -8, h: 260 }, { x: 220, r: 10, h: 280 }, { x: 400, r: -14, h: 320 }, { x: 570, r: 20, h: 290 }];
-const BX = 960, BY = 800; // box centre on stage
-
-function Flyer({ i }: { i: number }) {
-  const sp = SPOTS[i];
-  const x = useMotionValue(0), y = useMotionValue(0), r = useMotionValue(0), sc = useMotionValue(0.3), sy = useMotionValue(1), op = useMotionValue(0);
-  useEffect(() => {
-    const d = 0.9 + i * 0.2, up = 0.55, down = 0.42;
-    const ctl = [
-      animate(x, [0, sp.x], { duration: up + down, delay: d, ease: 'linear' }),
-      animate(y, [0, -sp.h, 150], { duration: up + down, delay: d, times: [0, up / (up + down), 1], ease: ['easeOut', 'easeIn'] }),
-      animate(r, [0, 540 + sp.r * 4, sp.r], { duration: up + down, delay: d, times: [0, 0.7, 1], ease: 'easeOut' }),
-      animate(sc, [0.3, 1.15, 1], { duration: up, delay: d, ease: 'easeOut' }),
-      animate(op, [0, 1], { duration: 0.05, delay: d }),
-      animate(sy, [1, 1, 0.7, 1.12, 0.96, 1], { duration: 0.6, delay: d + up + down - 0.05, times: [0, 0.01, 0.2, 0.5, 0.8, 1] }),
-    ];
-    return () => ctl.forEach(c => c.stop());
-  }, [i, sp, x, y, r, sc, sy, op]);
-  const sx = useTransform(sy, v => 2 - v);
-  return (
-    <motion.div style={{ position: 'absolute', left: BX - 100, top: BY - 140, x, y, rotate: r, scale: sc, scaleY: sy, scaleX: sx, opacity: op, transformOrigin: '50% 100%' }}>
-      <div className="wobble" style={{ ['--d' as string]: `${0.7 + i * 0.13}s`, animationDelay: `${1.9 + i * 0.2}s` } as CSSProperties}><Tool k={i} /></div>
-    </motion.div>
-  );
-}
-
 function Toolbox({ open }: { open: boolean }) {
   return (
     <Svg vw={440} vh={320} w={560}>
-      <g fill="#fff" stroke="#fff" strokeWidth={14}><rect x={20} y={110} width={400} height={200} rx={44} /></g>
-            <rect x={20} y={110} width={400} height={192} rx={44} fill={C.bad} />
+      <rect x={20} y={110} width={400} height={200} rx={44} fill="#fff" stroke="#fff" strokeWidth={14} />
+      <rect x={20} y={110} width={400} height={192} rx={44} fill={C.bad} />
       <rect x={20} y={110} width={400} height={64} rx={30} fill={C.blueDeep} />
       <rect x={20} y={120} width={400} height={30} fill={C.ink} opacity={0.35} />
       <rect x={20} y={170} width={400} height={12} fill={C.badEdge} />
@@ -80,33 +60,43 @@ function Toolbox({ open }: { open: boolean }) {
         <rect x={20} y={46} width={400} height={78} rx={36} fill="#fff" stroke="#fff" strokeWidth={12} />
         <rect x={20} y={46} width={400} height={74} rx={36} fill={C.bad} />
         <rect x={40} y={56} width={120} height={14} rx={7} fill={C.badHi} />
-        <path d="M150 48 Q150 0 220 0 Q290 0 290 48" stroke="#fff" strokeWidth={34} fill="none" /><path d="M150 48 Q150 4 220 4 Q290 4 290 48" stroke={C.steelEdge} strokeWidth={20} fill="none" /><path d="M156 46 Q156 10 220 10" stroke={C.steel} strokeWidth={10} fill="none" />
+        <path d="M150 48 Q150 0 220 0 Q290 0 290 48" stroke="#fff" strokeWidth={34} fill="none" /><path d="M150 48 Q150 4 220 4 Q290 4 290 48" stroke={C.steelEdge} strokeWidth={20} fill="none" />
       </g>
     </Svg>
   );
 }
 
 export default function ToolboxIntro() {
-  const [run, setRun] = useState(0);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    setOpen(false);
-    const t = setTimeout(() => setOpen(true), 500);
-    const iv = setTimeout(() => setRun(r => r + 1), 8200);
-    return () => { clearTimeout(t); clearTimeout(iv); };
-  }, [run]);
+  const beat = useBeat(TIMES);
+  const toolIndex = beat - 3;                 // which tool is the subject right now (0..5)
+  const showTool = toolIndex >= 0 && toolIndex < TOOL_COUNT;
+  const showBox = beat === 1 || beat === 2;   // the box is the subject while it drops and opens
   return (
     <Root>
       <Dots y={260} h={600} color={C.bg2} />
-      <div style={{ position: 'absolute', left: -400, top: 860, width: 2720, height: 220, background: C.wood }} /><div style={{ position: 'absolute', left: -400, top: 860, width: 2720, height: 20, background: C.woodHi }} />
-      <Abs x={BX - 700} y={880} style={{ width: 1400, height: 40, borderRadius: 20, background: C.woodEdge, opacity: 0.35 }} />
-      <div key={run}>
-        <motion.div style={{ position: 'absolute', left: BX - 280, top: BY - 180 }} initial={{ y: -300, scaleY: 1.2 }} animate={{ y: 0, scaleY: [1.2, 0.88, 1.04, 1] }} transition={{ duration: 0.5 }}>
-          <motion.div animate={open ? { scaleY: [1, 0.9, 1.06, 1], scaleX: [1, 1.05, 0.98, 1] } : {}} transition={{ duration: 0.5 }} style={{ transformOrigin: '50% 100%' }}><Toolbox open={open} /></motion.div>
-        </motion.div>
-        {open && SPOTS.map((_, i) => <Flyer key={i} i={i} />)}
-        {open && <><Abs x={BX - 150} y={BY - 260} className="twinkle"><Sparkle s={90} color={C.sunHi} /></Abs><Abs x={BX + 90} y={BY - 280} className="twinkle" style={{ ['--dl' as string]: '.5s' } as CSSProperties}><Star s={70} /></Abs></>}
-      </div>
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 180, background: C.wood }} />
+      <div style={{ position: 'absolute', left: -400, top: 900, width: 2720, height: 20, background: C.woodHi }} />
+      <Focus active={beat >= 1 && beat <= 8}>
+        <Backdrop>
+          {beat >= 3 && <Abs x={BOX_X} y={BOX_Y}><Toolbox open /></Abs>}
+          {SPOTS.map(([cx, cy], i) => i < toolIndex && (
+            <Abs key={i} x={cx - 100} y={cy - 100}><Tool k={i} s={200} /></Abs>
+          ))}
+        </Backdrop>
+        {showBox && (
+          <motion.div key="box" initial={{ y: -420 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 180, damping: 14 }}
+            style={{ position: 'absolute', left: 0, top: 0 }}>
+            <Subject at={{ x: 960, y: 640 }} scale={1.12}><Toolbox open={beat === 2} /></Subject>
+          </motion.div>
+        )}
+        {showTool && (
+          <Subject key={`t${toolIndex}`} at={{ x: 960, y: 520 }} scale={1.15}>
+            <motion.div initial={{ scale: 0.3, rotate: -25 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
+              <Tool k={toolIndex} s={360} />
+            </motion.div>
+          </Subject>
+        )}
+      </Focus>
     </Root>
   );
 }

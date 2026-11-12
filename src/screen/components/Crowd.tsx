@@ -1,5 +1,8 @@
 // A row of tiny customers reacting: walking away, dancing in, cheering, packed shop...
-import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { sfx } from '../../audio';
+import { REASON_TEXT, type Shopper } from '../../narration/lines/price';
 import { Person } from './art';
 import { cx } from '../lib/game';
 
@@ -26,6 +29,65 @@ export function Crowd({ mode, count = 6, size = 90, seed = 0 }: { mode: CrowdMod
               <Person i={i + seed} size={size} mood={mode === 'leave' ? 'sad' : mode === 'packed' || mode === 'cheer' ? 'wow' : 'happy'} />
             </div>
           </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------- Price It Right: ten shoppers deciding, one by one ----------
+/**
+ * The 10 interested people look at the price one after another: a happy face + coin + a reason when they buy, a sad face walking
+ * off + a reason when they do not. The reasons come from the real maths (see shoppersAt in narration/lines/price.ts).
+ */
+export function ShopperGrid({ shoppers, seed = 0, size = 70, start = 700, gap = 380, onDone }: { shoppers: Shopper[]; seed?: number; size?: number; start?: number; gap?: number; onDone?: () => void }) {
+  const [shown, setShown] = useState(0);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+  useEffect(() => {
+    const ids: number[] = [];
+    shoppers.forEach((s, i) => {
+      ids.push(window.setTimeout(() => {
+        setShown(i + 1);
+        sfx.play(s.buys ? 'coin' : 'tick');
+      }, start + i * gap));
+    });
+    ids.push(window.setTimeout(() => doneRef.current?.(), start + shoppers.length * gap + 500));
+    return () => ids.forEach(clearTimeout);
+  }, [shoppers, start, gap]);
+
+  return (
+    <div className="pr-shoppers">
+      {shoppers.map((s, i) => {
+        const decided = i < shown;
+        const state = !decided ? 'is-wait' : s.buys ? 'is-buy' : 'is-walk';
+        return (
+          <div key={s.k} className={`pr-shopper ${state}`}>
+            <div className="pr-shopper-top">
+              <motion.div
+                className={decided && s.buys ? 'scr-dance' : undefined}
+                initial={false}
+                animate={decided && !s.buys ? { x: [0, 0, 38], opacity: [1, 1, 0.5] } : { x: 0, opacity: decided ? 1 : 0.55 }}
+                transition={{ duration: 0.9, times: [0, 0.35, 1] }}
+              >
+                <Person i={s.k * 2 + seed} size={size} mood={!decided ? 'happy' : s.buys ? 'wow' : 'sad'} />
+              </motion.div>
+              <AnimatePresence>
+                {decided && (
+                  <motion.span key="badge" className="pr-badge" initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 520, damping: 14 }}>
+                    {s.buys ? '👍' : '🚶'}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="pr-bubble">
+              {decided ? (
+                <motion.span key="r" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>{REASON_TEXT[s.reason]}</motion.span>
+              ) : (
+                <span className="pr-think">…</span>
+              )}
+            </div>
+          </div>
         );
       })}
     </div>

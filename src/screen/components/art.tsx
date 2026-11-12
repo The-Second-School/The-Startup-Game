@@ -182,35 +182,6 @@ export function Hand({ size = 260, color = '#F6C9A0', dark = '#D9A577' }: { size
   );
 }
 
-export function ChaiCup({ size = 260 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 260 260" style={{ overflow: 'visible' }}>
-      <g className="scr-steam">
-        {[90, 130, 170].map((x, i) => <path key={x} d={`M${x} 70 C${x - 20} 50 ${x + 20} 30 ${x} 6`} stroke="#fff" strokeWidth={12} fill="none" strokeLinecap="round" style={{ animationDelay: `${i * 0.4}s` }} />)}
-      </g>
-      <path d="M196 120 C250 120 250 190 190 190" stroke="#fff" strokeWidth={34} fill="none" strokeLinecap="round" />
-      <path d="M196 120 C246 120 246 190 190 190" stroke="#E07F00" strokeWidth={18} fill="none" strokeLinecap="round" />
-      <path d="M50 90 H210 L192 220 Q188 240 168 240 H92 Q72 240 68 220 Z" fill="#fff" stroke="#fff" strokeWidth={12} strokeLinejoin="round" />
-      <path d="M58 98 H202 L186 218 Q183 232 168 232 H92 Q77 232 74 218 Z" fill="#E07F00" />
-      <path d="M58 98 H190 L176 214 Q174 226 160 226 H92 Q80 226 77 214 Z" fill="#FF9600" />
-      <ellipse cx={130} cy={98} rx={72} ry={14} fill="#C68A5A" />
-      <rect x={80} y={120} width={30} height={14} rx={7} fill="#fff" opacity={0.45} />
-    </svg>
-  );
-}
-
-export function Samosa({ size = 130 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 130 130">
-      <path d="M65 10 L122 112 Q124 120 116 120 H14 Q6 120 8 112 Z" fill="#fff" stroke="#fff" strokeWidth={12} strokeLinejoin="round" />
-      <path d="M65 18 L114 110 H16 Z" fill="#D68F00" strokeLinejoin="round" />
-      <path d="M65 18 L104 98 H22 Z" fill="#FFB800" />
-      <circle cx={55} cy={70} r={5} fill="#E07F00" /><circle cx={78} cy={84} r={5} fill="#E07F00" />
-      <path d="M58 34 L48 56" stroke="#fff" strokeWidth={8} strokeLinecap="round" opacity={0.55} />
-    </svg>
-  );
-}
-
 export function Heart({ size = 200, broken }: { size?: number; broken?: boolean }) {
   const d = 'M100 178 C40 130 10 100 10 62 C10 30 36 12 60 12 C80 12 94 24 100 40 C106 24 120 12 140 12 C164 12 190 30 190 62 C190 100 160 130 100 178 Z';
   return (
@@ -247,6 +218,88 @@ export function Handshake({ size = 260, left = '#1CB0F6', right = '#FF9600' }: {
         <path d="M96 58 C114 40 146 40 164 58 L164 98 C146 116 114 116 96 98 Z" fill="#F6C9A0" />
         <path d="M104 70 H156 M104 84 H156" stroke="#D9A577" strokeWidth={7} strokeLinecap="round" />
       </g>
+    </svg>
+  );
+}
+
+/** Medal on a ribbon for the leaderboards. Gold, silver or bronze. No numbers: the colour says the place. */
+const MEDALS = {
+  gold: { rim: '#E0A100', face: '#FFC800', hi: '#FFE277', ribbonA: '#FF4B4B', ribbonB: '#D93636' },
+  silver: { rim: '#8E99AD', face: '#C9D0DC', hi: '#EEF1F6', ribbonA: '#1CB0F6', ribbonB: '#1290CC' },
+  bronze: { rim: '#B8651F', face: '#E58A3B', hi: '#F7B77C', ribbonA: '#58CC02', ribbonB: '#45A302' },
+} as const;
+export type MedalKind = keyof typeof MEDALS;
+export function Medal({ kind, size = 72 }: { kind: MedalKind; size?: number }) {
+  const m = MEDALS[kind];
+  const star = Array.from({ length: 10 }, (_, i) => {
+    const r = i % 2 ? 9 : 20, a = -Math.PI / 2 + (i * Math.PI) / 5;
+    return `${50 + r * Math.cos(a)},${66 + r * Math.sin(a)}`;
+  }).join(' ');
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ overflow: 'visible', flex: 'none' }} aria-hidden>
+      <path d="M22 0 H44 L58 40 H38 Z" fill={m.ribbonB} stroke="#fff" strokeWidth={5} strokeLinejoin="round" />
+      <path d="M78 0 H56 L42 40 H62 Z" fill={m.ribbonA} stroke="#fff" strokeWidth={5} strokeLinejoin="round" />
+      <circle cx={50} cy={66} r={33} fill="#fff" />
+      <circle cx={50} cy={69} r={29} fill={m.rim} />
+      <circle cx={50} cy={66} r={29} fill={m.face} />
+      <circle cx={50} cy={66} r={22} fill="none" stroke={m.hi} strokeWidth={3.5} />
+      <polygon points={star} fill={m.hi} stroke={m.rim} strokeWidth={2.5} strokeLinejoin="round" />
+      <ellipse cx={38} cy={52} rx={8} ry={4} fill="#fff" opacity={0.6} transform="rotate(-35 38 52)" />
+    </svg>
+  );
+}
+
+/** Small friendly crown for whoever is on top. */
+export function Crown({ size = 120 }: { size?: number }) {
+  return (
+    <svg width={size} height={size * 0.7} viewBox="0 0 120 84" style={{ overflow: 'visible', flex: 'none' }} aria-hidden>
+      <path d="M12 70 L6 20 L38 44 L60 8 L82 44 L114 20 L108 70 Z" fill="#fff" stroke="#fff" strokeWidth={12} strokeLinejoin="round" />
+      <path d="M12 74 L6 24 L38 48 L60 12 L82 48 L114 24 L108 74 Z" fill="#E0A100" strokeLinejoin="round" stroke="#E0A100" strokeWidth={4} />
+      <path d="M12 70 L6 20 L38 44 L60 8 L82 44 L114 20 L108 70 Z" fill="#FFC800" strokeLinejoin="round" stroke="#FFC800" strokeWidth={4} />
+      <circle cx={60} cy={54} r={8} fill="#FF4B4B" /><circle cx={30} cy={56} r={6} fill="#1CB0F6" /><circle cx={90} cy={56} r={6} fill="#58CC02" />
+    </svg>
+  );
+}
+
+/** A small up or down arrow for "moved up / moved down". */
+export function MoveArrow({ up, size = 34 }: { up: boolean; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" style={{ flex: 'none' }} aria-hidden>
+      <path d={up ? 'M20 6 L35 24 H25 V34 H15 V24 H5 Z' : 'M20 34 L35 16 H25 V6 H15 V16 H5 Z'} fill={up ? '#58CC02' : '#FF4B4B'} stroke="#fff" strokeWidth={3.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** A calm kid doing a big stretch: arms float up when `up` is true and relax when it is false. Pure CSS transition, so it can follow a breathing rhythm. */
+export function Stretcher({ up, size = 360, seconds = 4 }: { up: boolean; size?: number; seconds?: number }) {
+  const arm = (side: 'l' | 'r'): CSSProperties => ({
+    transformOrigin: side === 'l' ? '72px 128px' : '128px 128px',
+    transform: `rotate(${(side === 'l' ? 1 : -1) * (up ? 164 : 14)}deg)`,
+    transition: `transform ${seconds}s ease-in-out`,
+  });
+  return (
+    <svg width={size} height={size * 1.5} viewBox="0 0 200 300" style={{ overflow: 'visible' }} aria-hidden>
+      <g style={arm('l')}>
+        <rect x={61} y={118} width={22} height={92} rx={11} fill="#fff" />
+        <rect x={65} y={122} width={14} height={84} rx={7} fill="#1CB0F6" />
+        <circle cx={72} cy={212} r={13} fill="#fff" /><circle cx={72} cy={212} r={9} fill="#F6C9A0" />
+      </g>
+      <g style={arm('r')}>
+        <rect x={117} y={118} width={22} height={92} rx={11} fill="#fff" />
+        <rect x={121} y={122} width={14} height={84} rx={7} fill="#1CB0F6" />
+        <circle cx={128} cy={212} r={13} fill="#fff" /><circle cx={128} cy={212} r={9} fill="#F6C9A0" />
+      </g>
+      <rect x={72} y={206} width={26} height={80} rx={13} fill="#fff" /><rect x={102} y={206} width={26} height={80} rx={13} fill="#fff" />
+      <rect x={77} y={210} width={16} height={72} rx={8} fill="#4A3613" /><rect x={107} y={210} width={16} height={72} rx={8} fill="#4A3613" />
+      <rect x={70} y={270} width={30} height={16} rx={8} fill="#FF9600" /><rect x={100} y={270} width={30} height={16} rx={8} fill="#FF9600" />
+      <rect x={60} y={104} width={80} height={118} rx={34} fill="#fff" />
+      <rect x={65} y={109} width={70} height={108} rx={30} fill="#1CB0F6" />
+      <rect x={74} y={118} width={20} height={9} rx={4.5} fill="#fff" opacity={0.45} />
+      <circle cx={100} cy={64} r={46} fill="#fff" />
+      <circle cx={100} cy={64} r={41} fill="#F6C9A0" />
+      <path d="M58 58 C58 22 142 22 142 58 C124 44 76 44 58 58 Z" fill="#4A3613" />
+      <path d="M80 70 Q86 76 92 70 M108 70 Q114 76 120 70" stroke="#4A3613" strokeWidth={4.5} fill="none" strokeLinecap="round" />
+      <path d="M88 86 Q100 96 112 86" stroke="#4A3613" strokeWidth={4.5} fill="none" strokeLinecap="round" />
     </svg>
   );
 }

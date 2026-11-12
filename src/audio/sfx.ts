@@ -2,8 +2,8 @@
 // Chain: cue -> cue gain -> master gain -> compressor -> destination.
 // The AudioContext is created/resumed on the first pointerdown/keydown anywhere (autoplay policy).
 
-export type Sfx = 'pop' | 'tap' | 'lock' | 'whoosh' | 'ding' | 'gain' | 'loss' | 'buzz' | 'drumroll' | 'fanfare' | 'splat' | 'tick' | 'coin' | 'evil' | 'cheer';
-export const SFX_NAMES: Sfx[] = ['pop', 'tap', 'lock', 'whoosh', 'ding', 'gain', 'loss', 'buzz', 'drumroll', 'fanfare', 'splat', 'tick', 'coin', 'evil', 'cheer'];
+export type Sfx = 'pop' | 'tap' | 'lock' | 'whoosh' | 'ding' | 'gain' | 'loss' | 'buzz' | 'drumroll' | 'fanfare' | 'splat' | 'tick' | 'coin' | 'evil' | 'cheer' | 'clap' | 'gavel';
+export const SFX_NAMES: Sfx[] = ['pop', 'tap', 'lock', 'whoosh', 'ding', 'gain', 'loss', 'buzz', 'drumroll', 'fanfare', 'splat', 'tick', 'coin', 'evil', 'cheer', 'clap', 'gavel'];
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -90,7 +90,7 @@ function noise(x: Ctx, o: { at?: number; dur: number; vol?: number; type?: Biqua
 const N = { C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5, D6: 1174.66, E6: 1318.5, G6: 1568, C7: 2093 };
 
 type Recipe = (x: Ctx, opt?: PlayOpts) => number; // returns duration in s
-const R: Record<Sfx, Recipe> = {
+const R: Partial<Record<Sfx, Recipe>> = {
   tap: x => {
     tone(x, { f: 720, f2: 380, dur: 0.09, vol: 0.45, glide: 0.07 });
     noise(x, { dur: 0.02, vol: 0.12, type: 'highpass', f: 3000 });
@@ -198,6 +198,30 @@ const R: Record<Sfx, Recipe> = {
   },
 };
 
+R.clap = x => { // dramatic applause: a slow-clap start, then a crowd of claps swelling, then a final cheer
+  const slow = [0, 0.32, 0.6, 0.84];
+  slow.forEach((at, i) => {
+    noise(x, { at, dur: 0.07, vol: 0.55 + i * 0.05, type: 'bandpass', f: 1500, q: 0.9 });
+    noise(x, { at, dur: 0.04, vol: 0.28, type: 'highpass', f: 3200 });
+  });
+  let t = 1.0, k = 0;
+  while (t < 2.3) {
+    const swell = Math.min(1, (t - 1.0) / 0.9);
+    noise(x, { at: t, dur: 0.06, vol: 0.14 + 0.4 * swell, type: 'bandpass', f: 1200 + Math.random() * 1600, q: 0.8 });
+    if (k % 2) noise(x, { at: t + 0.012, dur: 0.04, vol: 0.12 * swell, type: 'highpass', f: 3500 });
+    t += 0.045 + Math.random() * 0.03; k++;
+  }
+  noise(x, { at: 1.2, dur: 1.3, vol: 0.22, type: 'bandpass', f: 1000, f2: 1700, q: 0.6, attack: 0.5 });
+  [N.C5, N.E5, N.G5, N.C6].forEach((f, i) => tone(x, { at: 1.9 + i * 0.05, f, dur: 0.5, vol: 0.1, type: 'triangle' }));
+  return 2.7;
+};
+R.gavel = x => { // wooden hammer: a thud and a bright knock, "SOLD!"
+  tone(x, { f: 170, f2: 70, dur: 0.18, vol: 0.9, glide: 0.12 });
+  noise(x, { dur: 0.06, vol: 0.7, type: 'bandpass', f: 1400, q: 1.5 });
+  tone(x, { at: 0.02, f: 900, f2: 500, dur: 0.07, vol: 0.2, type: 'triangle' });
+  return 0.3;
+};
+
 export type PlayOpts = { pitch?: number; duration?: number; volume?: number };
 
 function play(name: Sfx, opt?: PlayOpts) {
@@ -213,7 +237,7 @@ function play(name: Sfx, opt?: PlayOpts) {
   out.gain.value = opt?.volume ?? 1;
   out.connect(master);
   const det = 1 + (Math.random() * 2 - 1) * (name === 'fanfare' || name === 'tick' ? 0.005 : 0.03);
-  const dur = R[name]({ c, out, t: c.currentTime + 0.005, det }, opt);
+  const dur = R[name]!({ c, out, t: c.currentTime + 0.005, det }, opt);
   active++;
   setTimeout(() => { active = Math.max(0, active - 1); out.disconnect(); }, (dur + 0.2) * 1000);
 }
@@ -225,4 +249,6 @@ export const sfx = {
   /** master volume 0..1 (default 0.6) */
   setVolume: (v: number) => { volume = Math.max(0, Math.min(1, v)); if (master && ctx) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.02); },
   unlock: unlockAudio,
+  /** Freeze (suspend) or resume all sound. */
+  freeze: (on: boolean) => { if (!ctx) return; void (on ? ctx.suspend() : ctx.resume()); },
 };

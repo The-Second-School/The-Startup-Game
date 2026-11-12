@@ -1,7 +1,8 @@
-// Shared bits for the act scenes (welcome, howto, act1..act3): a mover wrapper and rAIvan the 10-headed AI.
+// Shared bits for the act scenes (welcome, howto, act1..act3): a mover wrapper and the scene version of Fibbot (wraps the ui Fibbot).
 import { AnimatePresence, motion } from 'motion/react';
 import type { CSSProperties, ReactNode } from 'react';
 import { HUE, INK, SPRING } from '../kit';
+import { Fibbot as UiFibbot, type FibbotMood } from '../../ui/characters';
 
 export type MvState = { x?: number; y?: number; scale?: number; rotate?: number; opacity?: number };
 
@@ -18,55 +19,15 @@ export function Mv({ left = 0, top = 0, to, from, spring = SPRING.settle, origin
   );
 }
 
-const HEAD_HUES = [HUE.raivan, HUE.purple, HUE.raivan, HUE.pink, HUE.raivan, HUE.purple, HUE.raivan, HUE.pink, HUE.raivan, HUE.purple];
-
-/** rAIvan, the 10-headed AI. 520 x 460 box, feet at the bottom. angry = red eyes + brows, smoke = puffs from the heads. */
-export function Raivan({ size = 520, angry = false, smoke = false, style }: { size?: number; angry?: boolean; smoke?: boolean; style?: CSSProperties }) {
-  const heads = Array.from({ length: 10 }, (_, i) => {
-    const a = (-168 + (i * 156) / 9) * (Math.PI / 180);
-    const rad = i % 2 ? 214 : 190;
-    return { x: 260 + Math.cos(a) * rad * 1.15, y: 270 + Math.sin(a) * rad * 0.95, r: 40 + (i % 3) * 3, i };
-  });
+/** Fibbot for the scenes: a thin wrapper around the one and only ui Fibbot. 520 x 460 box (scaled by `size`), feet at the bottom.
+ *  angry = angry face, smoke = puffs from his antennas. */
+export function Fibbot({ size = 520, angry = false, smoke = false, mood, style }: { size?: number; angry?: boolean; smoke?: boolean; mood?: FibbotMood; style?: CSSProperties }) {
   return (
-    <svg width={size} height={(size * 460) / 520} viewBox="0 0 520 460" style={{ overflow: 'visible', ...style }} strokeLinecap="round" strokeLinejoin="round">
-      {/* necks */}
-      {heads.map(h => <path key={`n${h.i}`} d={`M260 290 Q${(260 + h.x) / 2} ${(290 + h.y) / 2 + 30} ${h.x} ${h.y}`} stroke={HUE.raivan.edge} strokeWidth={26} fill="none" />)}
-      {/* body */}
-      <ellipse cx={260} cy={358} rx={150} ry={90} fill="#fff" />
-      <ellipse cx={260} cy={358} rx={140} ry={86} fill={HUE.raivan.base} />
-      <ellipse cx={210} cy={322} rx={56} ry={26} fill={HUE.raivan.hi} opacity={0.9} />
-      <rect x={210} y={352} width={100} height={64} rx={22} fill="#fff" opacity={0.18} />
-      <text x={260} y={398} textAnchor="middle" fontSize={44} fontWeight={800} fill="#fff" fontFamily="inherit">AI</text>
-      {/* feet */}
-      <ellipse cx={170} cy={440} rx={52} ry={20} fill={HUE.raivan.edge} /><ellipse cx={350} cy={440} rx={52} ry={20} fill={HUE.raivan.edge} />
-      {/* heads */}
-      {heads.map(h => {
-        const hue = HEAD_HUES[h.i];
-        return (
-          <g key={h.i}>
-            <g className="k-sway" style={{ ['--dur' as string]: `${2.2 + (h.i % 4) * 0.4}s`, ['--delay' as string]: `${h.i * 0.17}s`, ['--sway-a' as string]: '-5deg', ['--sway-b' as string]: '5deg', transformOrigin: '260px 300px' } as CSSProperties}>
-              <g transform={`translate(${h.x} ${h.y})`}>
-                <circle r={h.r + 6} fill="#fff" />
-                <circle r={h.r} fill={hue.base} />
-                <ellipse cx={-h.r * 0.35} cy={-h.r * 0.45} rx={h.r * 0.34} ry={h.r * 0.2} fill={hue.hi} />
-                <circle cx={-h.r * 0.36} cy={-2} r={h.r * 0.27} fill="#fff" /><circle cx={h.r * 0.36} cy={-2} r={h.r * 0.27} fill="#fff" />
-                <circle cx={-h.r * 0.34} cy={0} r={h.r * 0.13} fill={angry ? HUE.red.base : INK} /><circle cx={h.r * 0.38} cy={0} r={h.r * 0.13} fill={angry ? HUE.red.base : INK} />
-                {angry
-                  ? <><path d={`M${-h.r * 0.7} ${-h.r * 0.42} L${-h.r * 0.1} ${-h.r * 0.18}`} stroke={INK} strokeWidth={5} /><path d={`M${h.r * 0.7} ${-h.r * 0.42} L${h.r * 0.1} ${-h.r * 0.18}`} stroke={INK} strokeWidth={5} /><path d={`M${-h.r * 0.34} ${h.r * 0.5} Q0 ${h.r * 0.28} ${h.r * 0.34} ${h.r * 0.5}`} stroke={INK} strokeWidth={5} fill="none" /></>
-                  : <path d={`M${-h.r * 0.36} ${h.r * 0.34} Q0 ${h.r * 0.7} ${h.r * 0.36} ${h.r * 0.34}`} stroke={INK} strokeWidth={5} fill="none" />}
-                {smoke && (
-                  <g transform={`translate(0 ${-h.r - 4})`}>
-                    <g className="k-rise" style={{ ['--dur' as string]: '1.6s', ['--delay' as string]: `${(h.i % 5) * 0.3}s`, ['--rise' as string]: '-90px' } as CSSProperties}>
-                      <circle r={14} fill="#fff" stroke="#E2D2F5" strokeWidth={4} />
-                    </g>
-                  </g>
-                )}
-              </g>
-            </g>
-          </g>
-        );
-      })}
-    </svg>
+    <div style={{ position: 'relative', width: size, height: (size * 460) / 520, ...style }}>
+      <div style={{ position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)', lineHeight: 0 }}>
+        <UiFibbot mood={mood ?? (angry ? 'angry' : 'sneaky')} size={size * 0.98} smoke={smoke} />
+      </div>
+    </div>
   );
 }
 

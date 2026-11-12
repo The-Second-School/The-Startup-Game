@@ -103,7 +103,7 @@ for (const [teams, players] of [[3, 12], [4, 20], [5, 20], [5, 25], [6, 30], [4,
   g = reduce(g, { type: 'LOCK', teamId: 't1', choice: 1 });
   assert.equal((g.step as any).locks.t1, 1, 'broke team can lock the free option');
 }
-// Every question has at least one free, honest option so a broke team is never forced into rAIvan's trap
+// Every question has at least one free, honest option so a broke team is never forced into Fibbot's trap
 for (const q of Object.values(QUESTIONS)) assert.ok(q.options.some(o => o.coins >= 0 && !o.trap), q.id + ' has a free honest option');
 // Mega Order with 3 and 5 teams: exactly one solo team, outside every pair, rewarded once, with the solo story text
 for (const n of [3, 5, 4, 6]) {

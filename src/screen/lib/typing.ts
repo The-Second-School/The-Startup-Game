@@ -1,5 +1,6 @@
 // Shared typing actions: used by the physical keyboard handler (useKeyboard) and the on-screen touch keyboard.
-import { currentStep, teamById } from '../../game/engine';
+import { currentStep } from '../../game/engine';
+import type { GameState } from '../../game/types';
 import { uid } from '../../game/helpers';
 import { useScreen } from '../../store/screenStore';
 import { isDefaultName } from './game';
@@ -11,16 +12,23 @@ export const MAX_NAME = 24;
 export const shouldCap = (typed: string) => typed === '' || /[\s-]$/.test(typed);
 export const caseChar = (typed: string, ch: string) => (/\p{L}/u.test(ch) ? (shouldCap(typed) ? ch.toUpperCase() : ch.toLowerCase()) : ch);
 
+/** The team that receives the next typed name: the one picked with a number key while it is still unnamed, else the first unnamed team. */
+export function namingTeamId(state: GameState, kbTeam: string | null): string | null {
+  const open = state.teams.filter(t => isDefaultName(t.name));
+  return (open.find(t => t.id === kbTeam) ?? open[0])?.id ?? null;
+}
+
 export function typeChar(ch: string) {
   const { state } = useScreen.getState();
   const ui = useUi.getState();
   const step = currentStep(state);
   if (ch === ' ' && !ui.typing) return;
-  if (ui.typing.length < MAX_NAME) ui.setTyping(ui.typing + caseChar(ui.typing, ch));
-  if (step.kind === 'setup_names' && !ui.kbTeam) {
-    const free = state.teams.find(t => isDefaultName(t.name)) ?? state.teams[0];
-    if (free) ui.setKbTeam(free.id);
+  if (step.kind === 'setup_names') {
+    const id = namingTeamId(state, ui.kbTeam);
+    if (!id) return;                      // every team is named: nothing left to type
+    if (ui.kbTeam !== id) ui.setKbTeam(id);
   }
+  if (ui.typing.length < MAX_NAME) ui.setTyping(ui.typing + caseChar(ui.typing, ch));
 }
 
 export function backspaceTyping() {
@@ -38,9 +46,9 @@ export function commitTyping(): boolean {
   if (step.kind === 'setup_players') {
     dispatch({ type: 'ADD_PLAYER', player: { id: `k${uid()}`, name, grade: ui.grade } });
   } else if (step.kind === 'setup_names') {
-    const target = teamById(state, ui.kbTeam) ?? state.teams.find(t => isDefaultName(t.name)) ?? null;
+    const target = namingTeamId(state, ui.kbTeam);
     if (!target) return false;
-    dispatch({ type: 'SET_TEAM_NAME', teamId: target.id, name });
+    dispatch({ type: 'SET_TEAM_NAME', teamId: target, name });
     const after = useScreen.getState().state;
     ui.setKbTeam(after.teams.find(t => isDefaultName(t.name))?.id ?? null);
   } else return false;

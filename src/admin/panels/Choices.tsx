@@ -12,6 +12,7 @@ const PRICES = Array.from({ length: (PRICE.max - PRICE.min) / PRICE.step + 1 }, 
 export function ChoicePanel() {
   const { state, send } = useA();
   const [open, setOpen] = useState<string | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
   const step = currentStep(state);
   const st = state.step;
   if (st.type !== 'question' && st.type !== 'price' && st.type !== 'megaorder') return null;
@@ -19,42 +20,53 @@ export function ChoicePanel() {
   const q = st.type === 'question' && step.kind === 'question' ? QUESTIONS[step.qId] : null;
   const { teams } = state;
 
-  const picker = (t: Team): ReactNode => {
-    if (q) {
-      return q.options.map((o, i) => {
-        const ok = canAfford(t, o.coins);
-        return (
-          <Btn key={i} tone="soft" disabled={!ok} onClick={() => { send({ type: 'LOCK', teamId: t.id, choice: i }); setOpen(null); }} className="opt-btn">
+  // Secret entry: a team's Lock Master whispers the shape to the host. 4 small shape buttons, then Lock to confirm.
+  const shapes = (t: Team, opts: { ok: boolean; note: string }[]): ReactNode => (
+    <>
+      <div className="shapegrid">
+        {opts.map((o, i) => (
+          <Btn key={i} tone={sel === i ? 'sun' : 'soft'} disabled={!o.ok} onClick={() => setSel(i)} className="shape-btn" label={SHAPES[i]}>
             <span className="opt-shape" style={{ color: OPTION_STYLES[i].dark }}>{SHAPES[i]}</span>
-            <span className="opt-text">{o.text}<small>{ok ? coinTag(o.coins) : 'Not enough coins'}</small></span>
+            <small>{o.ok ? o.note : 'No coins'}</small>
           </Btn>
-        );
-      });
-    }
+        ))}
+      </div>
+      <Btn tone="good" size="lg" disabled={sel === null} onClick={() => { if (sel !== null) { send({ type: 'LOCK', teamId: t.id, choice: sel }); setSel(null); setOpen(null); } }}>Lock it in</Btn>
+    </>
+  );
+
+  const picker = (t: Team): ReactNode => {
+    if (q) return shapes(t, q.options.map(o => ({ ok: canAfford(t, o.coins), note: coinTag(o.coins) })));
     if (st.type === 'price') {
       const p = productById(t.productId);
+      // Fibbot's copy price, shown as a quiet reference on the grid (nearest ₹10 step).
+      const rivalStep = p ? Math.min(PRICE.max, Math.max(PRICE.min, Math.round(p.rival / PRICE.step) * PRICE.step)) : null;
       return (
         <>
-          {p && <div className="hint">{p.icon} {p.name} {p.unit}. {p.hint}</div>}
+          {p && (
+            <div className="hint">
+              <div>{p.icon} <b>{p.name}</b>. One sale is {p.unit}.</div>
+              <div>It costs <b>₹{p.cost}</b> to make one. Fibbot’s copy sells for <b>₹{p.rival}</b>.</div>
+            </div>
+          )}
           <div className="pricegrid">
-            {PRICES.map(v => <Btn key={v} tone="soft" onClick={() => { send({ type: 'LOCK', teamId: t.id, choice: v }); setOpen(null); }}>₹{v}</Btn>)}
+            {PRICES.map(v => (
+              <Btn key={v} tone="soft" onClick={() => { send({ type: 'LOCK', teamId: t.id, choice: v }); setOpen(null); }} className={v === rivalStep ? 'price-ref' : ''}>
+                ₹{v}{v === rivalStep && <small>Fibbot</small>}
+              </Btn>
+            ))}
           </div>
         </>
       );
     }
-    return MEGA.options.map((o, i) => (
-      <Btn key={i} tone="soft" onClick={() => { send({ type: 'LOCK', teamId: t.id, choice: i }); setOpen(null); }} className="opt-btn">
-        <span className="opt-shape" style={{ color: OPTION_STYLES[i].dark }}>{SHAPES[i]}</span>
-        <span className="opt-text">{o.text}<small>{o.detail}</small></span>
-      </Btn>
-    ));
+    return shapes(t, MEGA.options.map(o => ({ ok: true, note: o.text })));
   };
 
   const row = (t: Team) => {
     const locked = st.locks[t.id] !== undefined;
     const choosing = st.selectedTeamId === t.id;
     return (
-      <TeamLine key={t.id} team={t} hot={choosing} onTap={() => setOpen(open === t.id ? null : t.id)}
+      <TeamLine key={t.id} team={t} hot={choosing} onTap={() => { setSel(null); setOpen(open === t.id ? null : t.id); }}
         right={locked ? <Pill tone="good">Locked</Pill> : choosing ? <Pill tone="sun">Choosing</Pill> : <Pill>Waiting</Pill>}
         below={open === t.id && (
           <div className="picker">

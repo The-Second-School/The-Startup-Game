@@ -18,7 +18,7 @@ export const HUE = {
   blue: { hi: '#7DD3FA', base: '#1CB0F6', edge: '#1395D4' },
   sky: { hi: '#B8E8FF', base: '#7FD0F7', edge: '#4FB0E0' },
   purple: { hi: '#E2B5FF', base: '#CE82FF', edge: '#B05EE8' },
-  raivan: { hi: '#A07AE0', base: '#7B4BC9', edge: '#5A2F9E' },
+  fibbot: { hi: '#A07AE0', base: '#7B4BC9', edge: '#5A2F9E' },
   pink: { hi: '#FFB3D8', base: '#FF6FB5', edge: '#E5539A' },
   cream: { hi: '#FFFFFF', base: '#FFF6DE', edge: '#EED9A0' },
   paper: { hi: '#FFFFFF', base: '#FFFFFF', edge: '#EED9A0' },

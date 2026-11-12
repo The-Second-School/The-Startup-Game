@@ -1,14 +1,17 @@
 // Awards: reveal 5 -> 1 with drumroll, card flip, confetti and trophies.
 // Banana Peel shows its funny reasons; at #1 the Success board unlocks and buildings rise.
+import '../views2.css';
+import '../board.css';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, Bolt, Building, Confetti, CountUp, MeterIcon } from '../../ui';
+import { Avatar, Building, Confetti, CountUp, MeterIcon } from '../../ui';
 import { AWARDS } from '../../game/content';
 import { stageOf, success } from '../../game/engine';
 import type { AwardResult, AwardsState, Team } from '../../game/types';
 import { sfx } from '../../audio';
 import { useGame } from '../lib/ctx';
 import { teamBase, teamName } from '../lib/game';
+import { Crown, Medal } from '../components/art';
 import { ReadyHint } from '../components/ReadyHint';
 import { useTimeline } from '../hooks/useTimeline';
 
@@ -59,17 +62,6 @@ function StarArt({ size = 90 }: { size?: number }) {
     </svg>
   );
 }
-function Crown({ size = 120 }: { size?: number }) {
-  return (
-    <svg width={size} height={size * 0.7} viewBox="0 0 120 84" style={{ overflow: 'visible' }}>
-      <path d="M12 70 L6 20 L38 44 L60 8 L82 44 L114 20 L108 70 Z" fill="#fff" stroke="#fff" strokeWidth={12} strokeLinejoin="round" />
-      <path d="M12 74 L6 24 L38 48 L60 12 L82 48 L114 24 L108 74 Z" fill="#E0A100" strokeLinejoin="round" stroke="#E0A100" strokeWidth={4} />
-      <path d="M12 70 L6 20 L38 44 L60 8 L82 44 L114 20 L108 70 Z" fill="#FFC800" strokeLinejoin="round" stroke="#FFC800" strokeWidth={4} />
-      <circle cx={60} cy={54} r={8} fill="#FF4B4B" /><circle cx={30} cy={56} r={6} fill="#1CB0F6" /><circle cx={90} cy={56} r={6} fill="#58CC02" />
-    </svg>
-  );
-}
-
 function Badge({ id, size }: { id: AwardId; size: number }): ReactNode {
   if (id === 'banana') return <BananaArt size={size} />;
   if (id === 'pitch') return <MicArt size={size} />;
@@ -114,11 +106,8 @@ function Intro() {
   return (
     <motion.div className="v2-card v2-award-main v2-award-intro" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
       <div className="v2-intro-hero">
-        <motion.div className="v2-intro-bolt" initial={{ x: -120, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.2 }}>
-          <Bolt pose="cheer" size={300} />
-        </motion.div>
         <motion.div animate={{ y: [0, -16, 0], rotate: [-2, 2, -2] }} transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}>
-          <Trophy id="champion" size={330} />
+          <Trophy id="champion" size={360} />
         </motion.div>
       </div>
       <div className="v2-top-title" style={{ fontSize: 112 }}>Awards time!</div>
@@ -184,7 +173,7 @@ function AwardCard({ res, team, n }: { res: AwardResult; team: Team; n: number }
 
 function SuccessBoard({ teams, championId }: { teams: Team[]; championId: string }) {
   const list = [...teams].sort((a, b) => success(b) - success(a) || teams.indexOf(a) - teams.indexOf(b));
-  const rowH = Math.min(140, Math.floor(620 / Math.max(1, list.length)));
+  const rowH = Math.min(140, Math.floor(560 / Math.max(1, list.length)));
   return (
     <motion.div className="v2-card v2-award-main v2-success" initial={{ scale: 0.6, opacity: 0, rotate: -4 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 260, damping: 18 }}>
       <div className="v2-success-head">
@@ -197,7 +186,7 @@ function SuccessBoard({ teams, championId }: { teams: Team[]; championId: string
           const champ = t.id === championId;
           return (
             <motion.div key={t.id} className={`v2-srow${champ ? ' is-champ' : ''}`} style={{ height: rowH }} initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 300, opacity: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 + i * 0.12 }}>
-              <span className="v2-brank" style={{ background: ['#FFC800', '#C9D0DC', '#E58A3B'][i] ?? '#FFF3CF' }}>{i + 1}</span>
+              <span className="bd-srank">{i < 3 ? <Medal kind={(['gold', 'silver', 'bronze'] as const)[i]} size={i === 0 ? 76 : 60} /> : <i className="bd-dot" />}</span>
               <motion.div className="v2-srow-b" initial={{ y: 120, scale: 0.4, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 150, damping: 11, delay: 0.7 + i * 0.15 }}>
                 <Building stage={stageOf(t).id} color={teamBase(t)} size={Math.round(rowH * 0.78)} animateIn />
               </motion.div>
@@ -227,7 +216,7 @@ function Awards({ st }: { st: AwardsState }) {
   const r = st.reveal;
   const res = r > 0 ? st.results[r - 1] : null;
   const team = res ? state.teams.find(t => t.id === res.teamId) ?? null : null;
-  const n = useTimeline(`reveal-${r}`, r > 0 ? [2600, 3300, 4000, 4700, 9500] : []);
+  const n = useTimeline(`reveal-${r}`, r > 0 ? [4200, 4900, 5600, 6300, 10800] : []);
   const [fire, setFire] = useState(0);
   const [shake, setShake] = useState(0);
   const finale = res?.id === 'champion';
@@ -244,7 +233,7 @@ function Awards({ st }: { st: AwardsState }) {
   const champion = st.results.find(x => x.id === 'champion');
 
   return (
-    <motion.div className="v2-root" animate={shake ? { x: [0, -16, 16, -12, 12, -6, 6, 0], y: [0, 6, -6, 4, -4, 0] } : undefined} transition={{ duration: 0.7 }}>
+    <motion.div className="v2-root bd-aw" animate={shake ? { x: [0, -16, 16, -12, 12, -6, 6, 0], y: [0, 6, -6, 4, -4, 0] } : undefined} transition={{ duration: 0.7 }}>
       <Confetti fire={fire} count={finale ? 200 : 120} />
       <AnimatePresence mode="wait">
         {r === 0 ? <Intro key="intro" /> : showSuccess && champion ? <SuccessBoard key="success" teams={state.teams} championId={champion.teamId} /> : res && team ? <AwardCard key={`a${r}`} res={res} team={team} n={n} /> : null}

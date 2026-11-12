@@ -6,6 +6,7 @@ import { Beam, Curtain, Pedestal, Trophy, Valance } from '../artb/stage';
 import { Avatar } from '../../ui';
 import { Mv, V, H } from '../artc/helpers';
 import { Show } from '../shared/bits';
+import { Backdrop as Dim, Focus, Subject } from '../kit/focus';
 import type { SceneBodyProps } from '../types';
 
 const FLOOR = 770;
@@ -48,7 +49,8 @@ export default function ShowDay({ beat, teams }: SceneBodyProps) {
 
   return (
     <Root bg={WALL}>
-      <Backdrop />
+      {/* the golden trophy is the main subject on beat 3: the stage behind it dims */}
+      <Focus active={beat === 3}><Dim blur={0} dim={0.55}><Backdrop /></Dim></Focus>
       <Abs x={-400} y={190} z={2}><Bunting w={2720} sag={60} n={14} seed={2} /></Abs>
 
       {/* teams on stage (beats 1-2) */}
@@ -80,13 +82,16 @@ export default function ShowDay({ beat, teams }: SceneBodyProps) {
       ))}</Show>
 
       {/* beat 3: the Golden Trophy */}
-      <Mv beat={beat} z={5} stiff={90} damp={11} to={[H(690, 1000), H(690, 1000), H(690, 1000), V(750, 330, 1)]}>
-        <div style={{ position: 'relative' }}>
-          <Trophy s={360} className="pulse" style={cssVars({ '--s': 1.04, '--d': '1.6s' })} />
-          <Abs x={380} y={20} className="twinkle"><Sparkle s={80} /></Abs><Abs x={-40} y={120} className="twinkle" style={cssVars({ '--dl': '.7s' })}><Sparkle s={64} /></Abs>
+      {/* (the trophy sits at y 420: its enlarged top edge stays below the Bolt bubble) */}
+      <Mv beat={beat} z={5} stiff={90} damp={11} to={[H(690, 1000), H(690, 1000), H(690, 1000), V(750, 420, beat === 3 ? 1.2 : 1)]}>
+        <div style={{ position: 'relative', width: 360, height: 360 }}>
+          <Subject at={{ x: 180, y: 180 }} w={360} h={360} anchor="c" on={beat === 3} scale={1.06}>
+            <Trophy s={360} className="pulse" style={cssVars({ '--s': 1.04, '--d': '1.6s' })} />
+            <Abs x={380} y={20} className="twinkle"><Sparkle s={80} /></Abs><Abs x={-40} y={120} className="twinkle" style={cssVars({ '--dl': '.7s' })}><Sparkle s={64} /></Abs>
+          </Subject>
         </div>
       </Mv>
-      <Mv beat={beat} z={4} to={[H(750, 1000), H(750, 1000), H(750, 1000), V(750, 640, 1)]}><Pedestal w={420} h={300} /></Mv>
+      <Mv beat={beat} z={4} to={[H(750, 1000), H(750, 1000), H(750, 1000), V(750, 720, 1)]}><Pedestal w={420} h={300} /></Mv>
       <Show when={beat === 3} k="burst" y={0} style={{ zIndex: 6 }}><Abs x={960} y={620} z={6}><Burst n={18} r={320} d={2.4} up /></Abs></Show>
 
       {/* curtains: closed on beat 0, tied back after */}

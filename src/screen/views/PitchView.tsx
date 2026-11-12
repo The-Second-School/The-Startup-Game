@@ -1,8 +1,10 @@
 // Show Day pitch: the pitching team on stage with a 45 s timer and its story as a slideshow.
-// Voting: "Show 1 to 5 fingers!" and a tick per team that voted (the stars stay hidden).
+// Voting: "Show 1 to 5 fingers!" and a tick per team that voted (the stars stay hidden). Bolt (top-left dock) narrates each phase.
+import '../views2.css';
+import '../board.css';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Avatar, Bolt, CheckBadge, DeltaPill, ProductArt, TimerRing } from '../../ui';
+import { Avatar, CheckBadge, DeltaPill, Num, ProductArt, TimerRing } from '../../ui';
 import { PITCH_MS, RECIPE, productById } from '../../game/content';
 import { timerRemaining } from '../../game/engine';
 import { memberWithRole } from '../../game/helpers';
@@ -23,7 +25,6 @@ function Pitch({ st }: { st: PitchState }) {
   const { state } = useGame();
   const team = state.teams[st.index];
   const total = state.teams.length;
-
   const done = st.phase === 'done' || !team;
   return (
     <AnimatePresence mode="wait">
@@ -34,26 +35,24 @@ function Pitch({ st }: { st: PitchState }) {
 
 function PitchDone() {
   const { state } = useGame();
-  {
-    return (
-      <motion.div className="v2-root" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
-        <motion.div className="v2-card v2-top" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
-          <div className="v2-top-bolt"><Bolt pose="cheer" size={250} /></div>
-          <div className="v2-top-body"><div className="v2-top-title">What a show!</div><div className="v2-sub">Every startup has pitched. Time for the Golden Trophy!</div></div>
-        </motion.div>
-        <div className="v2-sumrow">
-          {state.teams.map((t, i) => (
-            <motion.div key={t.id} className="v2-card v2-sum" initial={{ y: 80, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 80, opacity: 0, scale: 0.8 }} transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.1 + i * 0.09 }}>
-              <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={130} mood="wow" />
-              <div className="v2-sum-name">{teamName(t)}</div>
-              <CheckBadge size={64} />
-            </motion.div>
-          ))}
-        </div>
-        <ReadyHint bottom={486} />
+  return (
+    <motion.div className="bd-root" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+      <motion.div className="bd-card bd-pt-banner" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+        <div className="bd-pt-big">What a show!</div>
+        <div className="bd-pt-sub">Every startup has pitched. Time for the Golden Trophy!</div>
       </motion.div>
-    );
-  }
+      <div className="bd-pt-sumrow">
+        {state.teams.map((t, i) => (
+          <motion.div key={t.id} className="bd-card bd-pt-sum" initial={{ y: 80, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 80, opacity: 0, scale: 0.8 }} transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.1 + i * 0.09 }}>
+            <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={170} mood="wow" />
+            <div className="bd-pt-sum-name">{teamName(t)}</div>
+            <CheckBadge size={64} />
+          </motion.div>
+        ))}
+      </div>
+      <ReadyHint />
+    </motion.div>
+  );
 }
 
 function Stage({ st, team, total }: { st: PitchState; team: Team; total: number }) {
@@ -78,119 +77,117 @@ function Stage({ st, team, total }: { st: PitchState; team: Team; total: number 
   const entry = story.length ? story[slide % story.length] : null;
   const voters = state.teams.filter(t => t.id !== team.id);
   const votes = state.votes[team.id] ?? {};
+  const voted = voters.filter(v => votes[v.id] !== undefined).length;
 
   return (
-    <motion.div className="v2-root" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
-      <div className="v2-pitch-dots">
-        {state.teams.map((t, i) => (
-          <div key={t.id} className={`v2-pitch-dot${i === st.index ? ' is-now' : i < st.index ? ' is-done' : ''}`}>
-            <Avatar seed={t.avatarSeed} colorIndex={t.colorIndex} shade={2} size={64} ring />
-          </div>
-        ))}
-        <span className="v2-pill">Pitch {st.index + 1} of {total}</span>
-      </div>
-
+    <motion.div className="bd-root" exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+      {/* who is on stage (or who is being rated) */}
       <AnimatePresence mode="popLayout">
-      <motion.div key={team.id} className="v2-pitch-who" initial={{ x: -400, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -400, opacity: 0, transition: { duration: 0.25 } }} transition={{ type: 'spring', stiffness: 220, damping: 20 }}>
-        <motion.div animate={talking ? { y: [0, -14, 0] } : { y: 0 }} transition={talking ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}>
-          <Avatar seed={team.avatarSeed} colorIndex={team.colorIndex} shade={2} size={330} mood={voting ? 'wow' : 'happy'} />
+        <motion.div key={team.id} className="bd-card bd-pt-who" initial={{ x: -400, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -400, opacity: 0, transition: { duration: 0.25 } }} transition={{ type: 'spring', stiffness: 220, damping: 20 }}>
+          <motion.div animate={talking ? { y: [0, -12, 0] } : { y: 0 }} transition={talking ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}>
+            <Avatar seed={team.avatarSeed} colorIndex={team.colorIndex} shade={2} size={250} mood={voting ? 'wow' : 'happy'} />
+          </motion.div>
+          <div className="bd-pt-text">
+            <div className="bd-pt-name" style={{ fontSize: team.name.length > 14 ? 76 : 100 }}>{teamName(team)}</div>
+            <div className="bd-pill" style={{ ['--c' as string]: teamBase(team) }}>{speaker ? `${speaker.name} is pitching` : 'Our Speaker pitches'}</div>
+            {product && <div className="bd-pt-prod">{product.icon} {product.name}: {product.does}</div>}
+          </div>
+          <span className="bd-pt-count-pill">Pitch <Num value={st.index + 1} /> of <Num value={total} /></span>
         </motion.div>
-        <div className="v2-pitch-text">
-          <div className="v2-pitch-name" style={{ fontSize: team.name.length > 14 ? 80 : 108 }}>{teamName(team)}</div>
-          <div className="v2-pill is-big" style={{ ['--c' as string]: teamBase(team) }}>{speaker ? `${speaker.name} is pitching` : 'Our Speaker pitches'}</div>
-          {product && <div className="v2-sub v2-pitch-prod">{product.icon} {product.name}: {product.does}</div>}
-        </div>
-      </motion.div>
       </AnimatePresence>
 
-      <AnimatePresence>
-        {!voting && (
-          <motion.div key="timer" className="v2-pitch-timer" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 20, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
+      {/* the timer (while pitching) or the waving hand (while voting) */}
+      <AnimatePresence mode="wait">
+        {!voting ? (
+          <motion.div key="timer" className="bd-pt-side" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 20, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
             <motion.div animate={talking ? { scale: [1, 1.035, 1] } : { scale: 1 }} transition={talking ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}>
-              <TimerRing remainingMs={talking ? rem : PITCH_MS} totalMs={talking ? tot : PITCH_MS} size={300} />
+              <TimerRing remainingMs={talking ? rem : PITCH_MS} totalMs={talking ? tot : PITCH_MS} size={270} />
             </motion.div>
             <AnimatePresence>
-              {!talking && <motion.div key="ready" className="v2-pill is-warn" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}>Get ready! {PITCH_MS / 1000} seconds</motion.div>}
+              {!talking && <motion.div key="ready" className="bd-pill is-warn" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}>Get ready!</motion.div>}
             </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div key="hand" className="bd-pt-side" initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400, transition: { duration: 0.2 } }} transition={{ type: 'spring', stiffness: 180, damping: 14, delay: 0.2 }}>
+            <motion.div animate={{ rotate: [-6, 6, -6], y: [0, -10, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: '50% 90%' }}>
+              <Hand size={250} />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-      {!voting ? (
-        <motion.div key="slides" className="v2-slidewrap" exit={{ y: 120, opacity: 0, transition: { duration: 0.22 } }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={entry ? `${team.id}-${slide % story.length}` : `${team.id}-none`}
-              className="v2-card v2-slide"
-              initial={{ x: 500, opacity: 0, rotate: 3 }}
-              animate={{ x: 0, opacity: 1, rotate: 0 }}
-              exit={{ x: -500, opacity: 0, rotate: -3, transition: { duration: 0.25 } }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-            >
-              {entry ? (
-                <>
-                  <div className="v2-slide-icon">{entry.icon}</div>
-                  <div className="v2-slide-body">
-                    <div className="v2-pill">{RECIPE.find(r => r.act === entry.act)?.icon} Step {entry.act}: {RECIPE.find(r => r.act === entry.act)?.name}</div>
-                    <div className="v2-slide-label">{entry.label}</div>
-                    <div className="v2-slide-story">{entry.story}</div>
-                  </div>
-                  <div className="v2-slide-deltas">
-                    {([['customers', entry.deltas.customers], ['happiness', entry.deltas.happiness], ['coins', entry.deltas.coins]] as const)
-                      .filter(([, v]) => v !== 0).map(([k, v]) => <DeltaPill key={k} value={v} kind={k} />)}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="v2-slide-icon">{product ? <ProductArt productId={product.id} size={190} /> : '🌱'}</div>
-                  <div className="v2-slide-body">
-                    <div className="v2-slide-label">A brand new startup!</div>
-                    <div className="v2-slide-story">{product ? `${product.name} is ready to meet Techistan.` : 'Ready to meet Techistan.'}</div>
-                  </div>
-                </>
-              )}
+        {!voting ? (
+          <motion.div key="slides" className="bd-pt-slidewrap" exit={{ y: 120, opacity: 0, transition: { duration: 0.22 } }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={entry ? `${team.id}-${slide % story.length}` : `${team.id}-none`}
+                className="bd-card bd-pt-slide"
+                initial={{ x: 500, opacity: 0, rotate: 3 }}
+                animate={{ x: 0, opacity: 1, rotate: 0 }}
+                exit={{ x: -500, opacity: 0, rotate: -3, transition: { duration: 0.25 } }}
+                transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              >
+                {entry ? (
+                  <>
+                    <div className="v2-slide-icon">{entry.icon}</div>
+                    <div className="v2-slide-body">
+                      <div className="bd-pill">{RECIPE.find(r => r.act === entry.act)?.icon} Step {entry.act}: {RECIPE.find(r => r.act === entry.act)?.name}</div>
+                      <div className="v2-slide-label">{entry.label}</div>
+                      <div className="v2-slide-story">{entry.story}</div>
+                    </div>
+                    <div className="v2-slide-deltas">
+                      {([['customers', entry.deltas.customers], ['happiness', entry.deltas.happiness], ['coins', entry.deltas.coins]] as const)
+                        .filter(([, v]) => v !== 0).map(([k, v]) => <DeltaPill key={k} value={v} kind={k} />)}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="v2-slide-icon">{product ? <ProductArt productId={product.id} size={190} /> : '🌱'}</div>
+                    <div className="v2-slide-body">
+                      <div className="v2-slide-label">A brand new startup!</div>
+                      <div className="v2-slide-story">{product ? `${product.name} is ready to meet Techistan.` : 'Ready to meet Techistan.'}</div>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
+            {story.length > 1 && (
+              <div className="v2-slide-dots">
+                {story.map((_, i) => <span key={i} className={i === slide % story.length ? 'is-on' : ''} />)}
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div key="vote" className="bd-pt-vote" exit={{ opacity: 0, y: 80, transition: { duration: 0.22 } }}>
+            <motion.div className="bd-pt-votetitle" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 16 }}>
+              <div className="bd-pt-big">Show 1 to 5 fingers!</div>
+              <div className="bd-pt-sub">Be fair. How good was the pitch?</div>
             </motion.div>
-          </AnimatePresence>
-          {story.length > 1 && (
-            <div className="v2-slide-dots">
-              {story.map((_, i) => <span key={i} className={i === slide % story.length ? 'is-on' : ''} />)}
+            <div className="bd-pt-voters">
+              {voters.map((v, i) => {
+                const done = votes[v.id] !== undefined;
+                return (
+                  <motion.div key={v.id} className={`bd-card bd-pt-voter${done ? ' is-done' : ''}`} initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 20, delay: 0.1 + i * 0.07 }}>
+                    <Avatar seed={v.avatarSeed} colorIndex={v.colorIndex} shade={2} size={120} mood={done ? 'happy' : 'cool'} />
+                    <div className="bd-pt-voter-name">{teamName(v)}</div>
+                    <div className="bd-pt-voter-status">{done ? 'Voted!' : 'Thinking...'}</div>
+                    <AnimatePresence>
+                      {done && (
+                        <motion.div className="bd-pt-tick" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 40 }} transition={{ type: 'spring', stiffness: 600, damping: 12 }}>
+                          <CheckBadge size={84} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
             </div>
-          )}
-        </motion.div>
-      ) : (
-        <motion.div key="vote" className="v2-vote" exit={{ opacity: 0, y: 80, transition: { duration: 0.22 } }}>
-          <motion.div className="v2-vote-title" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 16 }}>
-            <div className="v2-top-title" style={{ fontSize: 96 }}>Show 1 to 5 fingers!</div>
-            <div className="v2-sub">Be fair. How good was the pitch?</div>
+            <div className="bd-pt-votecount"><Num value={voted} /> of <Num value={voters.length} /> teams voted</div>
           </motion.div>
-          <motion.div className="v2-vote-hand" initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }} transition={{ type: 'spring', stiffness: 180, damping: 14, delay: 0.2 }}>
-            <motion.div animate={{ rotate: [-6, 6, -6], y: [0, -10, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: '50% 90%' }}>
-              <Hand size={250} />
-            </motion.div>
-          </motion.div>
-          <div className="v2-voters">
-            {voters.map((v, i) => {
-              const done = votes[v.id] !== undefined;
-              return (
-                <motion.div key={v.id} className={`v2-card v2-voter${done ? ' is-done' : ''}`} initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 20, delay: 0.1 + i * 0.07 }}>
-                  <Avatar seed={v.avatarSeed} colorIndex={v.colorIndex} shade={2} size={120} mood={done ? 'happy' : 'cool'} />
-                  <div className="v2-voter-name">{teamName(v)}</div>
-                  <div className="v2-voter-status">{done ? 'Voted!' : 'Thinking...'}</div>
-                  <AnimatePresence>
-                    {done && (
-                      <motion.div className="v2-voter-tick" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 40 }} transition={{ type: 'spring', stiffness: 600, damping: 12 }}>
-                        <CheckBadge size={84} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+        )}
       </AnimatePresence>
+      <ReadyHint show={voting && voters.length > 0 && voted >= voters.length} />
     </motion.div>
   );
 }

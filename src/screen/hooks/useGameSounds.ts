@@ -1,5 +1,7 @@
 // App-level sound cues for state events (from any source: tap, keyboard or phone).
-// Animation-synced cues (delta pills, splats, wheel ticks, SOLD) live inside the views.
+// Animation-synced cues (delta pills, splats, wheel ticks) live inside the views. ONE OWNER PER CUE: Bug Smash's countdown,
+// splats, result sting and the auction's drumroll / evil sting / gavel / SOLD fanfare are played by the views (they are timed
+// to staged beats and to the narrator), so this hook must NOT play them. The hook only owns the coin ding when a bid arrives.
 import { useEffect, useRef } from 'react';
 import { currentStep, timerRemaining } from '../../game/engine';
 import type { GameState } from '../../game/types';
@@ -36,8 +38,11 @@ export function useGameSounds(state: GameState) {
       if (ph === 'talking') sfx.play('ding');
       if (ph === 'voting') sfx.play('pop');
       if (ph === 'bidding' && pph === 'intro') sfx.play('pop');
+      if (ph === 'bidding' && pph === 'sold') sfx.play('whoosh');   // next billboard
+      if (ph === 'turn' && pph === 'intro') sfx.play('pop');         // Bug Smash: first team's turn
     }
     if (st.type === 'auction' && p.step.type === 'auction' && st.bidLog.length > p.step.bidLog.length) sfx.play('coin');
+    if (st.type === 'bugsmash' && p.step.type === 'bugsmash' && st.turn !== p.step.turn) sfx.play('whoosh');   // next team's turn
     if (Object.keys(state.votes).length && JSON.stringify(state.votes) !== JSON.stringify(p.votes)) sfx.play('pop');
     const named = state.teams.filter((t, i) => p.teams[i] && t.name !== p.teams[i].name).length;
     if (named) sfx.play('cheer');

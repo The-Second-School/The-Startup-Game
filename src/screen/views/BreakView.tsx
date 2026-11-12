@@ -1,45 +1,73 @@
-// Snack break: calm idle scene. If the host starts a timer on the phone, the ring shows it.
+// Break: a calm, quiet screen. A big circle breathes in and out, a kid stretches along with it.
+// If the host starts a timer on the phone, the ring shows it. Narration (calm) lives in narration/lines/board.ts.
+import '../board.css';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Bolt, TimerRing } from '../../ui';
+import { TimerRing } from '../../ui';
 import { timerRemaining } from '../../game/engine';
 import { useGame } from '../lib/ctx';
-import { ChaiCup, Samosa, Sparkle } from '../components/art';
+import { Sparkle, Stretcher } from '../components/art';
 import { ReadyHint } from '../components/ReadyHint';
 import { useNow } from '../hooks/useNow';
+
+const BREATH_S = 4;   // seconds to breathe in, and again to breathe out
+const TIPS = [
+  { icon: '🌬️', text: 'Take a slow, deep breath' },
+  { icon: '🙆', text: 'Stretch your arms up high' },
+  { icon: '💧', text: 'Have some water' },
+  { icon: '🚶', text: 'Walk around a little' },
+];
 
 export function BreakView() {
   const { state } = useGame();
   const now = useNow(state.timer.running, 250);
   const hasTimer = state.timer.total > 0;
+  const [inhale, setInhale] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setInhale(v => !v), BREATH_S * 1000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div className="v2-root">
-      <motion.div className="v2-break-title" initial={{ y: -80, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: -80, opacity: 0, scale: 0.8 }} transition={{ type: 'spring', stiffness: 300, damping: 16 }}>
-        <div className="v2-top-title" style={{ fontSize: 120 }}>Snack break!</div>
-        <div className="v2-sub" style={{ fontSize: 52 }}>Stretch, sip some chai and eat a samosa</div>
+    <div className="bd-root bd-break">
+      <motion.div className="bd-break-main" initial={{ x: -80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -80, opacity: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 24 }}>
+        <div className="bd-break-title">Break</div>
+        <div className="bd-break-sub">Take a breath, stretch and rest your eyes. We continue soon.</div>
+        <div className="bd-break-tips">
+          {TIPS.map((t, i) => (
+            <motion.div key={t.text} className="bd-tip" initial={{ x: -60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -60, opacity: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 24, delay: 0.35 + i * 0.14 }}>
+              <span className="bd-tip-icon">{t.icon}</span>{t.text}
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
-      <div className="v2-break-table" />
-      <motion.div className="v2-break-cup" initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }} transition={{ type: 'spring', stiffness: 160, damping: 14, delay: 0.2 }}>
-        <div className="v2-bob"><ChaiCup size={340} /></div>
-      </motion.div>
-      <motion.div className="v2-break-bolt" initial={{ y: 500 }} animate={{ y: 0 }} exit={{ y: 500 }} transition={{ type: 'spring', stiffness: 140, damping: 14, delay: 0.4 }}>
-        <motion.div animate={{ y: [0, -10, 0], rotate: [-1.5, 1.5, -1.5] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: '50% 100%' }}><Bolt pose="idle" size={420} /></motion.div>
-      </motion.div>
-      {[0, 1, 2].map(i => (
-        <motion.div key={i} className="v2-break-samosa" style={{ left: 1040 + i * 220, top: 690 + (i % 2) * 50 }} initial={{ y: 500, rotate: 40 }} animate={{ y: 0, rotate: i * 12 - 10 }} exit={{ y: 500, rotate: 40 }} transition={{ type: 'spring', stiffness: 200, damping: 13, delay: 0.5 + i * 0.12 }}>
-          <div className="v2-bob" style={{ ['--d' as string]: `${-i * 0.7}s` }}><Samosa size={190} /></div>
+      <div className="bd-breath">
+        {[1.5, 1.22, 1].map((k, i) => (
+          <motion.div key={i} className="bd-ring" style={{ ['--k' as string]: i }}
+            animate={{ scale: inhale ? k * 1 : k * 0.72, opacity: inhale ? 0.95 - i * 0.2 : 0.7 - i * 0.12 }}
+            transition={{ duration: BREATH_S, ease: 'easeInOut', delay: i * 0.12 }} />
+        ))}
+        <motion.div className="bd-figure" initial={{ y: 400, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 400, opacity: 0 }} transition={{ type: 'spring', stiffness: 140, damping: 16, delay: 0.3 }}>
+          <Stretcher up={inhale} size={330} seconds={BREATH_S} />
         </motion.div>
-      ))}
-      {[[200, 520, 70], [1620, 480, 90], [980, 560, 60], [1790, 760, 60]].map(([x, y, s], i) => (
-        <div key={i} className="v2-break-spark" style={{ left: x, top: y, ['--d' as string]: `${-i * 0.5}s` }}><Sparkle size={s} /></div>
+        <div className="bd-breath-word">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={inhale ? 'in' : 'out'} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.5 }}>
+              {inhale ? 'Breathe in...' : 'Breathe out...'}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {[[150, 640, 64], [880, 930, 52], [1810, 330, 60]].map(([x, y, s], i) => (
+        <div key={i} className="bd-twinkle" style={{ left: x, top: y, ['--d' as string]: `${-i * 0.8}s` }}><Sparkle size={s} /></div>
       ))}
 
       <AnimatePresence>
         {hasTimer && (
-          <motion.div key="timer" className="v2-break-timer" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 20 }} transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
-            <motion.div animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
-              <TimerRing remainingMs={timerRemaining(state, now)} totalMs={state.timer.total} size={260} />
-            </motion.div>
+          <motion.div key="timer" className="bd-break-timer" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0, rotate: 20 }} transition={{ type: 'spring', stiffness: 400, damping: 16 }}>
+            <TimerRing remainingMs={timerRemaining(state, now)} totalMs={state.timer.total} size={200} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -20,6 +20,7 @@ import { BreakView } from './BreakView';
 import { PitchView } from './PitchView';
 import { AwardsView } from './AwardsView';
 import { EndView } from './EndView';
+import { ProgressScreen } from './ProgressView';
 
 export function ViewFor({ state }: { state: GameState }) {
   const step = SCRIPT[state.stepIndex] ?? currentStep(state);
@@ -39,7 +40,8 @@ export function ViewFor({ state }: { state: GameState }) {
     case 'auction': return state.step.type === 'auction' ? <AuctionView /> : null;
     case 'mood': return state.step.type === 'mood' ? <MoodView /> : null;
     case 'mic': return state.step.type === 'mic' ? <MicView /> : null;
-    case 'board': return <BoardView act={step.act} />;
+    case 'board': return <BoardView act={step.act} recap={step.recap} />;
+    case 'progress': return <ProgressScreen act={step.act} />;
     case 'break': return <BreakView />;
     case 'pitch': return state.step.type === 'pitch' ? <PitchView /> : null;
     case 'awards': return state.step.type === 'awards' ? <AwardsView /> : null;

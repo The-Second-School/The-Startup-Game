@@ -1,22 +1,31 @@
-// The big-screen app: owns the game state, routes each script step to its view, plays cues.
+// The big-screen app: owns the game state, routes each script step to its view, plays cues, narrates.
 import { useEffect, useMemo } from 'react';
 import { AnimatePresence, motion, useIsPresent } from 'motion/react';
-import { RecipeBar, StageFrame } from '../ui';
+import { StageFrame } from '../ui';
 import { prefetchScenes } from '../scenes';
 import { sfx, voice } from '../audio';
 import { currentStep } from '../game/engine';
 import { SCRIPT } from '../game/content';
 import type { GameState } from '../game/types';
 import { useScreen } from '../store/screenStore';
+import { useNarrator } from '../narration/useNarrator';
+import { NarrationDock } from '../narration/NarrationDock';
+import { VoiceChip } from '../narration/VoiceChip';
+import '../narration/narration.css';
+import { setFrozen, onFreeze } from './lib/freeze';
 import { Ctx, type Dispatch } from './lib/ctx';
 import { actOf } from './lib/game';
 import { installPointerGuard } from './lib/tap';
 import { useUi } from './lib/ui';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useGameSounds } from './hooks/useGameSounds';
-import { useNarration } from './hooks/useNarration';
+import { ProgressScreen } from './views/ProgressView';
 import { ViewFor } from './views';
 import './screen.css';
+
+// Apply the saved voice setting at module load, before any child effect can ask the voice to speak.
+voice.setEnabled(useScreen.getState().state.settings.voice);
+
 
 export default function ScreenApp() {
   const state = useScreen(s => s.state);
@@ -35,13 +44,16 @@ export default function ScreenApp() {
     ui.setPick(null); ui.setKbTeam(null); ui.setTyping('');
   }, [state.stepIndex]);
 
+  // Host "Freeze": stop everything in place (clock, timers, frames, animations) and pause speech + sound.
+  useEffect(() => { onFreeze(on => { try { if (on) window.speechSynthesis?.pause(); else window.speechSynthesis?.resume(); } catch { /* ignore */ } sfx.freeze(on); }); }, []);
+  useEffect(() => { setFrozen(state.frozen); }, [state.frozen]);
+
   useKeyboard();
   useGameSounds(state);
-  useNarration(state);
+  useNarrator(state);
 
   const safeIndex = Math.max(0, Math.min(SCRIPT.length - 1, state.stepIndex));
   const step = SCRIPT[safeIndex] ?? currentStep(state);
-  const showHeader = step.kind !== 'lobby';
   const key = `${safeIndex}-${step.id}`;
 
   return (
@@ -50,11 +62,16 @@ export default function ScreenApp() {
         <AnimatePresence initial={false}>
           <ViewShell key={key} state={state} dispatch={dispatch} />
         </AnimatePresence>
+        <div className="scr-frame" style={{ pointerEvents: 'none', zIndex: 40 }}>
+          <NarrationDock visible />
+          <VoiceChip on={state.settings.voice} />
+        </div>
+        {state.frozen && <div className="scr-frozen" aria-hidden><span>❚❚ Paused</span></div>}
+        {/* Host-controlled full-screen progress (More menu in the admin). The step's own view stays underneath. */}
         <AnimatePresence>
-          {showHeader && (
-            <motion.div key="header" className="ui-header" initial={{ y: -140, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -140, opacity: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 26 }}>
-              <div className="ui-header-bg" />
-              <div className="ui-header-in"><RecipeBar act={actOf(step)} /></div>
+          {state.progressView && (
+            <motion.div key="progress-overlay" className="scr-view" style={{ zIndex: 30 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
+              <div className="scr-frame"><ProgressScreen act={actOf(step)} overlay /></div>
             </motion.div>
           )}
         </AnimatePresence>

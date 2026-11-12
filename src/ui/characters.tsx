@@ -1,4 +1,4 @@
-// Bolt (the yellow robot guide) and rAIvan (the silly 10-headed AI villain). Flat layered SVG with white sticker borders.
+// Bolt (the yellow robot guide) and Fibbot (the fibbing, copying, cheating purple robot villain). Flat layered SVG with white sticker borders.
 import { motion } from 'motion/react';
 import { Sticker, Shaded, rrect, path } from './svg';
 
@@ -110,83 +110,190 @@ export function Bolt({ pose = 'idle', size = 160, talking }: { pose?: BoltPose; 
 }
 
 // ---------------------------------------------------------------------------
-type RMood = 'laugh' | 'angry' | 'sneaky' | 'dizzy' | 'shock';
+// Fibbot: THE villain. One cheeky purple robot who fibs, copies and cheats. His Pinocchio nose grows every time he fibs.
+// Same flat sticker style as Bolt: white border, darker edge layer, a little shine. Every Fibbot in the app is this component.
+// ---------------------------------------------------------------------------
+export type FibbotMood = 'laugh' | 'angry' | 'sneaky' | 'dizzy' | 'shock';
 const P = { hi: '#A982E8', base: '#7B4BC9', shade: '#6A3CB6', edge: '#5A2F9E' };
-const SMALL_FACES = ['grin', 'wink', 'tongue', 'smirk', 'o', 'grin', 'smirk', 'wink', 'tongue'] as const;
+const SCR = '#2A1550', EYE = '#FFE14D', MOUTH = '#12072B', NOSE = { base: '#FF9600', shade: '#E07F00', hi: '#FFC266' };
+const CX = 140, NOSE_Y = 121, NOSE_LEN = 150;
 
-function Face({ cx, cy, s, kind, mood }: { cx: number; cy: number; s: number; kind: string; mood: RMood }) {
-  const eye = (x: number, wink = false) => {
-    if (mood === 'dizzy') return <path d={`M${x - 5 * s} ${cy - 4 * s} q${5 * s} ${-6 * s} ${8 * s} 0 q${-2 * s} ${6 * s} ${-6 * s} ${3 * s}`} stroke="#FFE14D" strokeWidth={2.4 * s} fill="none" strokeLinecap="round" />;
-    if (wink) return <path d={`M${x - 5 * s} ${cy - 3 * s} q${5 * s} ${-4 * s} ${10 * s} 0`} stroke="#FFE14D" strokeWidth={2.6 * s} fill="none" strokeLinecap="round" />;
-    const dx = mood === 'sneaky' ? 2.5 * s : 0;
+/** Pinocchio nose pointing right, from (CX, NOSE_Y). Full length = NOSE_LEN, scaled by the caller. */
+const NOSE_D = `M${CX} ${NOSE_Y - 9} L${CX + NOSE_LEN - 12} ${NOSE_Y - 5} A6 6 0 0 1 ${CX + NOSE_LEN - 12} ${NOSE_Y + 7} L${CX} ${NOSE_Y + 9} Z`;
+
+function FibbotEyes({ mood }: { mood: FibbotMood }) {
+  const L = 108, R = 172, Y = 94;
+  if (mood === 'laugh') {
     return (
-      <g>
-        <ellipse cx={x} cy={cy - 3 * s} rx={4.8 * s} ry={mood === 'shock' ? 6.5 * s : 5.5 * s} fill="#FFE14D" />
-        <circle cx={x + dx} cy={cy - 3 * s} r={2.2 * s} fill="#2A1550" />
-        {mood === 'angry' && <path d={`M${x - 6 * s} ${cy - 11 * s} L${x + 6 * s} ${cy - 7 * s}`} stroke="#2A1550" strokeWidth={2.6 * s} strokeLinecap="round" transform={x < cx ? '' : `scale(-1 1) translate(${-2 * x} 0)`} />}
+      <g stroke={EYE} strokeWidth={7} fill="none" strokeLinecap="round">
+        <path d={`M${L - 12} ${Y + 4} Q${L} ${Y - 16} ${L + 12} ${Y + 4}`} />
+        <path d={`M${R - 12} ${Y + 4} Q${R} ${Y - 16} ${R + 12} ${Y + 4}`} />
       </g>
     );
-  };
-  const mouth = () => {
-    if (mood === 'shock') return <ellipse cx={cx} cy={cy + 8 * s} rx={4 * s} ry={5 * s} fill="#2A1550" />;
-    if (mood === 'angry') return <path d={`M${cx - 7 * s} ${cy + 10 * s} q${7 * s} ${-6 * s} ${14 * s} 0`} stroke="#2A1550" strokeWidth={2.8 * s} fill="none" strokeLinecap="round" />;
-    if (kind === 'o') return <circle cx={cx} cy={cy + 8 * s} r={3.4 * s} fill="#2A1550" />;
-    if (kind === 'smirk' || mood === 'sneaky') return <path d={`M${cx - 6 * s} ${cy + 8 * s} q${8 * s} ${5 * s} ${12 * s} ${-3 * s}`} stroke="#2A1550" strokeWidth={2.6 * s} fill="none" strokeLinecap="round" />;
+  }
+  if (mood === 'angry') {
+    const red = '#FF6A4D';
     return (
       <g>
-        <path d={`M${cx - 8 * s} ${cy + 5 * s} Q${cx} ${cy + 17 * s} ${cx + 8 * s} ${cy + 5 * s} Z`} fill="#2A1550" />
-        {kind === 'tongue' && <ellipse cx={cx + 2 * s} cy={cy + 11 * s} rx={3.4 * s} ry={2.6 * s} fill="#FF6FB5" />}
-        <path d={`M${cx - 6 * s} ${cy + 6 * s} H${cx + 6 * s}`} stroke="#fff" strokeWidth={2 * s} strokeLinecap="round" />
+        <ellipse cx={L} cy={Y + 3} rx={11} ry={9} fill={red} /><ellipse cx={R} cy={Y + 3} rx={11} ry={9} fill={red} />
+        <circle cx={L + 2} cy={Y + 5} r={4} fill={SCR} /><circle cx={R - 2} cy={Y + 5} r={4} fill={SCR} />
+        <path d={`M${L - 17} ${Y - 14} L${L + 13} ${Y - 3}`} stroke={EYE} strokeWidth={7} strokeLinecap="round" />
+        <path d={`M${R + 17} ${Y - 14} L${R - 13} ${Y - 3}`} stroke={EYE} strokeWidth={7} strokeLinecap="round" />
       </g>
     );
-  };
-  return <g>{eye(cx - 7 * s, kind === 'wink')}{eye(cx + 7 * s)}{mouth()}</g>;
+  }
+  if (mood === 'sneaky') {
+    return (
+      <g>
+        {[L, R].map(x => (
+          <g key={x}>
+            <path d={`M${x - 13} ${Y - 2} A13 13 0 0 0 ${x + 13} ${Y - 2} Z`} fill={EYE} />
+            <circle cx={x + 5} cy={Y + 2} r={4.5} fill={SCR} />
+            <path d={`M${x - 15} ${Y - 3} H${x + 15}`} stroke={EYE} strokeWidth={5} strokeLinecap="round" />
+          </g>
+        ))}
+      </g>
+    );
+  }
+  if (mood === 'dizzy') {
+    return (
+      <g fill="none" stroke={EYE} strokeWidth={4.5} strokeLinecap="round">
+        {[L, R].map(x => (
+          <g key={x} className="ui-spin-slow" style={{ ['--dur' as string]: '1.1s' }}>
+            <path d={`M${x} ${Y} m-2 0 a2 2 0 1 1 4 0 a5 5 0 1 1 -10 0 a8 8 0 1 1 16 0 a11 11 0 1 1 -22 0`} />
+          </g>
+        ))}
+      </g>
+    );
+  }
+  // shock
+  return (
+    <g>
+      <ellipse cx={L} cy={Y} rx={14} ry={17} fill={EYE} /><ellipse cx={R} cy={Y} rx={14} ry={17} fill={EYE} />
+      <circle cx={L} cy={Y + 1} r={4} fill={SCR} /><circle cx={R} cy={Y + 1} r={4} fill={SCR} />
+    </g>
+  );
 }
 
-/** rAIvan: a big middle screen-head plus 9 small screen-heads in a fan = 10 heads. viewBox 0 0 300 300. */
-export function Raivan({ mood = 'laugh', size = 160 }: { mood?: RMood; size?: number }) {
-  const heads = Array.from({ length: 9 }, (_, i) => {
-    const a = (-160 + (i / 8) * 140) * (Math.PI / 180);
-    const ring = i % 2 === 0 ? 112 : 96;
-    return { x: 150 + Math.cos(a) * ring * 1.15, y: 150 + Math.sin(a) * ring * 0.95 + 30, i };
-  });
-  const wob = mood === 'dizzy' ? 'ui-wiggle' : mood === 'laugh' ? 'ui-bob' : mood === 'angry' ? 'ui-shake' : 'ui-float';
+function FibbotMouth({ mood }: { mood: FibbotMood }) {
+  if (mood === 'laugh') {
+    return (
+      <g>
+        <path d="M102 138 Q140 184 178 138 Z" fill={MOUTH} />
+        <ellipse cx={140} cy={160} rx={14} ry={7} fill="#FF6FB5" />
+        <path d="M106 138 H174 Q172 148 164 150 H116 Q108 148 106 138Z" fill="#fff" />
+      </g>
+    );
+  }
+  if (mood === 'angry') {
+    return (
+      <g>
+        <path d="M106 158 Q140 128 174 158 Z" fill={MOUTH} />
+        <path d="M114 148 L122 156 L130 144 L140 156 L150 144 L158 156 L166 148 Q140 134 114 148Z" fill="#fff" />
+      </g>
+    );
+  }
+  if (mood === 'sneaky') {
+    return (
+      <g>
+        <path d="M104 146 Q136 168 180 136" stroke={EYE} strokeWidth={7} fill="none" strokeLinecap="round" />
+        <path d="M168 146 L174 156 L180 142Z" fill="#fff" />
+      </g>
+    );
+  }
+  if (mood === 'dizzy') {
+    return (
+      <g>
+        <path d="M108 148 q8 -10 16 0 t16 0 t16 0 t16 0" stroke="#fff" strokeWidth={6} fill="none" strokeLinecap="round" />
+        <path d="M146 150 Q146 168 158 168 Q170 168 170 152Z" fill="#FF6FB5" />
+      </g>
+    );
+  }
+  return <ellipse cx={140} cy={152} rx={12} ry={15} fill={MOUTH} stroke={EYE} strokeWidth={4} />;
+}
+
+/** Fibbot: a cheeky round-square purple robot with horn antennas, a copyright badge and a long fibbing nose. viewBox 0 0 300 300 (feet at the bottom, nose points right). */
+export function Fibbot({ mood = 'laugh', size = 160, smoke = false }: { mood?: FibbotMood; size?: number; smoke?: boolean }) {
+  const armA: Record<FibbotMood, [number, number]> = { laugh: [-30, 30], angry: [25, -25], sneaky: [10, -60], dizzy: [-55, 55], shock: [-150, 150] };
+  const [la, ra] = armA[mood];
+  const noseScale: Record<FibbotMood, number> = { laugh: 1, angry: 0.72, sneaky: 1, dizzy: 0.5, shock: 0.4 };
+  const grows = mood === 'laugh' || mood === 'sneaky';
+  const body = mood === 'laugh' ? 'ui-jump' : mood === 'angry' ? 'ui-shake' : mood === 'dizzy' ? 'ui-wiggle' : 'ui-bob';
+  const bodyVars = { ['--dur' as string]: mood === 'laugh' ? '0.9s' : mood === 'angry' ? '0.45s' : mood === 'dizzy' ? '1.6s' : '2.6s', ['--amp' as string]: '5px', ['--rot' as string]: '4deg' };
+  const noseStyle = grows
+    ? { ['--dur' as string]: mood === 'laugh' ? '2.2s' : '3.2s', transformOrigin: `${CX}px ${NOSE_Y}px`, transformBox: 'view-box' as const }
+    : { transform: `scale(${noseScale[mood]}, 1) rotate(${mood === 'angry' ? 4 : 0}deg)`, transformOrigin: `${CX}px ${NOSE_Y}px`, transformBox: 'view-box' as const };
   return (
     <svg className="ui-svg-art" width={size} height={size} viewBox="0 0 300 300" aria-hidden>
-      <g className={mood === 'laugh' ? 'ui-jump' : undefined} style={{ ['--dur' as string]: '0.8s', ['--amp' as string]: '5px' }}>
+      <g className={body} style={bodyVars}>
         <Sticker w={6}>
-          {/* cape body */}
-          <Shaded shape={path('M80 296 Q86 210 150 196 Q214 210 220 296 Z')} fill={P.base} shade={P.shade} off={[6, 4]} />
-          <path d="M126 204 L150 236 L174 204 Z" fill="#FFC800" className="in" />
-          {/* necks */}
-          {heads.map(h => <path key={`n${h.i}`} d={`M150 200 Q${(150 + h.x) / 2} ${(200 + h.y) / 2 + 20} ${h.x} ${h.y + 14}`} stroke={P.edge} strokeWidth={10} fill="none" className="ln" style={{ ['--lw' as string]: '10px' }} />)}
-          {heads.map(h => (
-            <g key={`h${h.i}`} className={wob} style={{ ['--d' as string]: `${-h.i * 0.27}s`, ['--rot' as string]: '10deg', ['--dur' as string]: mood === 'angry' ? '0.4s' : '2.4s', ['--amp' as string]: '5px' }}>
-              <Shaded shape={rrect(h.x - 24, h.y - 20, 48, 40, 14)} fill={h.i % 2 ? P.hi : P.base} shade={P.edge} off={[3, 3]} />
+          {/* feet */}
+          <rect x={92} y={262} width={46} height={24} rx={12} fill={P.edge} />
+          <rect x={142} y={262} width={46} height={24} rx={12} fill={P.edge} />
+          {/* arms */}
+          <g transform={`rotate(${-la} 86 208)`}>
+            <rect x={76} y={202} width={18} height={44} rx={9} fill={P.shade} /><circle cx={85} cy={250} r={13} fill={P.hi} />
+          </g>
+          <g transform={`rotate(${-ra} 194 208)`}>
+            <rect x={186} y={202} width={18} height={44} rx={9} fill={P.shade} /><circle cx={195} cy={250} r={13} fill={P.hi} />
+          </g>
+          {/* body */}
+          <Shaded shape={rrect(88, 186, 104, 82, 30)} fill={P.base} shade={P.shade} off={[5, 5]}>
+            <ellipse cx={108} cy={200} rx={14} ry={6} fill={P.hi} transform="rotate(-20 108 200)" />
+          </Shaded>
+          {/* horn antennas */}
+          {[-1, 1].map(d => (
+            <g key={d} className="ui-wiggle" style={{ ['--rot' as string]: `${5 * d}deg`, ['--dur' as string]: '2s', transformOrigin: `${CX + d * 46}px 60px`, transformBox: 'view-box' }}>
+              <path d={`M${CX + d * 46} 62 Q${CX + d * 62} 30 ${CX + d * 84} 26`} stroke={P.edge} strokeWidth={9} fill="none" className="ln" style={{ ['--lw' as string]: '9px' }} />
+              <circle cx={CX + d * 86} cy={24} r={12} fill="#FFC800" />
+              <circle cx={CX + d * 82} cy={20} r={3.5} fill="#fff" className="in" />
             </g>
           ))}
-          {/* crown spikes on the big head */}
-          <path d="M104 92 L116 60 L132 84 L150 50 L168 84 L184 60 L196 92 Z" fill="#FFC800" />
-          {/* big head */}
-          <Shaded shape={rrect(96, 86, 108, 96, 34)} fill={P.base} shade={P.shade} off={[6, 6]}>
-            <ellipse cx={120} cy={100} rx={16} ry={7} fill={P.hi} transform="rotate(-18 120 100)" />
+          {/* head + ear discs */}
+          <circle cx={46} cy={118} r={14} fill={P.edge} /><circle cx={234} cy={118} r={14} fill={P.edge} />
+          <Shaded shape={rrect(48, 52, 184, 140, 48)} fill={P.base} shade={P.shade} off={[7, 7]}>
+            <ellipse cx={82} cy={70} rx={24} ry={9} fill={P.hi} transform="rotate(-18 82 70)" />
           </Shaded>
         </Sticker>
-        {/* small screens + faces */}
-        {heads.map(h => (
-          <g key={`f${h.i}`} className={wob} style={{ ['--d' as string]: `${-h.i * 0.27}s`, ['--rot' as string]: '10deg', ['--dur' as string]: mood === 'angry' ? '0.4s' : '2.4s', ['--amp' as string]: '5px' }}>
-            <rect x={h.x - 18} y={h.y - 14} width={36} height={28} rx={9} fill="#2A1550" />
-            <Face cx={h.x} cy={h.y - 2} s={0.82} kind={SMALL_FACES[h.i]} mood={mood} />
+        {/* copy badge */}
+        <g>
+          <rect x={112} y={208} width={56} height={44} rx={12} fill="#FFF6DE" />
+          <text x={140} y={242} textAnchor="middle" fontSize={38} fontWeight={800} fill={P.edge} fontFamily="Baloo 2, sans-serif">©</text>
+          <rect x={120} y={214} width={22} height={5} rx={2.5} fill="#FFC800" />
+        </g>
+        {/* face screen */}
+        <rect x={70} y={70} width={140} height={100} rx={32} fill={SCR} />
+        <rect x={80} y={76} width={60} height={9} rx={4.5} fill="#4B2C8A" opacity={0.7} />
+        <ellipse cx={86} cy={140} rx={9} ry={6} fill="#FF86A8" opacity={0.75} /><ellipse cx={194} cy={140} rx={9} ry={6} fill="#FF86A8" opacity={0.75} />
+        <FibbotEyes mood={mood} />
+        <FibbotMouth mood={mood} />
+        {/* the fibbing nose, drawn on top of the screen */}
+        <g className={grows ? 'ui-nose' : undefined} style={noseStyle}>
+          <Sticker w={5}>
+            <Shaded shape={path(NOSE_D)} fill={NOSE.base} shade={NOSE.shade} off={[0, 4]}>
+              <rect x={CX + 8} y={NOSE_Y - 8} width={NOSE_LEN - 40} height={4} rx={2} fill={NOSE.hi} />
+            </Shaded>
+            <circle cx={CX} cy={NOSE_Y} r={11} fill={NOSE.base} />
+          </Sticker>
+        </g>
+        {/* mood extras */}
+        {mood === 'laugh' && <g fill="#7CF3FF" opacity={0.95}><path d="M88 108 q-7 12 0 16 q7 -4 0 -16z" /><path d="M192 108 q-7 12 0 16 q7 -4 0 -16z" /></g>}
+        {mood === 'shock' && <text x={226} y={52} fontSize={64} fontWeight={800} fill="#FF4B4B" stroke="#fff" strokeWidth={7} paintOrder="stroke" fontFamily="Baloo 2, sans-serif">!</text>}
+        {mood === 'dizzy' && (
+          <g className="ui-spin-slow" style={{ ['--dur' as string]: '2.4s', transformOrigin: `${CX}px 34px`, transformBox: 'view-box' }}>
+            {[0, 120, 240].map(a => <path key={a} d="M0 -9 L3 -3 L9 -3 L4 1 L6 8 L0 4 L-6 8 L-4 1 L-9 -3 L-3 -3Z" fill="#FFC800" stroke="#fff" strokeWidth={3} strokeLinejoin="round" transform={`rotate(${a} ${CX} 34) translate(${CX} 12)`} />)}
+          </g>
+        )}
+        {(mood === 'angry' || smoke) && [-1, 1].map((d, i) => (
+          <g key={d} className="ui-puff" style={{ ['--d' as string]: `${i * 0.55}s` }}>
+            <circle cx={CX + d * 86} cy={4} r={smoke ? 15 : 12} fill="#fff" stroke="#E2D2F5" strokeWidth={4} />
           </g>
         ))}
-        <rect x={110} y={102} width={80} height={64} rx={20} fill="#2A1550" />
-        <Face cx={150} cy={128} s={2.3} kind="grin" mood={mood} />
-        {mood === 'angry' && [120, 180].map((x, i) => (
-          <g key={x} className="ui-steam" style={{ ['--d' as string]: `${i * 0.5}s` }}>
-            <circle cx={x} cy={70} r={12} fill="#fff" opacity={0.9} />
+        {smoke && [-1, 1].map((d, i) => (
+          <g key={`s${d}`} className="ui-puff" style={{ ['--d' as string]: `${0.3 + i * 0.55}s` }}>
+            <circle cx={CX + d * 70} cy={10} r={12} fill="#fff" stroke="#E2D2F5" strokeWidth={4} />
           </g>
         ))}
-        {mood === 'shock' && <text x={226} y={70} fontSize={56} fontWeight={800} fill="#FF4B4B" stroke="#fff" strokeWidth={6} paintOrder="stroke">!</text>}
       </g>
     </svg>
   );

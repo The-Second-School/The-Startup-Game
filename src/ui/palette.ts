@@ -14,7 +14,7 @@ export const T = {
   good: '#58CC02', goodEdge: '#46A302',
   bad: '#FF4B4B', badEdge: '#D93636',
   coin: '#FFB800', coinEdge: '#D68F00',
-  raivan: '#7B4BC9', raivanEdge: '#5A2F9E',
+  fibbot: '#7B4BC9', fibbotEdge: '#5A2F9E',
   blue: '#1CB0F6', blueEdge: '#1395D4',
   purple: '#CE82FF', orange: '#FF9600', pink: '#FF6FB5',
 } as const;

@@ -7,7 +7,7 @@ If you need something from the engine, write a note in `docs/NOTES-<yourname>.md
 ## 1. What it is
 A live classroom game for ~20 kids aged 10 to 13 (Std 5 to 7) in Jalna, India. Teams build a pretend startup in
 the city of **Techistan** in 5 acts (Problem, Build, Launch, Money, Grow) + Show Day. Guide mascot: **Bolt**, a
-cheerful yellow robot who narrates in speech bubbles. Villain: **rAIvan**, a silly 10-headed AI (Ravan joke) who
+cheerful yellow robot who narrates in speech bubbles. Villain: **Fibbot**, a silly 10-headed AI (Ravan joke) who
 tempts teams to copy, cheat or sell out. Funny, never scary.
 
 Two screens:
@@ -60,13 +60,13 @@ Duolingo spirit, light-yellow theme. Read `docs/DESIGN_RESEARCH.md` when it exis
 --good: #58CC02 --good-edge: #46A302   gains
 --bad: #FF4B4B  --bad-edge: #D93636    losses
 --coin: #FFB800 --coin-edge: #D68F00
---raivan: #7B4BC9 --raivan-edge: #5A2F9E  villain purple
+--fibbot: #7B4BC9 --fibbot-edge: #5A2F9E  villain purple
 ```
 Team colours and option colours: `TEAM_COLORS` and `OPTION_STYLES` in `content.ts` (each has a base and darker shade).
 
 ## 4. File ownership (only edit your own files)
 - Orchestrator: `src/game/*`, `src/sync/*`, `src/store/*`, `src/main.tsx`, `index.html`, `docs/SPEC.md`.
-- **ui** agent: `src/ui/**` (theme, primitives, Bolt, rAIvan, Avatar, Building, ProductArt, etc.), `src/audio/**`.
+- **ui** agent: `src/ui/**` (theme, primitives, Bolt, Fibbot, Avatar, Building, ProductArt, etc.), `src/audio/**`.
 - **scenes** agents: `src/scenes/**` (big act scenes + small question intros).
 - **screen** agent: `src/screen/**` (the whole big-screen app).
 - **admin** agent: `src/admin/**`.
@@ -92,7 +92,7 @@ OptionShape({ shape: 'circle'|'square'|'triangle'|'star'; color: string; size?: 
 MeterIcon({ kind: 'customers'|'happiness'|'coins'; size?: number })  // our own SVG icons for the 3 meters
 // Characters
 Bolt({ pose?: 'idle'|'wave'|'talk'|'think'|'cheer'|'sad'|'point'|'shock'; size?: number; talking?: boolean })
-Raivan({ mood?: 'laugh'|'angry'|'sneaky'|'dizzy'|'shock'; size?: number })   // 10 heads, silly
+Fibbot({ mood?: 'laugh'|'angry'|'sneaky'|'dizzy'|'shock'; size?: number })   // 10 heads, silly
 Avatar({ seed: number; colorIndex: number; shade?: number; size?: number; mood?: 'happy'|'sad'|'wow'|'cool'; ring?: boolean })
    // Procedural fun object character (mango, rocket, cupcake, kettle, cactus, planet, bulb, donut, robot, cloud, ice cream,
    // book, drum, sandwich...) with a face. seed picks object + face + accessory deterministically. shade 0..4 picks the
@@ -131,7 +131,7 @@ Common question layout (question, price, megaorder):
 - Flow: Lock Master taps their team chip → taps an option → the chip shows a big LOCK 🔒 button → tap = `LOCK`.
   A small "change" link clears the selection before locking. Timer ring top-right while `phase === 'open'`.
 - `revealed`: all chips flip to show the chosen option colour + icon; tiles show the little avatars of who picked them;
-  the rAIvan option gets a 😈 stamp with a cheeky rAIvan pop-up.
+  the Fibbot option gets a 😈 stamp with a cheeky Fibbot pop-up.
 - `spotlight` (one team at a time): big centred card: avatar (mood matches result), team name, chosen option, the
   story line (big), then each change pops in as a DeltaPill with sound, meters on the chip count up, and the live
   leaderboard panel re-sorts. ~4 to 6 s of animation each; host taps Next.
@@ -147,14 +147,14 @@ Other steps:
   winner card with ProductArt.
 - setup_names: team boxes wait for names typed on the phone; each lands with confetti. Avatars already exist.
 - scene: `<ActScene>` full stage. Host Next skips ahead.
-- bugsmash: one team at a time. Top: team + timer + counter. Bottom band (y 560 to 1040): rAIvan's bugs crawl,
+- bugsmash: one team at a time. Top: team + timer + counter. Bottom band (y 560 to 1040): Fibbot's bugs crawl,
   wiggle and split; tap = splat. Seconds = `bugSeconds(team)`. Lock Master taps START (BUG_START) then plays;
   at time up dispatch `BUG_RESULT`. Result card with tier text.
 - price: like a question, but after selecting a team a big slider (₹10 to ₹100, step 10) appears in the bottom
   half with that team's ProductArt and price hint; LOCK. Spotlight shows a crowd reacting by verdict.
 - auction: one ticket at a time: big ticket card, a bid board with one paddle per team (coins left, already-won teams
-  greyed) plus rAIvan's paddle. Host enters bids on the phone; the top bid glows and bounces. SOLD: "Going once...
-  twice... SOLD!" hammer animation, ticket flies to the winner. rAIvan can win (nobody gets it).
+  greyed) plus Fibbot's paddle. Host enters bids on the phone; the top bid glows and bounces. SOLD: "Going once...
+  twice... SOLD!" hammer animation, ticket flies to the winner. Fibbot can win (nobody gets it).
 - megaorder: pairs shown side by side with a combo name; same lock flow with the 4 MEGA options; reveal per pair with
   handshake or broken-heart animation.
 - mood: one team at a time, quick (about 2.5 s each): tiny customers walk out under a rain cloud, or dance in.

@@ -17,12 +17,13 @@ interface BtnProps {
   keepFocus?: boolean;
   type?: 'button' | 'submit';
   label?: string;
+  autoFocus?: boolean;
 }
 /** Flat button with an even white border and a springy press. */
-export function Btn({ tone = 'soft', face, ink, size = 'md', disabled, onClick, children, className = '', style, keepFocus, type = 'button', label }: BtnProps) {
+export function Btn({ tone = 'soft', face, ink, size = 'md', disabled, onClick, children, className = '', style, keepFocus, type = 'button', label, autoFocus }: BtnProps) {
   const vars = { ...(face ? { '--f': face } : {}), ...(ink ? { '--i': ink } : {}), ...style } as CSSProperties;
   return (
-    <button type={type} className={`btn btn-${size} btn-${tone} ${className}`} style={vars} disabled={disabled} onClick={onClick} aria-label={label}
+    <button type={type} className={`btn btn-${size} btn-${tone} ${className}`} style={vars} disabled={disabled} onClick={onClick} aria-label={label} autoFocus={autoFocus}
       onMouseDown={keepFocus ? e => e.preventDefault() : undefined}>
       {children}
     </button>

@@ -1,0 +1,82 @@
+/* ==========================================================================
+   Setup screens (owner: setup agent A1): lobby, players, team names + the shared big touch keyboard.
+   Everything is prefixed st-. Stage 1920x1080. Bolt (the dock) owns y 56..188 top-left; our content starts at y 196/204.
+   Kids can only touch y >= 560: the keyboard starts at y 568. Min text 36px. Only transform + opacity animate.
+   ========================================================================== */
+
+.st-root { position: absolute; inset: 0; overflow: visible; font-family: var(--font); color: var(--ink); }
+
+/* ---------- lobby ---------- */
+.st-lobby { position: absolute; inset: 0; overflow: hidden; font-family: var(--font); color: var(--ink); }
+.st-lobby-title { position: absolute; left: 0; right: 0; top: 300px; text-align: center; font-size: 176px; font-weight: 800; line-height: 1; white-space: nowrap; z-index: 2; }
+.st-lobby-title span { display: inline-block; text-shadow: 0 10px 0 var(--sun); }
+.st-lobby-title span:nth-child(3n) { text-shadow: 0 10px 0 var(--blue); }
+.st-lobby-title span:nth-child(3n+1) { text-shadow: 0 10px 0 var(--good-hi); }
+.st-lobby-title span.is-space { width: 52px; }
+.st-lobby-sub { position: absolute; left: 0; right: 0; top: 520px; text-align: center; font-size: 72px; font-weight: 700; z-index: 2; }
+.st-lobby-go { position: absolute; left: 50%; top: 650px; margin-left: -360px; width: 720px; z-index: 2; display: grid; place-items: center; height: 96px; border-radius: 48px; background: var(--sun-hi); border: 6px solid #fff; box-shadow: var(--sh); font-size: 48px; font-weight: 800; padding-top: 4px; }
+.st-lobby-coin { position: absolute; width: 92px; height: 92px; border-radius: 50%; background: var(--sun); border: 6px solid #fff; box-shadow: var(--sh); display: grid; place-items: center; font-size: 52px; font-weight: 800; padding-top: 4px; z-index: 1; }
+
+/* ---------- players ---------- */
+.st-count { position: absolute; left: 1456px; top: 16px; width: 424px; height: 116px; display: flex; align-items: center; justify-content: center; gap: 18px; background: var(--sun-hi); border: 6px solid #fff; border-radius: 58px; box-shadow: var(--sh); }
+.st-count-num { font-size: 84px; font-weight: 800; line-height: 1; padding-top: 6px; min-width: 76px; text-align: center; }
+.st-count-label { font-size: 40px; font-weight: 700; line-height: 1; padding-top: 4px; }
+
+.st-row { position: absolute; left: 40px; right: 40px; top: 156px; height: 96px; display: flex; align-items: center; gap: 28px; }
+.st-field-wrap { flex: none; width: 1100px; }
+.st-note { flex: 1; min-width: 0; height: 96px; display: flex; align-items: center; padding: 0 28px; background: var(--sun-hi); border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh-sm); font-size: 36px; font-weight: 700; line-height: 1.1; }
+
+.st-field { width: 100%; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 20px 0 44px; background: var(--paper); border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh); }
+.st-field-text { flex: 1; min-width: 0; font-size: 60px; font-weight: 700; line-height: 1.1; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-field-ph { color: var(--ink-soft); opacity: 0.7; font-weight: 600; font-size: 48px; }
+.st-chip-slot { flex: none; display: grid; place-items: center; min-width: 200px; }
+.st-field-chip { display: inline-block; font-size: 40px; font-weight: 700; line-height: 1; padding: 10px 24px 10px; border-radius: 999px; border: 5px solid #fff; white-space: nowrap; }
+
+.st-classes { position: absolute; left: 40px; right: 40px; top: 316px; height: 64px; display: flex; gap: 12px; }
+.st-class { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 12px; border: 5px solid #fff; border-radius: 999px; font-size: 36px; font-weight: 700; line-height: 1; padding-top: 3px; white-space: nowrap; opacity: 0.78; transform: scale(1); transition: transform 0.2s, opacity 0.2s; }
+.st-class.is-on { opacity: 1; transform: scale(1.05); border-color: var(--ink); }
+.st-class-num { font-size: 46px; font-weight: 800; min-width: 28px; text-align: center; }
+
+.st-bubbles { position: absolute; left: 40px; right: 40px; top: 392px; height: 164px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px 14px; overflow: hidden; contain: layout; }
+.st-pbubble { display: inline-flex; align-items: center; gap: 10px; height: 50px; padding: 2px 6px 0 20px; border-radius: 999px; border: 4px solid #fff; font-size: 36px; font-weight: 700; line-height: 1; color: var(--ink); }
+.st-pbubble.is-more { background: var(--sun-hi); padding: 2px 22px 0; }
+.st-pbubble-tag { display: inline-grid; place-items: center; min-width: 34px; height: 34px; background: #fff; border-radius: 999px; font-size: 30px; font-weight: 700; padding: 2px 8px 0; }
+.st-pempty { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font-size: 48px; font-weight: 700; color: var(--ink-soft); }
+
+/* ---------- big touch keyboard ---------- */
+.st-kbd { position: absolute; left: 0; right: 0; top: 568px; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 8; }
+.st-kbd-row { display: flex; gap: 10px; justify-content: center; }
+.st-key, .st-key.scr-tap { display: grid; place-items: center; align-content: center; justify-items: center; background: var(--paper); border: 6px solid #fff; border-radius: 32px; box-shadow: var(--sh-sm); font-size: 58px; font-weight: 700; letter-spacing: 0.02em; }
+.st-key span { padding-top: 4px; }
+.st-key.is-fn { background: var(--bad-soft); }
+.st-key.is-space { background: var(--paper-3); font-size: 44px; font-weight: 600; }
+.st-key.is-go { background: var(--good); font-size: 62px; }
+.st-key.is-grade { opacity: 0.62; transition: transform 0.15s, opacity 0.15s; }
+.st-key.is-grade.is-on { opacity: 1; border-color: var(--ink); transform: scale(1.05); }
+.st-key.is-grade span { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 2px; }
+.st-key.is-grade i { font-style: normal; font-size: 30px; font-weight: 700; line-height: 1; }
+.st-key.is-grade b { font-size: 60px; font-weight: 800; line-height: 1; }
+
+/* ---------- team names ---------- */
+.st-names-head { position: absolute; left: 40px; right: 40px; top: 156px; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+.st-names-head.is-done { justify-content: center; }
+.st-names-title { display: flex; align-items: center; font-size: 72px; font-weight: 800; line-height: 1; white-space: nowrap; padding-top: 4px; }
+.st-names-head.is-done .st-names-title { font-size: 96px; }
+.st-names-field { flex: none; width: 1000px; }
+.st-check { display: inline-grid; place-items: center; width: 84px; height: 84px; margin-right: 24px; border-radius: 50%; background: var(--good); border: 6px solid #fff; box-shadow: var(--sh); color: #fff; font-size: 56px; line-height: 1; padding-top: 4px; }
+
+.st-names-cols { position: absolute; left: 40px; right: 40px; top: 304px; height: 252px; display: flex; align-items: stretch; }
+.st-ncol { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; border: 6px solid #fff; border-radius: 44px; box-shadow: var(--sh); overflow: hidden; }
+.st-ncol.is-active { border-color: var(--sun); }
+.st-nslot { width: 100%; height: 88px; display: grid; place-items: center; text-align: center; }
+.st-nname, .st-ntyping { font-weight: 700; line-height: 1; overflow-wrap: anywhere; max-width: 100%; }
+.st-nname { font-size: 50px; }
+.st-ntyping { font-size: 46px; }
+.st-nwait { font-size: 40px; font-weight: 700; color: var(--ink-soft); }
+.st-nmembers { display: flex; justify-content: center; gap: 2px; height: 40px; }
+
+.st-names-cards { position: absolute; left: 40px; right: 40px; top: 316px; height: 716px; display: flex; justify-content: center; align-items: stretch; }
+.st-ncard { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 16px 28px; border: 6px solid #fff; border-radius: 56px; box-shadow: var(--sh); overflow: hidden; }
+.st-ncard-name { font-weight: 800; line-height: 1.05; text-align: center; overflow-wrap: anywhere; max-width: 100%; background: #fff; border-radius: 36px; padding: 10px 22px 8px; box-shadow: var(--sh-sm); }
+.st-ncard-members { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 100%; }
+.st-ncard-member { max-width: 100%; font-size: 36px; font-weight: 700; line-height: 1; padding: 6px 20px 4px; border: 4px solid #fff; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

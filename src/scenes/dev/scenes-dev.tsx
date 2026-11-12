@@ -20,7 +20,7 @@ const names = ['Aarav', 'Diya', 'Kabir', 'Isha', 'Vihaan', 'Anaya', 'Arjun', 'Sa
 const players: Player[] = names.map((n, i) => ({ id: `p${i}`, name: n, grade: ([5, 6, 7] as const)[i % 3] }));
 const teamNames = ['Rocket Rasgulla', 'Chai Champs', 'Bolt Brigade', 'Mango Minds', 'Pixel Pandas', 'Turbo Tigers'];
 const teams = makeTeams(players, nTeams).map((t, i) => ({ ...t, name: teamNames[i], colorIndex: i, avatarSeed: 1000 + i * 7919, productId: PRODUCTS[(i * 3) % PRODUCTS.length].id }));
-const recap = teams.map((t, i) => ({ teamId: t.id, icon: ['🗣️', '📦', '🧦', '📢', '🏠', '🤝'][i], text: ['Asked 10 people', 'Idea box at school', 'Hid the notebook', 'Told everyone first', 'Guessed at home', 'Joined rAIvan'][i] }));
+const recap = teams.map((t, i) => ({ teamId: t.id, icon: ['🗣️', '📦', '🧦', '📢', '🏠', '🤝'][i], text: ['Asked 10 people', 'Idea box at school', 'Hid the notebook', 'Told everyone first', 'Guessed at home', 'Joined Fibbot'][i] }));
 
 const beatParam = q.get('beat');
 async function main() {

@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
 import { PRODUCTS, ROLES, ROLE_PLAN, TEAM_COLORS, productById } from '../../game/content';
 import { availableProducts, makeTeams, suggestRoles, suggestTeamCount, uid } from '../../game/helpers';
-import type { Grade, RoleId, Team } from '../../game/types';
+import { GRADES, type Grade, type RoleId, type Team } from '../../game/types';
 import { useA } from '../ctx';
 import { isDefaultName } from '../info';
 import { Btn, Card, Chip, CommitInput, Fold, Label, TeamDot, TeamLine } from '../kit';
 
-const GRADES: Grade[] = [5, 6, 7];
 const ROLE_IDS = Object.keys(ROLES) as RoleId[];
 const SHORT: Record<RoleId, string> = { ceo: 'CEO', money: 'Money', lock: 'Lock', speaker: 'Speaker', time: 'Time' };
 
@@ -63,15 +62,19 @@ export function PlayersPanel() {
         <form onSubmit={e => { e.preventDefault(); add(); }}>
           <input ref={ref} className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Name, then Add"
             maxLength={20} enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="words" />
-          <div className="row" style={{ marginTop: 10 }}>
-            {GRADES.map(g => <Chip key={g} on={grade === g} onClick={() => { setGrade(g); ref.current?.focus(); }} style={{ flex: 1 }}>Class {g}</Chip>)}
+          <div className="chips" style={{ marginTop: 10 }}>
+            {GRADES.map(g => <Chip key={g} on={grade === g} onClick={() => { setGrade(g); ref.current?.focus(); }} style={{ flex: '1 0 30%' }}>Class {g}</Chip>)}
           </div>
+          <div className="hint">Class only mixes the teams. It does not change any score.</div>
           <Btn type="submit" tone="good" size="lg" keepFocus style={{ width: '100%', marginTop: 10 }}>Add player</Btn>
         </form>
       </Card>
       <TeamCount />
       {state.players.length > 0 && (
         <Fold title={`Everyone so far (${state.players.length})`} hint="Tap a name to remove it">
+          <div className="hint" style={{ marginTop: 0, marginBottom: 10 }}>
+            {GRADES.map(g => ({ g, n: state.players.filter(p => p.grade === g).length })).filter(x => x.n > 0).map(x => `Class ${x.g}: ${x.n}`).join(' · ')}
+          </div>
           <div className="chips">
             {[...state.players].reverse().map(p => (
               <button key={p.id} type="button" className="namechip" onClick={() => send({ type: 'REMOVE_PLAYER', playerId: p.id })} aria-label={`Remove ${p.name}`}>
@@ -197,7 +200,7 @@ export function ProductsPanel() {
 }
 
 // ---------- Names ----------
-const FUN = ['Rocket Samosas', 'Turbo Tigers', 'Chai Champs', 'Pixel Pandas', 'Laddoo Labs', 'Jugaad Jets', 'Cosmic Cubs', 'Masala Makers', 'Desi Dragons', 'Bolt Buddies', 'Mango Mavericks', 'Techistan Titans', 'Pani Puri Pilots', 'Zoom Zebras', 'Spark Squad', 'Brain Bhai'];
+const FUN = ['Rocket Rangers', 'Turbo Tigers', 'Cosmic Champs', 'Pixel Pandas', 'Lightning Labs', 'Jugaad Jets', 'Cosmic Cubs', 'Maker Mavericks', 'Desi Dragons', 'Bolt Buddies', 'Mighty Monkeys', 'Techistan Titans', 'Pixel Pilots', 'Zoom Zebras', 'Spark Squad', 'Brain Bhai'];
 
 export function NamesPanel() {
   const { state, send } = useA();

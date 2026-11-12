@@ -1,11 +1,11 @@
 // Pure game engine: (state, action) -> state. No randomness inside: callers pass random picks in actions.
 
 import {
-  AUCTION_OPEN, AUCTION_RESERVE, AUCTION_TICKETS, AWARDS, BUG, MEGA, METER_MAX, MOOD, PAIR_TALK_MS, PITCH_MS, PRICE,
-  PRODUCTS, QUESTIONS, SCRIPT, START, STAGES, SUCCESS_DIVISOR, TALK_MS, productById,
+  AUCTION_OPEN, AUCTION_RESERVE, AUCTION_STEP, AUCTION_TICKETS, AWARDS, BUG, MEGA, METER_MAX, MOOD, PAIR_TALK_MS, PITCH_MS, PRICE,
+  PRODUCTS, QUESTIONS, SCRIPT, START, STAGES, SUCCESS_DIVISOR, TALK_MS, buyersAt, productById,
 } from './content';
 import type {
-  Action, AwardResult, Deltas, GameState, HistoryEntry, Step, StepState, Team,
+  Action, AuctionState, AwardResult, Deltas, GameState, HistoryEntry, MoodResult, PriceOutcome, Step, StepState, Team,
 } from './types';
 
 // ---------- Selectors ----------
@@ -20,7 +20,7 @@ export function stageOf(t: Team) {
   const v = success(t);
   return STAGES.find(st => v >= st.min && v <= st.max) ?? STAGES[0];
 }
-// Banana Peel (lowest wins). Hidden from the screen. Coins scaled down so they don't drown the meters; each rAIvan trick costs 5.
+// Banana Peel (lowest wins). Hidden from the screen. Coins scaled down so they don't drown the meters; each Fibbot trick costs 5.
 export const startupHealth = (t: Team) => Math.round(t.coins / 8) + t.customers + t.happiness - 5 * t.history.filter(h => h.trap).length;
 
 export const teamById = (s: GameState, id: string | null | undefined) => s.teams.find(t => t.id === id) ?? null;
@@ -57,6 +57,11 @@ export function averageVote(s: GameState, teamId: string): number {
 const clampMeter = (n: number) => Math.max(0, Math.min(METER_MAX, n));
 const zero = (): Deltas => ({ coins: 0, customers: 0, happiness: 0 });
 
+/** The change a team will really get (meters stop at 0 and 50), so pills, narration and meters always agree. */
+export function realDeltas(t: Team, d: Deltas): Deltas {
+  return { coins: Math.max(0, t.coins + d.coins) - t.coins, customers: clampMeter(t.customers + d.customers) - t.customers, happiness: clampMeter(t.happiness + d.happiness) - t.happiness };
+}
+
 function applyDeltas(t: Team, d: Deltas, entry: Omit<HistoryEntry, 'deltas'> | null): Team {
   const customers = clampMeter(t.customers + d.customers);
   const happiness = clampMeter(t.happiness + d.happiness);
@@ -79,7 +84,11 @@ export function initialState(): GameState {
     step: { type: 'none' },
     players: [],
     teams: [],
-    settings: { teamCount: 4, sound: true, voice: false },
+    settings: { teamCount: 4, sound: true, voice: true },
+    progressView: false,
+    progressPaused: false,
+    frozen: false,
+    frozenPaused: false,
     timer: { running: false, endsAt: null, remaining: 0, total: 0 },
     micPicked: [],
     votes: {},
@@ -101,11 +110,12 @@ function enterStep(s: GameState, index: number): GameState {
   switch (step.kind) {
     case 'scene': st = { type: 'scene', beat: 0 }; break;
     case 'question': st = { type: 'question', phase: 'intro', selectedTeamId: null, locks: {}, pending: {}, stories: {}, spotlight: 0 }; break;
-    case 'price': st = { type: 'price', phase: 'intro', selectedTeamId: null, locks: {}, pending: {}, stories: {}, verdict: {}, spotlight: 0 }; break;
+    case 'price': st = { type: 'price', phase: 'intro', selectedTeamId: null, locks: {}, pending: {}, stories: {}, verdict: {}, outcomes: {}, spotlight: 0 }; break;
     case 'bugsmash': st = { type: 'bugsmash', phase: 'intro', turn: 0, turnPhase: 'ready', results: {} }; break;
     case 'auction': {
       const n = Math.max(1, Math.min(AUCTION_TICKETS.length, Math.ceil(s.teams.length / 2)));
-      st = { type: 'auction', phase: 'intro', tickets: AUCTION_TICKETS.slice(0, n), ticket: 0, bid: { by: 'raivan', amount: AUCTION_OPEN }, bidLog: [], winners: {} };
+      const tickets = AUCTION_TICKETS.slice(0, n);
+      st = { type: 'auction', phase: 'intro', tickets, ticket: 0, bid: { by: 'fibbot', amount: AUCTION_OPEN }, bidLog: [], villainCap: planVillainCap(s, tickets, 0, {}), winners: {} };
       break;
     }
     case 'megaorder': {
@@ -118,15 +128,9 @@ function enterStep(s: GameState, index: number): GameState {
       break;
     }
     case 'mood': {
-      const pending: Record<string, { customers: number; kind: 'left' | 'joined' | 'same' }> = {};
-      for (const t of s.teams) {
-        const gap = t.customers - t.happiness;
-        let c = 0;
-        if (gap >= 10) c = MOOD.rules[0].customers;
-        else if (gap >= 1) c = MOOD.rules[1].customers;
-        else if (gap <= -10) c = MOOD.rules[2].customers;
-        pending[t.id] = { customers: c, kind: c < 0 ? 'left' : c > 0 ? 'joined' : 'same' };
-      }
+      const pending: Record<string, MoodResult> = {};
+      const upto = 'act' in step ? step.act : 2;
+      for (const t of s.teams) pending[t.id] = moodFor(t, upto);
       st = { type: 'mood', phase: 'intro', index: 0, pending };
       break;
     }
@@ -159,17 +163,98 @@ function computeQuestionReveal(s: GameState, qId: string) {
       customers = o.elseCustomers ?? 0;
       story = o.elseStory ?? story;
     }
-    pending[t.id] = { coins: o.coins, customers, happiness: o.happiness };
+    pending[t.id] = realDeltas(t, { coins: o.coins, customers, happiness: o.happiness });
     stories[t.id] = fill(story, t);
   }
   return { pending, stories };
 }
 
-function priceVerdict(price: number, best: number) {
-  const off = Math.abs(price - best);
-  const tier = PRICE.tiers.find(x => off <= x.off)!;
-  const verdict: 'right' | 'close' | 'high' | 'low' = tier.verdict ?? (price > best ? 'high' : 'low');
-  return { tier, verdict };
+// ---------- Price It Right maths ----------
+
+const profitFor = (p: { fair: number; cost: number }, price: number) => buyersAt(p, price) * (price - p.cost);
+
+export function priceOutcome(price: number, productId: string | null): PriceOutcome {
+  const p = productById(productId) ?? { fair: 50, cost: 20, bestPrice: 50 };
+  const buyers = buyersAt(p, price);
+  const best = 'bestPrice' in p ? p.bestPrice : 50;
+  return { price, cost: p.cost, profitPerUnit: price - p.cost, interested: PRICE.interested, buyers, totalProfit: buyers * (price - p.cost), best, bestProfit: profitFor(p, best) };
+}
+
+/** Happiness reaction: a fair price pleases people, a greedy price annoys them. */
+export function priceHappiness(price: number, productId: string | null) {
+  const fair = productById(productId)?.fair ?? 50;
+  return price <= fair * 0.9 ? 2 : price <= fair * 1.3 ? 0 : -2;
+}
+
+export function priceVerdict(o: PriceOutcome): 'right' | 'close' | 'high' | 'low' {
+  const ratio = o.bestProfit > 0 ? o.totalProfit / o.bestProfit : 0;
+  if (ratio >= 0.9) return 'right';
+  if (ratio >= 0.6) return 'close';
+  return o.price > o.best ? 'high' : 'low';
+}
+
+// ---------- Customer mood (twice per game) ----------
+
+/** Weighted check over acts 1..upto. Later acts count double. Explains itself in `why`. */
+export function moodFor(t: Team, upto: number): MoodResult {
+  const acts: number[] = [];
+  for (let a = 1; a <= upto; a++) acts.push(a);
+  let gained = 0, happy = 0, G = 0;
+  for (const h of t.history) {
+    if (h.act < 1 || h.act > upto || h.stepId.startsWith('mood')) continue;
+    const w = MOOD.weights[h.act] ?? 1;
+    gained += Math.max(0, h.deltas.customers);
+    happy += h.deltas.happiness;
+    G += w * (h.deltas.customers - h.deltas.happiness);
+  }
+  const W = acts.reduce((a, k) => a + (MOOD.weights[k] ?? 1), 0) || 1;
+  const gap = G / W;
+  let c = 0;
+  for (const r of MOOD.rules) {
+    if (r.minGap !== undefined && gap >= r.minGap) { c = r.customers; break; }
+    if (r.maxGap !== undefined && gap <= r.maxGap) { c = r.customers; break; }
+  }
+  const name = t.name || 'This team';
+  const span = upto <= 2 ? 'Acts 1 and 2' : 'all 5 acts (the later acts count double)';
+  const hap = happy >= 0 ? `only ${happy} happiness` : `${-happy} LESS happiness`;
+  let why: string;
+  if (c < 0) why = `Looking at ${span}: ${name} won ${gained} customers but earned ${hap}. Customers who are not happy get bored, so ${-c} left.`;
+  else if (c > 0) why = `Looking at ${span}: ${name} earned ${happy} happiness, more than the customers it won (${gained}). Very happy customers tell their friends, so ${c} more came!`;
+  else why = `Looking at ${span}: ${name} won ${gained} customers and earned ${happy} happiness. They grew about evenly, so everyone stayed.`;
+  return { customers: c, kind: c < 0 ? 'left' : c > 0 ? 'joined' : 'same', gained, happy, why, acts };
+}
+
+// ---------- Auction: Fibbot bids by himself, by a fairness algorithm ----------
+// Goal: Fibbot wins about half the tickets. When he does NOT win, the keenest team wins while paying clearly less than its limit.
+// Fibbot has a secret walk-away price (cap) per ticket, decided once from what the teams can afford:
+//   "strong" Fibbot (cap above the richest team's limit): nobody can outbid him, he wins.
+//   "weak"   Fibbot (cap well below that limit): the keenest team wins and pays less than its limit.
+// The coin flip is seeded (same state = same result) and nudged so he does not win every ticket or none.
+
+function hashStr(str: string) { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; }
+function rngFrom(seed: string) { let a = hashStr(seed) || 1; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const round10 = (n: number) => Math.round(n / AUCTION_STEP) * AUCTION_STEP;
+
+export function planVillainCap(s: GameState, tickets: { id: string }[], ticketIdx: number, winners: AuctionState['winners']): number {
+  const taken = new Set(Object.values(winners).map(w => w.by));
+  const limits = s.teams.filter(t => !taken.has(t.id)).map(maxBid).filter(m => m >= AUCTION_OPEN + AUCTION_STEP).sort((a, b) => b - a);
+  const top = limits[0] ?? 0;
+  if (top < AUCTION_OPEN + AUCTION_STEP) return AUCTION_OPEN;                 // nobody can bid: Fibbot keeps it
+  const rnd = rngFrom(`${tickets[ticketIdx]?.id}|${ticketIdx}|${s.teams.map(t => t.id + t.coins).join(',')}`);
+  const wins = Object.values(winners).filter(w => w.by === 'fibbot').length;
+  const played = Object.keys(winners).length;
+  // 50/50, nudged back toward balance if he has been winning too much or too little so far
+  const pVillain = Math.max(0.2, Math.min(0.8, 0.5 + (played ? (0.5 - wins / played) * 0.4 : 0)));
+  const strong = rnd() < pVillain;
+  const cap = strong ? top * (1.05 + rnd() * 0.35) : top * (0.4 + rnd() * 0.4);
+  return Math.max(AUCTION_OPEN + AUCTION_STEP, round10(cap));
+}
+
+/** Fibbot's answer to a team bid: a counter-bid of 10 to 30 coins more, never above his secret cap. null = he gives up. */
+export function villainCounter(cap: number, current: number, seed: string): number | null {
+  if (current + AUCTION_STEP > cap) return null;
+  const inc = [10, 10, 20, 30][Math.floor(rngFrom(seed)() * 4)];
+  return Math.min(cap, round10(current + inc));
 }
 
 function computeMega(s: GameState) {
@@ -230,7 +315,7 @@ export function computeAwards(s: GameState): AwardResult[] {
   const bananaWhy = (t: Team): string[] => {
     const lines: string[] = [];
     const traps = t.history.filter(h => h.trap).length;
-    if (traps) lines.push(`Trusted rAIvan ${traps === 1 ? 'once' : `${traps} times`} 😈`);
+    if (traps) lines.push(`Trusted Fibbot ${traps === 1 ? 'once' : `${traps} times`} 😈`);
     const worst = t.history.slice().sort((a, b) => (a.deltas.customers + a.deltas.happiness) - (b.deltas.customers + b.deltas.happiness))[0];
     if (worst && worst.deltas.customers + worst.deltas.happiness < 0) lines.push(`Biggest slip: “${worst.label}” (${worst.deltas.customers + worst.deltas.happiness} points)`);
     const spent = t.history.reduce((a, h) => a + Math.min(0, h.deltas.coins), 0);
@@ -272,16 +357,18 @@ function next(s: GameState): GameState {
         if (st.type === 'price') {
           const pending: Record<string, Deltas> = {}, stories: Record<string, string> = {};
           const verdict: Record<string, 'right' | 'close' | 'high' | 'low'> = {};
+          const outcomes: Record<string, PriceOutcome> = {};
           for (const t of s.teams) {
             const p = st.locks[t.id];
-            const best = productById(t.productId)?.bestPrice ?? 50;
             if (p === undefined) { pending[t.id] = zero(); stories[t.id] = `${t.name} forgot to set a price 😴`; verdict[t.id] = 'low'; continue; }
-            const { tier, verdict: v } = priceVerdict(p, best);
-            pending[t.id] = { coins: tier.coins, customers: 0, happiness: tier.happiness };
+            const o = priceOutcome(p, t.productId);
+            const v = priceVerdict(o);
+            outcomes[t.id] = o;
+            pending[t.id] = realDeltas(t, { coins: o.bestProfit > 0 ? Math.round(PRICE.bestCoins * o.totalProfit / o.bestProfit) : 0, customers: o.buyers - PRICE.customersBase, happiness: priceHappiness(p, t.productId) });
             verdict[t.id] = v;
             stories[t.id] = PRICE.text[v];
           }
-          return { ...s, step: { ...st, phase: 'revealed', pending, stories, verdict, selectedTeamId: null }, timer: stopTimer() };
+          return { ...s, step: { ...st, phase: 'revealed', pending, stories, verdict, outcomes, selectedTeamId: null }, timer: stopTimer() };
         }
       }
       if (st.phase === 'revealed') return applySpotlight({ ...s, step: { ...st, phase: 'spotlight', spotlight: 0 } }, 0);
@@ -305,7 +392,7 @@ function next(s: GameState): GameState {
       if (st.phase === 'intro') return { ...s, step: { ...st, phase: 'bidding' } };
       if (st.phase === 'bidding') return sold(s);
       if (st.phase === 'sold') {
-        if (st.ticket + 1 < st.tickets.length) return { ...s, step: { ...st, phase: 'bidding', ticket: st.ticket + 1, bid: { by: 'raivan', amount: AUCTION_OPEN }, bidLog: [] } };
+        if (st.ticket + 1 < st.tickets.length) return { ...s, step: { ...st, phase: 'bidding', ticket: st.ticket + 1, bid: { by: 'fibbot', amount: AUCTION_OPEN }, bidLog: [], villainCap: planVillainCap(s, st.tickets, st.ticket + 1, st.winners) } };
         return { ...s, step: { ...st, phase: 'done' } };
       }
       return go();
@@ -410,7 +497,7 @@ function applyMood(s: GameState, i: number): GameState {
   if (!m || m.customers === 0) return s;
   const step = currentStep(s);
   const act = 'act' in step ? step.act : 0;
-  const story = m.kind === 'left' ? MOOD.text.left(-m.customers) : MOOD.text.joined(m.customers);
+  const story = m.why;
   return patchTeam(s, team.id, t => applyDeltas(t, { coins: 0, customers: m.customers, happiness: 0 }, { stepId: step.id, act, icon: m.kind === 'left' ? '😢' : '🥳', label: 'Customer mood', story }));
 }
 
@@ -418,7 +505,7 @@ function sold(s: GameState): GameState {
   const st = s.step as Extract<StepState, { type: 'auction' }>;
   const ticket = st.tickets[st.ticket];
   let out: GameState = { ...s, step: { ...st, phase: 'sold', winners: { ...st.winners, [ticket.id]: st.bid } } };
-  if (st.bid.by !== 'raivan') {
+  if (st.bid.by !== 'fibbot') {
     out = patchTeam(out, st.bid.by, t => applyDeltas(t, { ...ticket.deltas, coins: -st.bid.amount }, {
       stepId: 'auction', act: 3, icon: ticket.icon, label: `Won: ${ticket.title}`, story: `${t.name} won the ${ticket.title} for ${st.bid.amount} coins! ${ticket.icon}`,
     }));
@@ -435,6 +522,16 @@ export function reduce(s: GameState, a: Action): GameState {
 
 function reduceInner(s: GameState, a: Action): GameState {
   const st = s.step;
+  if (a.type === 'SET_FROZEN') {
+    if (a.on === s.frozen) return s;
+    if (a.on) {
+      if (!s.timer.running || !s.timer.endsAt) return { ...s, frozen: true, frozenPaused: false };
+      return { ...s, frozen: true, frozenPaused: true, timer: { ...s.timer, running: false, remaining: Math.max(0, s.timer.endsAt - Date.now()), endsAt: null } };
+    }
+    if (s.frozenPaused && !s.timer.running) return { ...s, frozen: false, frozenPaused: false, timer: { ...s.timer, running: true, endsAt: Date.now() + s.timer.remaining } };
+    return { ...s, frozen: false, frozenPaused: false };
+  }
+  if (s.frozen) return s;   // frozen: nothing else may change until the host resumes
   switch (a.type) {
     case 'NEXT': {
       // First entry: lobby has no state yet
@@ -494,20 +591,33 @@ function reduceInner(s: GameState, a: Action): GameState {
       if (s.teams[st.turn]?.id !== a.teamId) return s;
       const tier = BUG.tiers.find(x => a.bugs >= x.min && a.bugs <= x.max)!;
       const out = { ...s, step: { ...st, turnPhase: 'result' as const, results: { ...st.results, [a.teamId]: a.bugs } } };
-      return patchTeam(out, a.teamId, t => applyDeltas(t, { coins: 0, customers: 0, happiness: tier.happiness }, {
+      return patchTeam(out, a.teamId, t => applyDeltas(t, { coins: 0, customers: tier.customers, happiness: tier.happiness }, {
         stepId: 'bugsmash', act: 2, icon: '🐛', label: `Smashed ${a.bugs} bugs`, story: `${t.name} smashed ${a.bugs} bugs! ${tier.text}`,
       }));
     }
     case 'BID': {
-      if (st.type !== 'auction' || st.phase !== 'bidding') return s;
-      if (a.by !== 'raivan') {
-        const team = teamById(s, a.by);
-        if (!team || a.amount > maxBid(team)) return s;
-        const already = Object.values(st.winners).some(w => w.by === a.by);
-        if (already) return s;
-      }
+      // Only teams bid (the host enters it). Fibbot answers by himself using his secret cap.
+      if (st.type !== 'auction' || st.phase !== 'bidding' || a.by === 'fibbot') return s;
+      const team = teamById(s, a.by);
+      if (!team || a.amount > maxBid(team)) return s;
+      if (Object.values(st.winners).some(w => w.by === a.by)) return s;
       if (a.amount <= st.bid.amount) return s;
-      return { ...s, step: { ...st, bid: { by: a.by, amount: a.amount }, bidLog: [...st.bidLog, { by: a.by, amount: a.amount }] } };
+      const mine = { by: a.by, amount: a.amount };
+      const log = [...st.bidLog, mine];
+      let bid = mine;
+      const counter = villainCounter(st.villainCap, a.amount, `${st.tickets[st.ticket]?.id}|${log.length}|${a.amount}`);
+      if (counter !== null) { bid = { by: 'fibbot', amount: counter }; log.push(bid); }
+      return { ...s, step: { ...st, bid, bidLog: log } };
+    }
+    case 'SET_PROGRESS_VIEW': {
+      // The overlay also pauses the game: the timer stops while it is up and picks up again when it goes away.
+      if (a.on === s.progressView) return s;
+      if (a.on) {
+        if (!s.timer.running || !s.timer.endsAt) return { ...s, progressView: true, progressPaused: false };
+        return { ...s, progressView: true, progressPaused: true, timer: { ...s.timer, running: false, remaining: Math.max(0, s.timer.endsAt - Date.now()), endsAt: null } };
+      }
+      if (s.progressPaused && !s.timer.running) return { ...s, progressView: false, progressPaused: false, timer: { ...s.timer, running: true, endsAt: Date.now() + s.timer.remaining } };
+      return { ...s, progressView: false, progressPaused: false };
     }
     case 'SOLD': return st.type === 'auction' && st.phase === 'bidding' ? sold(s) : s;
     case 'MIC_PICK': {
@@ -576,6 +686,7 @@ export function nextLabel(s: GameState): string {
     case 'mic': return st.phase === 'spin' ? 'Waiting for the wheel…' : st.phase === 'picked' ? 'Done talking ✓' : 'Next step ▶';
     case 'pitch': return st.phase === 'ready' ? 'Start pitch ⏱️' : st.phase === 'talking' ? 'Stop, go to votes' : st.phase === 'voting' ? 'Next team ▶' : 'Next step ▶';
     case 'awards': return st.reveal < st.results.length ? `Reveal #${5 - st.reveal}` : 'Finish ▶';
+    case 'none': return currentStep(s).kind === 'progress' ? 'Next act ▶' : 'Next ▶';
     default: return 'Next ▶';
   }
 }

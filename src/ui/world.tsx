@@ -1,4 +1,4 @@
-// Building (the startup's look by stage) and ProductArt (the 10 products). Flat layered SVG.
+// Building (the startup's look by stage) and ProductArt (the 10 products, see PRODUCTS in game/content.ts). Flat layered SVG.
 import { memo, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Sticker, Shaded, rrect, circ, path } from './svg';
@@ -115,39 +115,74 @@ const PROD: Record<string, () => ReactNode> = {
     <g className="in"><circle cx={46} cy={54} r={5} fill="#3B2A0E" /><circle cx={74} cy={54} r={5} fill="#3B2A0E" /><ellipse cx={60} cy={70} rx={10} ry={8} fill="#FFF4E0" /><ellipse cx={60} cy={66} rx={5} ry={4} fill="#3B2A0E" /><path d="M56 78 q4 8 8 0" fill="#FF6FB5" /></g>
   </>),
   homeworkbuddy: () => (<>
-    <rect x={56} y={4} width={8} height={18} rx={4} fill="#9AA7BC" /><circle cx={60} cy={6} r={7} fill="#FF4B4B" />
-    <Shaded shape={rrect(28, 20, 64, 52, 18)} fill="#00CD9C" shade="#00A57E" off={[3, 3]} />
-    <rect x={38} y={30} width={44} height={30} rx={10} fill="#2E3A59" className="in" />
-    <g className="in"><circle cx={50} cy={44} r={5} fill="#7CF3FF" /><circle cx={70} cy={44} r={5} fill="#7CF3FF" /><path d="M52 52 q8 6 16 0" stroke="#7CF3FF" strokeWidth={3} fill="none" strokeLinecap="round" /></g>
-    <Shaded shape={rrect(30, 76, 60, 38, 8)} fill="#fff" shade="#EED9A0" off={[2, 2]} />
-    <g className="in"><path d="M40 88 H80 M40 98 H70" stroke="#1CB0F6" strokeWidth={4} strokeLinecap="round" /></g>
+    {/* study tablet with a to-do list, and a visor-bot popping out of it */}
+    <Shaded shape={rrect(14, 56, 92, 58, 14)} fill="#2E3A59" shade="#1F2940" off={[3, 3]}><rect x={20} y={61} width={44} height={6} rx={3} fill="#4A5A80" /></Shaded>
+    <g className="in">
+      {[0, 1, 2].map(r => (<g key={r}>
+        <rect x={24} y={72 + r * 13} width={9} height={9} rx={3} fill={r < 2 ? '#58CC02' : 'none'} stroke="#7CF3FF" strokeWidth={2.4} />
+        {r < 2 && <path d={`M26 ${76 + r * 13} l2 2.4 l4 -5`} stroke="#fff" strokeWidth={2.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+        <rect x={40} y={74 + r * 13} width={r === 1 ? 40 : 52} height={5} rx={2.5} fill="#7CF3FF" opacity={r < 2 ? 0.45 : 0.9} />
+      </g>))}
+    </g>
+    <g className="ui-bob" style={{ ['--amp' as string]: '3px', ['--dur' as string]: '2.2s' }}>
+      <rect x={58} y={2} width={4} height={12} rx={2} fill="#9AA7BC" /><circle cx={60} cy={4} r={5.5} fill="#FF9600" className="ui-blinklight" />
+      <rect x={24} y={22} width={8} height={18} rx={4} fill="#00A57E" /><rect x={88} y={22} width={8} height={18} rx={4} fill="#00A57E" />
+      <Shaded shape={rrect(30, 12, 60, 46, 20)} fill="#00CD9C" shade="#00A57E" off={[3, 4]}><ellipse cx={44} cy={20} rx={9} ry={3.5} fill="#7FF0D4" transform="rotate(-12 44 20)" /></Shaded>
+      <rect x={37} y={24} width={46} height={22} rx={11} fill="#1F2940" className="in" />
+      <g className="in"><ellipse cx={50} cy={35} rx={5} ry={5.5} fill="#7CF3FF" /><ellipse cx={70} cy={35} rx={5} ry={5.5} fill="#7CF3FF" /><circle cx={48.5} cy={33} r={1.6} fill="#fff" /><circle cx={68.5} cy={33} r={1.6} fill="#fff" /></g>
+    </g>
   </>),
   sipbottle: () => (<>
-    <rect x={44} y={6} width={32} height={16} rx={6} fill="#1395D4" />
-    <Shaded shape={rrect(32, 20, 56, 94, 22)} fill="#5CC8F9" shade="#1CB0F6" off={[4, 4]}><rect x={40} y={30} width={8} height={56} rx={4} fill="#A6E0FC" /></Shaded>
-    <rect x={32} y={64} width={56} height={14} fill="#FFC800" className="in" />
-    <g className="in"><circle cx={52} cy={48} r={4} fill="#3B2A0E" /><circle cx={70} cy={48} r={4} fill="#3B2A0E" /><path d="M54 56 q7 6 14 0" stroke="#3B2A0E" strokeWidth={3} fill="none" strokeLinecap="round" /></g>
+    {/* smart bottle: dark smart cap with an LED, water level, a little drop screen and a glowing hydration ring */}
+    <Shaded shape={rrect(42, 4, 36, 22, 9)} fill="#2E3A59" shade="#1F2940" off={[2, 3]} />
+    <circle cx={60} cy={15} r={4} fill="#7CF3FF" className="ui-blinklight in" />
+    <Shaded shape={rrect(34, 22, 52, 94, 22)} fill="#7FD6FF" shade="#1CB0F6" off={[4, 4]}><rect x={41} y={32} width={7} height={52} rx={3.5} fill="#D6F1FF" /></Shaded>
+    <g className="in">
+      <path d="M34 70 Q47 62 60 70 T86 70 V94 Q86 116 64 116 H56 Q34 116 34 94Z" fill="#1CB0F6" opacity={0.85} />
+      <rect x={46} y={36} width={28} height={26} rx={9} fill="#1F2940" />
+      <path d="M60 41 q-7 9 -7 13 a7 7 0 0 0 14 0 q0 -4 -7 -13z" fill="#7CF3FF" />
+      {[0, 1, 2].map(i => <rect key={i} x={78} y={32 + i * 8} width={5} height={3} rx={1.5} fill="#fff" opacity={0.8 - i * 0.2} />)}
+    </g>
   </>),
   roombot: () => (<>
-    <Shaded shape={path('M10 82 Q10 40 60 40 Q110 40 110 82 Z')} fill="#FF4B4B" shade="#D93636" off={[4, 4]}><ellipse cx={36} cy={56} rx={10} ry={5} fill="#FFB3B3" transform="rotate(-20 36 56)" /></Shaded>
-    <rect x={6} y={80} width={108} height={16} rx={8} fill="#4A3613" />
-    <g className="in"><circle cx={46} cy={64} r={5} fill="#fff" /><circle cx={74} cy={64} r={5} fill="#fff" /></g>
-    <g className="ui-spin-slow" style={{ ['--dur' as string]: '1.4s' }}><path d="M14 102 l10 -6 M14 102 l10 6 M14 102 h12" stroke="#FFC800" strokeWidth={4} strokeLinecap="round" /></g>
-    <g className="in ui-twinkle"><path d="M98 24 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#FFC800" /></g>
+    {/* round robot vacuum: white shell, dark smart top, glowing ring, little lidar and a happy face */}
+    <ellipse cx={60} cy={92} rx={52} ry={18} fill="#1F2940" />
+    <Shaded shape={path('M8 76 Q8 100 60 100 Q112 100 112 76 L112 66 Q112 40 60 40 Q8 40 8 66Z')} fill="#F4F1EA" shade="#CFC8B8" off={[4, 5]}><ellipse cx={34} cy={52} rx={14} ry={5} fill="#fff" transform="rotate(-16 34 52)" /></Shaded>
+    <path d="M10 80 Q12 98 60 98 Q108 98 110 80" stroke="#FF4B4B" strokeWidth={7} fill="none" strokeLinecap="round" className="in" />
+    <ellipse cx={60} cy={62} rx={40} ry={15} fill="#2E3A59" className="in" />
+    <ellipse cx={60} cy={62} rx={40} ry={15} fill="none" stroke="#7CF3FF" strokeWidth={2.5} opacity={0.7} className="in ui-blinklight" />
+    <g className="in"><ellipse cx={47} cy={61} rx={5} ry={6} fill="#7CF3FF" /><ellipse cx={73} cy={61} rx={5} ry={6} fill="#7CF3FF" /><path d="M53 69 q7 5 14 0" stroke="#7CF3FF" strokeWidth={3} fill="none" strokeLinecap="round" /></g>
+    <rect x={54} y={30} width={12} height={14} rx={5} fill="#5B6B7A" /><circle cx={60} cy={30} r={6} fill="#FF4B4B" className="ui-blinklight" />
+    <g className="ui-spin-slow" style={{ ['--dur' as string]: '1.2s' }}><path d="M12 106 l10 -6 M12 106 l10 6 M12 106 h12" stroke="#FFC800" strokeWidth={4} strokeLinecap="round" /></g>
+    <g className="in"><path d="M100 18 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#FFC800" /></g>
   </>),
-  bookswap: () => (<>
-    <Shaded shape={rrect(10, 40, 46, 62, 8)} fill="#FF9600" shade="#E07F00" off={[3, 3]}><rect x={16} y={46} width={6} height={50} rx={3} fill="#FFD199" /></Shaded>
-    <Shaded shape={rrect(64, 22, 46, 62, 8)} fill="#1CB0F6" shade="#1395D4" off={[3, 3]}><rect x={70} y={28} width={6} height={50} rx={3} fill="#A6E0FC" /></Shaded>
-    <path d="M40 22 Q60 4 78 14" stroke="#58CC02" strokeWidth={7} fill="none" strokeLinecap="round" className="ln" style={{ ['--lw' as string]: '7px' }} />
-    <path d="M72 8 L82 16 L70 20Z" fill="#58CC02" />
-    <path d="M82 104 Q62 120 44 110" stroke="#CE82FF" strokeWidth={7} fill="none" strokeLinecap="round" className="ln" style={{ ['--lw' as string]: '7px' }} />
-    <path d="M50 104 L40 112 L52 116Z" fill="#CE82FF" />
+  solarbuddy: () => (<>
+    {/* solar lamp: tilted solar panel on a stem, a glowing lantern below, rays of light */}
+    <path d="M60 36 V50" stroke="#5B6B7A" strokeWidth={7} strokeLinecap="round" className="ln" style={{ ['--lw' as string]: '7px' }} />
+    <Shaded shape={path('M24 36 L96 36 L108 10 L36 10Z')} fill="#2B72E0" shade="#1B4FAE" off={[3, 3]}><path d="M32 12 H46 L38 34 H26Z" fill="#6FA8FF" opacity={0.5} /></Shaded>
+    <g className="in" stroke="#BFD8FF" strokeWidth={1.8} opacity={0.85}><path d="M56 10 L48 36 M76 10 L72 36 M97 10 L89 36 M32 23 H102" /></g>
+    <Shaded shape={rrect(32, 50, 56, 58, 22)} fill="#FFC800" shade="#E0A100" off={[4, 4]} />
+    <rect x={40} y={58} width={40} height={36} rx={15} fill="#FFF6BF" className="in" />
+    <g className="in"><circle cx={60} cy={77} r={9} fill="#fff" /><circle cx={60} cy={77} r={14} fill="#FFE277" opacity={0.55} className="ui-glow" /></g>
+    <rect x={38} y={102} width={44} height={10} rx={5} fill="#5B6B7A" />
+    <g className="ui-pulse in" style={{ ['--dur' as string]: '1.8s' }}><path d="M18 62 H6 M20 78 H4 M22 94 L10 100 M102 62 H114 M100 78 H116 M98 94 L110 100" stroke="#FFC800" strokeWidth={5} strokeLinecap="round" /></g>
   </>),
-  partypal: () => (<>
-    <Shaded shape={rrect(18, 60, 84, 50, 14)} fill="#FF97C9" shade="#FF6FB5" off={[3, 3]} />
-    <path d="M18 70 Q32 82 46 70 Q60 82 74 70 Q88 82 102 70 V64 H18Z" fill="#fff" className="in" />
-    <Shaded shape={rrect(28, 38, 64, 26, 10)} fill="#FFD199" shade="#FFB44D" off={[2, 2]} />
-    {[42, 60, 78].map((x, i) => (<g key={x}><rect x={x - 3} y={18} width={6} height={20} rx={3} fill={['#1CB0F6', '#58CC02', '#CE82FF'][i]} /><path d={`M${x} 6 Q${x + 6} 12 ${x} 18 Q${x - 6} 12 ${x} 6Z`} fill="#FF9600" className="ui-flicker" style={{ ['--d' as string]: `${-i * 0.2}s` }} /></g>))}
+  cleanstreet: () => (<>
+    {/* green recycling bin with the three-arrows mark, a leaf and a bottle dropping in */}
+    <Shaded shape={path('M26 44 H94 L86 110 Q85 114 80 114 H40 Q35 114 34 110Z')} fill="#58CC02" shade="#46A302" off={[4, 4]}><rect x={32} y={52} width={7} height={52} rx={3.5} fill="#A5ED6E" /></Shaded>
+    <Shaded shape={rrect(18, 30, 84, 18, 9)} fill="#46A302" shade="#357D00" off={[2, 3]} />
+    <rect x={48} y={22} width={24} height={10} rx={5} fill="#357D00" />
+    <g className="in" fill="none" stroke="#fff" strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M60 58 L71 76" /><path d="M72 88 H50" /><path d="M49 76 L56 62" />
+    </g>
+    <g className="in" fill="#fff"><path d="M75 70 L76 82 L65 78Z" /><path d="M54 94 L52 83 L63 88Z" /><path d="M43 71 L55 69 L50 80Z" /></g>
+    <g className="ui-bob" style={{ ['--amp' as string]: '5px', ['--dur' as string]: '1.8s' }}>
+      <path d="M90 6 Q112 8 110 28 Q90 28 90 6Z" fill="#89DD45" />
+      <path d="M92 8 Q100 16 108 26" stroke="#46A302" strokeWidth={2.5} fill="none" strokeLinecap="round" className="in" />
+    </g>
+    <g className="ui-bob" style={{ ['--amp' as string]: '5px', ['--dur' as string]: '2.2s', ['--d' as string]: '-0.8s' }}>
+      <rect x={8} y={6} width={13} height={24} rx={5} fill="#7FD6FF" /><rect x={11} y={2} width={7} height={7} rx={2} fill="#1CB0F6" />
+    </g>
   </>),
 };
 

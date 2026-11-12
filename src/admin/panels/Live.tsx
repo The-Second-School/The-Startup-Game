@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { AUCTION_STEP, BUG } from '../../game/content';
+import { AUCTION_RESERVE, AUCTION_STEP, BUG } from '../../game/content';
 import { maxBid, teamById } from '../../game/engine';
-import { AUCTION_RESERVE } from '../../game/content';
+import { Num } from '../../ui/primitives';
 import { useA } from '../ctx';
 import { Btn, Card, Chip, Fold, Label, TeamDot, TeamLine } from '../kit';
 
@@ -35,48 +35,96 @@ export function BugPanel() {
 }
 
 // ---------- Auction ----------
+// Fibbot bids by himself inside the engine (his limit is secret and never shown). The host only enters team bids.
 export function AuctionPanel() {
   const { state, send } = useA();
   const st = state.step;
   const [by, setBy] = useState<string | null>(null);
-  const [custom, setCustom] = useState('');
+  const [picked, setPicked] = useState<number | null>(null);
   if (st.type !== 'auction' || st.phase !== 'bidding') return null;
+
+  const minNext = st.bid.amount + AUCTION_STEP;
   const wonBy = (id: string) => Object.values(st.winners).some(w => w.by === id);
+  const canBid = (id: string) => {
+    const t = teamById(state, id);
+    return !!t && !wonBy(id) && maxBid(t) >= minNext;
+  };
   const team = by ? teamById(state, by) : null;
-  const bid = (who: string, amount: number) => { send({ type: 'BID', by: who, amount }); setBy(null); setCustom(''); };
-  const customN = parseInt(custom, 10);
-  const customOk = !!team && Number.isFinite(customN) && customN > st.bid.amount && customN <= maxBid(team);
+  const max = team ? maxBid(team) : 0;
+  // Keep the amount inside the legal range even if Fibbot raised the bid while the host was choosing.
+  const amount = team ? Math.min(max, Math.max(minNext, picked ?? minNext)) : 0;
+  const ok = !!team && canBid(team.id) && amount >= minNext && amount <= max;
+
+  const tk = st.tickets[st.ticket];
+  const nameOf = (id: string) => (id === 'fibbot' ? 'Fibbot' : teamById(state, id)?.name ?? 'a team');
+  const top = st.bid.by === 'fibbot' && st.bidLog.length === 0 ? 'Opening price' : nameOf(st.bid.by);
+  const recent = st.bidLog.slice(-3).reverse();
+
+  const pick = (id: string) => { setBy(id === by ? null : id); setPicked(null); };
+  const place = () => {
+    if (!team || !ok) return;
+    send({ type: 'BID', by: team.id, amount });
+    setBy(null);
+    setPicked(null);
+  };
 
   return (
     <>
       <Card>
-        <Label>{team ? `${team.name} bids` : 'Who is bidding?'}</Label>
+        <div className="auc-ticket"><span aria-hidden>{tk.icon}</span><b>{tk.title}</b></div>
+        <div className="sub">Ticket {st.ticket + 1} of {st.tickets.length}</div>
+        <div className="auc-stats">
+          <div><small>Top bid</small><b><Num value={st.bid.amount} /></b><small>{top}</small></div>
+          <div><small>Next minimum</small><b><Num value={minNext} /></b><small>coins</small></div>
+        </div>
+        {recent.length > 0 && (
+          <div className="auc-log">
+            {recent.map((b, i) => <div key={i}><span>{nameOf(b.by)}</span><b>{b.amount}</b></div>)}
+          </div>
+        )}
+      </Card>
+
+      <Card>
+        <Label>Who bid?</Label>
         <div className="bidteams">
           {state.teams.map(t => {
-            const won = wonBy(t.id);
-            const poor = maxBid(t) <= st.bid.amount;
+            const can = canBid(t.id);
             return (
-              <Btn key={t.id} tone={by === t.id ? 'sun' : 'soft'} disabled={won || poor} onClick={() => setBy(by === t.id ? null : t.id)} className="bt">
+              <Btn key={t.id} tone={by === t.id ? 'sun' : 'soft'} disabled={!can} onClick={() => pick(t.id)} className="bt">
                 <TeamDot team={t} size={28} />
-                <span className="bt-text"><b>{t.name}</b><small>{won ? 'Already won one' : poor ? `Max bid ${maxBid(t)}: not enough` : `${t.coins} coins, max bid ${maxBid(t)}`}</small></span>
+                <span className="bt-text">
+                  <b>{t.name}</b>
+                  <small>{wonBy(t.id) ? 'Already won' : can ? `Max ${maxBid(t)}` : 'Too few coins'}</small>
+                </span>
               </Btn>
             );
           })}
         </div>
-        <div className="row" style={{ marginTop: 12 }}>
-          {[10, 20, 50].map(inc => {
-            const amt = st.bid.amount + inc;
-            return <Btn key={inc} tone="good" size="lg" disabled={!team || amt > maxBid(team)} onClick={() => team && bid(team.id, amt)} style={{ flex: 1, flexDirection: 'column', gap: 0 }}>+{inc}<small>{amt}</small></Btn>;
-          })}
-        </div>
-        {!team && <div className="hint">Tap the team that bid, then how much they raised.</div>}
-        {team && <div className={`hint${maxBid(team) <= st.bid.amount + 10 ? ' hint-warn' : ''}`}>{team.name} can bid at most {maxBid(team)} coins: every team keeps {AUCTION_RESERVE} coins in reserve. Buttons above that are off.</div>}
-        <form className="row" style={{ marginTop: 10 }} onSubmit={e => { e.preventDefault(); if (customOk && team) bid(team.id, customN); }}>
-          <input className="input" inputMode="numeric" pattern="[0-9]*" placeholder={team ? `Other amount (max ${maxBid(team)})` : 'Other amount'} value={custom} onChange={e => setCustom(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-          <Btn type="submit" tone="good" disabled={!customOk}>Bid</Btn>
-        </form>
+
+        {team && (
+          <>
+            <Label>Raise by</Label>
+            <div className="row">
+              {[10, 20, 50].map(inc => {
+                const a = st.bid.amount + inc;
+                return (
+                  <Btn key={inc} tone={amount === a ? 'sun' : 'soft'} disabled={a > max} onClick={() => setPicked(a)} style={{ flex: 1 }}>+{inc}</Btn>
+                );
+              })}
+            </div>
+
+            <Label>Amount</Label>
+            <div className="stepper">
+              <Btn tone="soft" size="lg" disabled={amount - AUCTION_STEP < minNext} onClick={() => setPicked(amount - AUCTION_STEP)}>−{AUCTION_STEP}</Btn>
+              <b className="stepper-val"><Num value={amount} /></b>
+              <Btn tone="soft" size="lg" disabled={amount + AUCTION_STEP > max} onClick={() => setPicked(amount + AUCTION_STEP)}>+{AUCTION_STEP}</Btn>
+            </div>
+
+            <Btn tone="good" size="lg" disabled={!ok} onClick={place} style={{ width: '100%', marginTop: 12 }}>Place bid</Btn>
+            <div className="hint">{team.name} can bid up to {max}. Every team keeps {AUCTION_RESERVE} coins.</div>
+          </>
+        )}
       </Card>
-      <Btn tone="purple" size="lg" onClick={() => bid('raivan', st.bid.amount + AUCTION_STEP)} style={{ width: '100%' }}>rAIvan bids {st.bid.amount + AUCTION_STEP}</Btn>
     </>
   );
 }

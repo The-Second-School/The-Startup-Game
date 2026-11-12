@@ -1,7 +1,7 @@
 // Keyboard fallback so the host can run the whole game from a laptop without the phone.
 // Space / → = NEXT, Backspace = UNDO, P = pause/resume timer, 1..6 = team chip, Q/W/E/R = option 1..4,
 // Enter = lock (or spin / start / make teams where that is the action). In the players and names steps
-// letters type a name (digits 5/6/7 pick the class) and Enter adds it.
+// letters type a name (digits 5-9 and 0 pick class 5-10) and Enter adds it.
 import { useEffect } from 'react';
 import { QUESTIONS } from '../../game/content';
 import { canAfford, currentStep, maxBid, teamById } from '../../game/engine';
@@ -32,9 +32,14 @@ export function useKeyboard() {
       if (step.kind === 'setup_players' || step.kind === 'setup_names') {
         const isChar = key.length === 1 && /[\p{L}'.\- ]/u.test(key);
         if (isChar && !(key === ' ' && !ui.typing)) { e.preventDefault(); typeChar(key); return; }
-        if (step.kind === 'setup_players' && ['5', '6', '7'].includes(key)) { ui.setGrade(Number(key) as Grade); sfx.play('tap'); return; }
+        if (step.kind === 'setup_players' && /^[0-9]$/.test(key)) {
+          const g = key === '0' ? 10 : Number(key);          // 5..9 = classes 5..9, 0 = class 10
+          if (g >= 5) { ui.setGrade(g as Grade); sfx.play('tap'); }
+          return;
+        }
         if (key === 'Escape') { ui.setTyping(''); return; }
-        if (key === 'Backspace' && ui.typing) { e.preventDefault(); backspaceTyping(); return; }
+        // Backspace edits the name; on an empty field it does nothing here (it must never undo the game by accident)
+        if (key === 'Backspace') { e.preventDefault(); backspaceTyping(); return; }
         if (key === 'Enter' && ui.typing.trim()) { e.preventDefault(); commitTyping(); return; }
       }
 
@@ -90,7 +95,7 @@ export function useKeyboard() {
           return;
         }
         if (st.type === 'auction' && st.phase === 'bidding') {
-          if (oi === 3) { dispatch({ type: 'BID', by: 'raivan', amount: st.bid.amount + 10 }); return; }
+          if (oi === 3) { dispatch({ type: 'BID', by: 'fibbot', amount: st.bid.amount + 10 }); return; }
           if (oi < 3 && ui.kbTeam) {
             const bidder = teamById(state, ui.kbTeam);
             const amount = st.bid.amount + [10, 20, 50][oi];

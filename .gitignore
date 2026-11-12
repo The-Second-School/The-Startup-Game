@@ -4,3 +4,4 @@ dist
 shots
 .vercel
 .env.local
+.playwright-mcp

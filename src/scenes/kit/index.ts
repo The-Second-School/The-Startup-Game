@@ -7,7 +7,7 @@
  *
  * ---- palette.ts ----
  *   INK, INK_SOFT, WHITE
- *   HUE.<name> = { hi, base, edge }  names: sun gold coin red coral orange saffron green mint teal blue sky purple raivan pink cream paper stone road wood steel tank
+ *   HUE.<name> = { hi, base, edge }  names: sun gold coin red coral orange saffron green mint teal blue sky purple fibbot pink cream paper stone road wood steel tank
  *   SKIN[5], HAIR[4], SKIES.<tone> (sunrise | day | storm | gold | stage) = { bands, sun, far, farWin, cloud, cloudEdge }, type SkyTone, type Hue
  *
  * ---- shapes.tsx (SVG <g> primitives; use inside an <svg>) ----

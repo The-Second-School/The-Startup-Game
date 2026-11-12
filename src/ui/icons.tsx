@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
-import { darken, mix, T } from './palette';
+import { darken, T } from './palette';
 import { Shaded, Sticker, circ, path, roundedPoly, starPoints } from './svg';
 
 // ---------------------------------------------------------------------------
-// OptionShape: circle / square / triangle / star. Lip + fill + shade crescent + highlight + white border.
+// OptionShape: circle / square / triangle / star as a HOLLOW outline icon with a sandwich border:
+// white outer ring, the themed colour ring in the middle, white inner ring, and an empty (transparent) inside.
 // ---------------------------------------------------------------------------
 export type ShapeKind = 'circle' | 'square' | 'triangle' | 'star';
 const SHAPES: Record<ShapeKind, string> = {
@@ -12,23 +13,17 @@ const SHAPES: Record<ShapeKind, string> = {
   triangle: roundedPoly([[50, 8], [94, 88], [6, 88]], 15),
   star: roundedPoly(starPoints(50, 52, 5, 48, 23), 7),
 };
-const HI: Record<ShapeKind, [number, number, number, number, number]> = {
-  circle: [30, 28, 12, 7, -35], square: [30, 26, 12, 6, -20], triangle: [40, 40, 7, 5, -55], star: [40, 34, 6, 4, -40],
-};
+const SHAPE_K = 0.78;           // the outline path is shrunk so the OUTER white ring ends where the old filled shape ended
+const RING = { white: 21, colour: 11 };   // total ring thickness and the colour band, in icon units (the 2 white bands are (21 - 11) / 2 each)
 
-export function OptionShape({ shape, color, size = 64, edge, style }: { shape: ShapeKind; color: string; size?: number; edge?: string; style?: CSSProperties }) {
-  const e = edge ?? darken(color, 0.16);
+export function OptionShape({ shape, color, size = 64, style }: { shape: ShapeKind; color: string; size?: number; edge?: string; style?: CSSProperties }) {
   const d = SHAPES[shape];
-  const [hx, hy, hrx, hry, rot] = HI[shape];
-  const bw = size < 70 ? 9 : 7;
   return (
-    <svg className="ui-svg-art" width={size} height={size} viewBox="-6 -6 112 120" style={style} aria-hidden>
-      <Sticker w={bw}>
-        <path d={d} transform="translate(0 9)" fill={e} />
-        <Shaded shape={path(d)} fill={color} shade={mix(color, e, 0.55)} off={[4, 5]}>
-          <ellipse cx={hx} cy={hy} rx={hrx} ry={hry} fill="#fff" opacity={0.75} transform={`rotate(${rot} ${hx} ${hy})`} />
-        </Shaded>
-      </Sticker>
+    <svg className="ui-svg-art" width={size} height={size} viewBox="-4 -4 108 108" style={{ flex: 'none', ...style }} aria-hidden>
+      <g transform={`translate(50 50) scale(${SHAPE_K}) translate(-50 -50)`} fill="none" strokeLinejoin="round" strokeLinecap="round">
+        <path d={d} stroke="#fff" strokeWidth={RING.white / SHAPE_K} />
+        <path d={d} stroke={color} strokeWidth={RING.colour / SHAPE_K} />
+      </g>
     </svg>
   );
 }

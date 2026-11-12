@@ -2,7 +2,8 @@
 
 import { AVATAR_SHAPES, PRODUCTS, ROLE_PLAN, TEAM_COLORS } from './content';
 import { newTeamStats } from './engine';
-import type { GameState, Member, Player, RoleId, Team } from './types';
+import { GRADES, type GameState, type Member, type Player, type RoleId, type Team } from './types';
+import { MIC_QUESTIONS } from './content';
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
 export const randInt = (n: number) => Math.floor(Math.random() * n);
@@ -14,7 +15,8 @@ export function shuffle<T>(a: T[]): T[] {
 
 /** Split players into `count` teams, mixing grades evenly (snake draft per grade). */
 export function makeTeams(players: Player[], count: number): Team[] {
-  const byGrade = [7, 6, 5].flatMap(g => shuffle(players.filter(p => p.grade === g)));
+  // Oldest class first, so each round of the snake hands the oldest kids to different teams (every team gets a mix of classes 5 to 10).
+  const byGrade = GRADES.slice().reverse().flatMap(g => shuffle(players.filter(p => p.grade === g)));
   const buckets: Player[][] = Array.from({ length: count }, () => []);
   byGrade.forEach((p, i) => {
     const round = Math.floor(i / count);
@@ -68,4 +70,13 @@ export function suggestTeamCount(players: number): 3 | 4 | 5 | 6 {
   if (players <= 20) return 4;
   if (players <= 25) return 5;
   return 6;
+}
+
+/** Mic Time question: depends on what the team chose this act (the trick they fell for, or the good choice they made). */
+export function micQuestionFor(team: Team, act: number): string {
+  const last = [...team.history].reverse().find(h => h.act === act && h.stepId !== 'bugsmash' && h.stepId !== 'auction' && !h.stepId.startsWith('mood'));
+  const base = MIC_QUESTIONS[act] ?? 'What did your team learn so far?';
+  if (!last || act === 4) return base;
+  if (last.trap) return `Your team chose “${last.label}”. That was Fibbot’s trick! Why was it a risky choice, and what would you do next time?`;
+  return `Your team chose “${last.label}”. Why was that a good idea for your startup? ${base}`;
 }

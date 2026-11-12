@@ -1,7 +1,8 @@
 // Core game types. Shared by the big screen, the admin phone and every UI piece.
 
 export type RoleId = 'ceo' | 'money' | 'lock' | 'speaker' | 'time';
-export type Grade = 5 | 6 | 7;
+export type Grade = 5 | 6 | 7 | 8 | 9 | 10;
+export const GRADES: Grade[] = [5, 6, 7, 8, 9, 10];
 
 export interface Player {
   id: string;
@@ -30,7 +31,7 @@ export interface HistoryEntry {
   label: string;        // short text, e.g. "Asked 10 people"
   story: string;        // full reveal line, already filled with team name
   deltas: Deltas;
-  trap?: boolean;       // rAIvan's trick
+  trap?: boolean;       // Fibbot's trick
 }
 
 export interface Team {
@@ -63,7 +64,8 @@ export type Step =
   | { kind: 'megaorder'; id: string; act: number }
   | { kind: 'mood'; id: string; act: number }
   | { kind: 'mic'; id: string; act: number }
-  | { kind: 'board'; id: string; act: number }
+  | { kind: 'board'; id: string; act: number; recap?: boolean }
+  | { kind: 'progress'; id: string; act: number }
   | { kind: 'break'; id: string }
   | { kind: 'pitch'; id: string }
   | { kind: 'awards'; id: string }
@@ -93,7 +95,20 @@ export interface PriceState {
   pending: Record<string, Deltas>;
   stories: Record<string, string>;
   verdict: Record<string, 'right' | 'close' | 'high' | 'low'>;
+  outcomes: Record<string, PriceOutcome>;   // computed on reveal
   spotlight: number;
+}
+
+/** What happened when a team's price met 10 interested customers. */
+export interface PriceOutcome {
+  price: number;
+  cost: number;             // what one unit costs the team to make
+  profitPerUnit: number;    // price - cost (negative = a loss on every sale)
+  interested: number;       // people who looked at the product (always 10)
+  buyers: number;           // how many of them bought
+  totalProfit: number;      // buyers x profitPerUnit
+  best: number;             // the price that would have earned the most
+  bestProfit: number;
 }
 
 export interface BugState {
@@ -116,8 +131,9 @@ export interface AuctionState {
   phase: 'intro' | 'bidding' | 'sold' | 'done';
   tickets: AuctionTicket[];
   ticket: number;
-  bid: { by: string; amount: number };      // by = teamId or 'raivan'
+  bid: { by: string; amount: number };      // by = teamId or 'fibbot'
   bidLog: { by: string; amount: number }[];
+  villainCap: number;                       // Fibbot's secret walk-away price for this ticket (set by the fairness algorithm)
   winners: Record<string, { by: string; amount: number }>; // ticketId -> winner
 }
 
@@ -137,7 +153,17 @@ export interface MoodState {
   type: 'mood';
   phase: 'intro' | 'team' | 'done';
   index: number;
-  pending: Record<string, { customers: number; kind: 'left' | 'joined' | 'same' }>;
+  pending: Record<string, MoodResult>;
+}
+
+/** Why customers left / joined / stayed. Numbers are totals over the acts the check looks at. */
+export interface MoodResult {
+  customers: number;                         // change in customers (negative = left)
+  kind: 'left' | 'joined' | 'same';
+  gained: number;                            // customers this team won over the acts checked (positive changes only)
+  happy: number;                             // happiness this team earned over the same acts
+  why: string;                               // one kid-friendly sentence saying WHY (numbers included)
+  acts: number[];                            // acts the check looked at: [1, 2] or [1, 2, 3, 4, 5]
 }
 
 export interface MicState {
@@ -199,6 +225,10 @@ export interface GameState {
   teams: Team[];
   settings: Settings;
   timer: TimerState;
+  progressView: boolean;      // host toggle: full-screen progress overlay on the big screen (also pauses the timer)
+  progressPaused: boolean;
+  frozen: boolean;            // host froze the whole screen at this exact moment (everything stops; the timer too)
+  frozenPaused: boolean;      // freezing paused a running timer and will resume it    // the overlay paused a running timer and will resume it
   micPicked: string[];        // teamIds already picked for Mic Time
   votes: Record<string, Record<string, number>>; // pitcherTeamId -> voterTeamId -> stars 1..5
   updatedAt: number;
@@ -224,6 +254,8 @@ export type Action =
   | { type: 'BUG_RESULT'; teamId: string; bugs: number }
   | { type: 'BID'; by: string; amount: number }
   | { type: 'SOLD' }
+  | { type: 'SET_PROGRESS_VIEW'; on: boolean }
+  | { type: 'SET_FROZEN'; on: boolean }
   | { type: 'MIC_PICK'; teamId: string }
   | { type: 'PITCH_START' }
   | { type: 'VOTE'; pitcherId: string; voterId: string; stars: number }

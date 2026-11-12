@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import type { Action, GameState } from '../game/types';
 
 export type Send = (a: Action | { type: 'UNDO' }) => void;
-export interface AskOpts { title: string; body?: string; ok?: string; cancel?: string; danger?: boolean }
+export interface AskOpts { title: string; body?: string; ok?: string; cancel?: string; danger?: boolean; /** OK stays off until the host types this word */ typeWord?: string }
 export interface Ctx {
   state: GameState;
   send: Send;

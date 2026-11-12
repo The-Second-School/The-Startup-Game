@@ -5,7 +5,7 @@ import { initialState, reduce } from '../game/engine';
 import type { Action, GameState } from '../game/types';
 import { currentRoom, hasRealtime, openChannel, type Channel, type Link } from '../sync/channel';
 
-const SAVE_KEY = 'sg-state-v1';
+const SAVE_KEY = 'sg-state-v2';
 const ME = `screen-${Math.random().toString(36).slice(2, 7)}`;
 // One id per screen page-load: phones use it to tell a restarted screen from an old one. `version` only ever goes up.
 const SID = Math.random().toString(36).slice(2, 10);

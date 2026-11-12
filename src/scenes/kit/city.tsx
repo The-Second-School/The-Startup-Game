@@ -223,8 +223,8 @@ export function Streetlight({ x, y, h = 300, singing = false, delay = 0 }: { x: 
         {singing && [0, 1, 2].map(i => (
           <g key={i} transform={`translate(${20 + i * 6} -20)`}>
             <g className="k-note" style={{ ['--delay' as string]: `${delay + i * 0.8}s`, ['--nx' as string]: `${30 + i * 20}px` } as CSSProperties}>
-              <path d="M0 0 L0 -30 L18 -36 L18 -6" fill="none" stroke={HUE.raivan.base} strokeWidth={5} />
-              <ellipse cx={-5} cy={1} rx={8} ry={6} fill={HUE.raivan.base} /><ellipse cx={13} cy={-5} rx={8} ry={6} fill={HUE.raivan.base} />
+              <path d="M0 0 L0 -30 L18 -36 L18 -6" fill="none" stroke={HUE.fibbot.base} strokeWidth={5} />
+              <ellipse cx={-5} cy={1} rx={8} ry={6} fill={HUE.fibbot.base} /><ellipse cx={13} cy={-5} rx={8} ry={6} fill={HUE.fibbot.base} />
             </g>
           </g>
         ))}

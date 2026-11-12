@@ -1,0 +1,191 @@
+/* ==========================================================================
+   Side activities (owner: agent C1): Bug Smash + Billboard Auction. Everything is prefixed sd-.
+   Layout contract: Bolt (the narration dock) sits top-left (x 24..212, y 56..188); boxes "after Bolt" start at x 204.
+   Full-width content starts at y 196 when the transcript is showing. Kids reach y >= 560. Min text 36px (badges 32px).
+   Only transform and opacity animate. No blur.
+   ========================================================================== */
+
+.sd-box {
+  background: var(--paper); border: 6px solid #fff; border-radius: var(--r-card); box-shadow: var(--sh); box-sizing: border-box;
+}
+.sd-box-title { font-size: 48px; font-weight: 800; line-height: 1.1; }
+
+/* ---------- Bug Smash: team box after Bolt ---------- */
+.sd-hud { position: absolute; left: 204px; top: 16px; width: 1676px; height: 332px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 40px 0 36px; }
+.sd-hud-who { display: flex; align-items: center; gap: 28px; min-width: 0; flex: 1 1 auto; }
+.sd-hud-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sd-hud-name { font-weight: 700; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 700px; }
+.sd-hud-score { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: none; }
+.sd-chip { background: #2B2118; color: #fff; border: 6px solid #fff; border-radius: 40px; box-shadow: var(--sh); padding: 6px 44px 12px; text-align: center; min-width: 360px; }
+.sd-chip-label { font-size: 38px; font-weight: 700; line-height: 1.2; color: #FFE277; }
+.sd-chip-num { font-size: 128px; font-weight: 800; line-height: 1; }
+.sd-hit-pill { background: var(--bad-soft); border: 4px solid #fff; border-radius: 999px; box-shadow: var(--sh-sm); padding: 2px 26px 0; font-size: 36px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+.sd-hud-timer { position: relative; flex: none; }
+.sd-hud-timer .v2-pill { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); white-space: nowrap; }
+
+.sd-strip { position: absolute; left: 204px; top: 364px; width: 1676px; height: 164px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 28px; }
+.sd-legend { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.sd-legend-item { display: flex; align-items: center; gap: 8px; font-size: 36px; font-weight: 700; line-height: 1.1; background: var(--paper-3); border-radius: 999px; padding: 4px 24px 4px 12px; white-space: nowrap; }
+.sd-legend-item.is-friend { background: #DDF1FF; }
+.sd-meters { display: flex; gap: 16px; flex: none; }
+.sd-meter { display: flex; align-items: center; gap: 10px; background: var(--paper-3); border-radius: 999px; padding: 6px 30px 6px 12px; font-size: 68px; font-weight: 800; line-height: 1; }
+
+/* ---------- Bug Smash: arena ---------- */
+.sd-bug {
+  position: absolute; pointer-events: auto; touch-action: none; will-change: transform;
+  animation: sd-path var(--dur) linear forwards, sd-life var(--dur) linear forwards;
+}
+.sd-bug::after { content: ''; position: absolute; inset: -18px; }   /* a generous touch target */
+.sd-bug-pop { width: 100%; height: 100%; display: grid; place-items: center; animation: v2-pop 0.35s var(--ease-back) both; }
+.v2-arena.is-paused .sd-bug, .v2-arena.is-paused .sd-bug * { animation-play-state: paused; }
+@keyframes sd-path {
+  0% { transform: translate(0, 0); }
+  33.3% { transform: translate(var(--x1), var(--y1)); }
+  66.6% { transform: translate(var(--x2), var(--y2)); }
+  100% { transform: translate(var(--x3), var(--y3)); }
+}
+@keyframes sd-life { 0%, 84% { opacity: 1; } 100% { opacity: 0; } }
+.sd-flap { animation: sd-flap 0.26s ease-in-out infinite alternate; animation-delay: var(--d, 0s); transform-origin: 50% 55%; }
+@keyframes sd-flap { from { transform: scaleX(1) translateY(0); } to { transform: scaleX(0.82) translateY(-8px); } }
+.sd-pop-text { position: absolute; width: 200px; height: 200px; display: grid; place-items: center; pointer-events: none; animation: sd-poptext 1s ease-out forwards; }
+.sd-pop-text span { font-size: 96px; font-weight: 800; color: #fff; background: var(--bad); border: 6px solid #fff; border-radius: 999px; padding: 0 30px 6px; box-shadow: var(--sh); line-height: 1.1; }
+@keyframes sd-poptext { 0% { transform: scale(0.3); opacity: 1; } 18% { transform: scale(1.15); opacity: 1; } 35% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-110px) scale(1); opacity: 0; } }
+
+.sd-countdown { position: absolute; left: 0; right: 0; top: 690px; text-align: center; font-size: 230px; font-weight: 800; line-height: 1; color: var(--ink); text-shadow: 0 10px 0 var(--sun); z-index: 6; pointer-events: none; }
+.sd-countdown-sub { position: absolute; left: 0; right: 0; top: 940px; text-align: center; font-size: 52px; font-weight: 700; color: var(--ink-soft); z-index: 6; pointer-events: none; }
+.sd-bonus { margin-top: 10px; display: inline-block; font-size: 40px; font-weight: 700; background: var(--good-soft); border: 4px solid #fff; border-radius: 999px; padding: 2px 30px 4px; box-shadow: var(--sh-sm); }
+
+/* ---------- Bug Smash: result ---------- */
+.sd-result { position: absolute; left: 70px; top: 584px; width: 1780px; height: 440px; display: flex; align-items: center; gap: 40px; padding: 0 48px; z-index: 5; }
+.sd-result-score { flex: none; width: 460px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sd-result-num { font-size: 190px; font-weight: 800; line-height: 1; }
+.sd-result-label { font-size: 44px; font-weight: 700; color: var(--ink-soft); line-height: 1.1; }
+.sd-result-sub { font-size: 36px; font-weight: 700; background: var(--bad-soft); border-radius: 999px; padding: 2px 22px 2px; }
+.sd-result-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.sd-result-tier { font-size: 50px; font-weight: 800; line-height: 1.12; }
+.sd-result-pills { display: flex; align-items: center; gap: 24px; min-height: 100px; }
+.sd-result-why { font-size: 40px; font-weight: 700; line-height: 1.15; color: var(--ink-soft); }
+
+/* ---------- Bug Smash: intro ---------- */
+.sd-intro-row { position: absolute; left: 40px; right: 40px; height: 300px; display: flex; gap: 24px; }
+.sd-step { position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 0 24px; }
+.sd-step-no { position: absolute; left: 22px; top: 18px; width: 62px; height: 62px; border-radius: 50%; background: var(--sun); border: 4px solid #fff; box-shadow: var(--sh-sm); display: grid; place-items: center; font-size: 44px; font-weight: 800; padding-top: 4px; }
+.sd-step-art { display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 150px; }
+.sd-step-text { font-size: 44px; font-weight: 700; line-height: 1.12; text-align: center; }
+.sd-intro-bottom { position: absolute; left: 40px; right: 40px; top: 516px; height: 524px; display: flex; gap: 24px; }
+.sd-tiers { flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 32px; }
+.sd-tiers .sd-box-title { margin-bottom: 8px; }
+.sd-tier { display: grid; grid-template-columns: 330px 1fr auto; align-items: center; gap: 20px; height: 92px; padding: 0 20px; border-radius: 30px; background: var(--paper-3); }
+.sd-tier-range { font-size: 44px; font-weight: 700; white-space: nowrap; }
+.sd-tier-range b { font-weight: 800; }
+.sd-tier-name { font-size: 40px; font-weight: 700; color: var(--ink-soft); line-height: 1.1; }
+.sd-tier-pills { display: flex; align-items: center; gap: 12px; }
+.sd-tier-none { font-size: 40px; font-weight: 700; color: var(--ink-soft); }
+.sd-intro-right { width: 780px; flex: none; display: flex; flex-direction: column; gap: 16px; }
+.sd-legend-box { height: 270px; padding: 0 32px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.sd-legend-box .sd-legend { flex-direction: column; align-items: flex-start; gap: 6px; }
+.sd-legend-box .sd-legend-item { width: 100%; box-sizing: border-box; }
+.sd-bonus-box { flex: 1; padding: 0 32px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.sd-bonus-why { font-size: 38px; font-weight: 700; color: var(--ink-soft); line-height: 1.15; }
+.sd-bonus-teams { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.sd-bonus-team { display: flex; align-items: center; gap: 8px; font-size: 36px; font-weight: 700; background: var(--good-soft); border-radius: 999px; padding: 0 22px 0 6px; max-width: 360px; }
+.sd-bonus-team span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Bug Smash: wrap-up (and shared "who won" rows) ---------- */
+.sd-done-head { position: absolute; left: 40px; width: 1840px; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 40px; }
+.sd-done-title { font-size: 68px; font-weight: 800; line-height: 1; }
+.sd-done-tally { margin-left: auto; display: flex; gap: 32px; font-size: 40px; font-weight: 700; color: var(--ink-soft); }
+.sd-done-tally b { color: var(--ink); font-size: 52px; }
+.sd-done-rows { position: absolute; left: 40px; right: 40px; display: flex; flex-direction: column; gap: 12px; }
+.sd-done-row { display: flex; align-items: center; gap: 24px; padding: 0 36px 0 24px; }
+.sd-done-row.is-best { background: var(--sun-hi); }
+.sd-done-rank { flex: none; width: 80px; text-align: center; font-size: 56px; font-weight: 800; }
+.sd-done-name { flex: 1; min-width: 0; font-size: 52px; font-weight: 700; display: flex; align-items: center; gap: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-done-best { font-size: 36px; font-weight: 700; background: var(--good); border: 4px solid #fff; border-radius: 999px; padding: 0 22px 2px; box-shadow: var(--sh-sm); flex: none; }
+.sd-done-bugs { flex: none; font-size: 44px; font-weight: 700; color: var(--ink-soft); }
+.sd-done-bugs b { font-size: 64px; color: var(--ink); font-weight: 800; }
+.sd-done-pills { flex: none; width: 520px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+
+/* ---------- Auction: ticket title box after Bolt ---------- */
+.sd-title { position: absolute; left: 204px; top: 16px; width: 1676px; height: 132px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 36px; }
+.sd-title-main { display: flex; align-items: center; gap: 24px; min-width: 0; }
+.sd-title-main .v2-pill { flex: none; }
+.sd-title-name { font-size: 48px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-title-prize { display: flex; align-items: center; gap: 12px; flex: none; }
+.sd-pillrow { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- Auction: left column ---------- */
+.sd-hero { position: absolute; left: 40px; top: 156px; width: 820px; height: 364px; display: flex; align-items: center; gap: 20px; padding: 0 28px 0 20px; }
+.sd-hero-bid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sd-hero-label { font-size: 44px; font-weight: 700; color: var(--ink-soft); line-height: 1.1; }
+.sd-hero-num { display: flex; align-items: center; gap: 10px; font-size: 128px; font-weight: 800; line-height: 1.02; }
+.sd-hero-who { display: flex; align-items: center; gap: 14px; font-size: 44px; font-weight: 700; line-height: 1.1; max-width: 100%; }
+.sd-hero-who span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-stamp { position: absolute; left: 14px; top: 96px; font-size: 100px; font-weight: 800; line-height: 1; background: var(--good); border: 6px solid #fff; border-radius: 30px; padding: 0 30px 6px; box-shadow: var(--sh); z-index: 3; }
+.sd-stage { position: absolute; left: 40px; top: 540px; width: 820px; height: 500px; padding: 24px 28px 22px; display: flex; flex-direction: column; justify-content: space-between; }
+.sd-stage-main { display: flex; align-items: center; gap: 18px; min-height: 0; }
+.sd-say { position: relative; flex: 1; min-width: 0; font-size: 54px; font-weight: 800; line-height: 1.1; background: var(--sun-hi); border: 6px solid #fff; border-radius: 36px; padding: 16px 26px 18px; box-shadow: var(--sh); }
+.sd-say.is-hot { background: #FFC27A; }
+.sd-dots { display: inline-flex; gap: 8px; margin-left: 12px; vertical-align: middle; }
+.sd-dots i { width: 16px; height: 16px; border-radius: 50%; background: var(--ink); animation: sd-dot 0.9s ease-in-out infinite; }
+.sd-dots i:nth-child(2) { animation-delay: 0.15s; } .sd-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes sd-dot { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-10px); opacity: 1; } }
+.sd-history { display: flex; flex-wrap: wrap; gap: 10px; min-height: 52px; }
+.sd-hist { font-size: 36px; font-weight: 700; line-height: 1.3; background: var(--paper-3); border-radius: 999px; padding: 2px 22px 0; white-space: nowrap; }
+.sd-hist.is-fib { background: #EBDDFF; }
+.sd-hist b { font-weight: 800; }
+.sd-gavel { flex: none; transform-origin: 85% 80%; }
+.sd-going { flex: 1; text-align: center; font-size: 92px; font-weight: 800; line-height: 1.05; }
+.sd-winner { flex: 1; min-width: 0; display: flex; align-items: center; gap: 20px; }
+.sd-winner-text { display: flex; flex-direction: column; min-width: 0; font-size: 44px; font-weight: 700; line-height: 1.1; }
+.sd-winner-text b { font-size: 56px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-gains { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
+.sd-stage.is-sold { --c: var(--sun-hi); background: var(--sun-hi); }
+
+/* ---------- Auction: team rows (right column) ---------- */
+.sd-rows { position: absolute; left: 884px; top: 156px; width: 996px; display: flex; flex-direction: column; gap: 10px; }
+.sd-row { --c: var(--sun); display: flex; align-items: center; gap: 16px; padding: 0 22px 0 12px; background: #fff; border: 6px solid #fff; border-left: 16px solid var(--c); border-radius: 36px; box-shadow: var(--sh); box-sizing: border-box; }
+.sd-row.is-hot { background: var(--sun-hi); }
+.sd-row.is-grey { opacity: 0.6; }
+.sd-row.is-rival { background: #F4ECFF; }
+.sd-row.is-rival.is-hot { background: #E3CFFF; }
+.sd-row-face { flex: none; display: grid; place-items: center; }
+.sd-row-name { flex: 1; min-width: 0; font-size: 42px; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 12px; }
+.sd-rival-tag { flex: none; font-size: 32px; font-weight: 700; background: #7B4BC9; color: #fff; border-radius: 999px; padding: 0 16px 2px; }
+.sd-row-coins { flex: none; display: flex; align-items: center; gap: 8px; font-size: 48px; font-weight: 700; line-height: 1; }
+.sd-row-status { flex: none; max-width: 370px; font-size: 36px; font-weight: 700; line-height: 1.25; background: var(--paper-3); border-radius: 999px; padding: 2px 20px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-row-status.is-hot { background: var(--sun); }
+
+/* ---------- Auction: intro ---------- */
+.sd-intro-head { position: absolute; left: 40px; right: 40px; height: 104px; display: flex; }
+.sd-intro-title { display: flex; align-items: center; gap: 22px; padding: 0 40px 0 24px; height: 104px; font-size: 68px; font-weight: 800; line-height: 1; white-space: nowrap; }
+.sd-intro-title svg { margin-top: 8px; }
+.sd-tickets { position: absolute; left: 40px; right: 40px; height: 240px; display: flex; gap: 20px; }
+.sd-mini-ticket { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 0 20px 0 10px; }
+.sd-mini-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sd-mini-title { font-size: 40px; font-weight: 800; line-height: 1.08; }
+.sd-intro-low { position: absolute; left: 40px; right: 40px; top: 568px; height: 472px; display: flex; gap: 20px; }
+.sd-how { flex: 1.1 1 0; min-width: 0; padding: 0 28px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.sd-how .sd-box-title { margin-bottom: 4px; }
+.sd-how-step { display: flex; align-items: center; gap: 18px; font-size: 38px; font-weight: 700; line-height: 1.15; min-height: 84px; padding: 0 14px; border-radius: 30px; background: var(--paper-3); }
+.sd-how-step.is-fibbot { background: #F4ECFF; }
+.sd-how-ico { flex: none; width: 86px; display: grid; place-items: center; font-size: 60px; }
+.sd-coins { flex: 1 1 0; min-width: 0; padding: 18px 28px 0; display: flex; flex-direction: column; gap: 4px; }
+.sd-coins-sub { font-size: 36px; font-weight: 700; line-height: 1.15; color: var(--ink-soft); margin-bottom: 4px; }
+.sd-coin-row { display: flex; align-items: center; gap: 14px; font-size: 38px; font-weight: 700; }
+.sd-coin-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-coin-have { display: flex; align-items: center; gap: 6px; flex: none; font-size: 44px; }
+.sd-coin-max { flex: none; font-size: 36px; color: var(--ink-soft); background: var(--paper-3); border-radius: 999px; padding: 0 18px 2px; }
+.sd-coin-max b { color: var(--ink); }
+
+/* ---------- Auction: who won what ---------- */
+.sd-done-list { position: absolute; left: 40px; right: 40px; display: flex; flex-direction: column; gap: 16px; }
+.sd-won { display: flex; align-items: center; gap: 28px; padding: 0 40px 0 24px; }
+.sd-won.is-fib { background: #F4ECFF; }
+.sd-won-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.sd-won-title { font-size: 50px; font-weight: 800; line-height: 1.08; }
+.sd-won-arrow { flex: none; font-size: 80px; font-weight: 800; color: var(--ink-soft); }
+.sd-won-who { flex: none; width: 700px; display: flex; align-items: center; gap: 20px; }
+.sd-won-text { display: flex; flex-direction: column; min-width: 0; font-size: 44px; font-weight: 700; line-height: 1.12; }
+.sd-won-text b { font-size: 54px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-won-text span { display: inline-flex; align-items: center; gap: 8px; }

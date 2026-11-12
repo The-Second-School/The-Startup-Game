@@ -22,7 +22,7 @@
 .v2-top-bolt { position: absolute; left: 24px; bottom: -14px; }
 .v2-top-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .v2-top-title { font-size: 100px; font-weight: 800; line-height: 1.03; }
-.v2-top-raivan { position: absolute; right: 24px; bottom: -20px; }
+.v2-top-fibbot { position: absolute; right: 24px; bottom: -20px; }
 .v2-sub { font-size: 44px; font-weight: 700; line-height: 1.2; color: var(--ink-soft); }
 .v2-pill {
   --c: var(--sun-hi);
@@ -209,7 +209,7 @@
 .v2-trophy { position: relative; flex: none; }
 .v2-trophy-badge { position: absolute; left: 50%; top: 31%; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%; }
 .v2-qmark { font-size: 130px; font-weight: 800; color: #fff; line-height: 1; padding-top: 14px; }
-.v2-award-main { position: absolute; left: 40px; top: 144px; width: 1230px; height: 892px; }
+.v2-award-main { position: absolute; left: 40px; top: 156px; width: 1230px; height: 892px; }
 .v2-award-intro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 60px; text-align: center; }
 .v2-intro-hero { display: flex; align-items: flex-end; justify-content: center; gap: 70px; margin-bottom: 8px; }
 .v2-award-head { display: flex; align-items: center; gap: 44px; padding: 18px 48px 0 48px; }
@@ -219,7 +219,7 @@
 .v2-flip { position: absolute; left: 44px; right: 44px; bottom: 30px; height: 478px; perspective: 1500px; }
 .v2-flip-in { position: absolute; inset: 0; transform-style: preserve-3d; }
 .v2-flip-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border: 6px solid #fff; border-radius: 44px; display: flex; align-items: center; padding: 0 44px; }
-.v2-flip-back { background: var(--raivan); box-shadow: var(--sh); justify-content: center; }
+.v2-flip-back { background: var(--fibbot); box-shadow: var(--sh); justify-content: center; }
 .v2-flip-front { transform: rotateY(180deg); background: var(--c, var(--sun)); box-shadow: var(--sh); gap: 44px; }
 .v2-drum { display: flex; align-items: center; gap: 28px; font-size: 76px; font-weight: 800; color: #fff; }
 .v2-drum span:first-child { font-size: 150px; line-height: 1; display: inline-block; }
@@ -243,7 +243,7 @@
 .v2-srow-val { flex: none; width: 104px; text-align: right; font-size: 64px; font-weight: 700; }
 .v2-srow-crown { position: absolute; left: 84px; top: -34px; transform: rotate(-14deg); }
 
-.v2-ladder { position: absolute; left: 1300px; top: 144px; width: 580px; display: flex; flex-direction: column; gap: 12px; }
+.v2-ladder { position: absolute; left: 1300px; top: 156px; width: 580px; display: flex; flex-direction: column; gap: 12px; }
 .v2-slot { height: 132px; display: flex; align-items: center; gap: 14px; padding: 0 18px; background: #FFF6D6; border: 6px dashed #E5D29A; border-radius: 40px; }
 .v2-slot.is-shown { background: #fff; border: 6px solid #fff; box-shadow: var(--sh); }
 .v2-slot.is-gold.is-shown { background: var(--sun-hi); box-shadow: var(--sh); }

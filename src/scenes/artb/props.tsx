@@ -190,7 +190,7 @@ export function Boat({ hull = C.blue, edge = C.blueEdge, hi = C.blueHi, sail = '
   );
 }
 
-/** rAIvan's Copy-O-Matic. Eyes follow slow blinks. Paper slot at about (260, 330) of 520x420. */
+/** Fibbot's Copy-O-Matic. Eyes follow slow blinks. Paper slot at about (260, 330) of 520x420. */
 export function Copier({ s = 520, mood = 'sneaky', lamp = true, style, className }: Sx & { mood?: 'sneaky' | 'angry'; lamp?: boolean }) {
   const u = useUid();
   return (

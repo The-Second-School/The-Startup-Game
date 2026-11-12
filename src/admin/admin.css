@@ -119,6 +119,8 @@
 .namechip .x{color:var(--a-soft);font-size:22px;line-height:1;margin-left:2px}
 .grade{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-weight:800;color:#fff;font-size:16px}
 .grade-5{background:#1CB0F6}.grade-6{background:#58B80F}.grade-7{background:#F58A00}
+.grade-8{background:#CE82FF}.grade-9{background:#FF4B4B}.grade-10{background:#00A6A6}
+.grade{font-size:14px;letter-spacing:-.02em}
 .mchip{display:inline-flex;align-items:center;border:3px solid #fff;border-radius:999px;padding:2px 12px;font-size:18px;font-weight:700;color:var(--a-ink)}
 .mrow-name{font-weight:800;margin-bottom:6px}
 
@@ -128,6 +130,38 @@
 .bt-text{display:flex;flex-direction:column;min-width:0;flex:1;align-items:flex-start}
 .bt-text b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px}
 .bt-text small{font-size:16px}
+.auc-ticket{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.auc-ticket span{font-size:26px;line-height:1}
+.auc-ticket b{font-size:20px;line-height:1.15}
+.auc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.auc-stats>div{background:var(--a-bg);border-radius:16px;padding:8px 10px}
+.auc-stats b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.auc-log{margin-top:10px;display:flex;flex-direction:column;gap:4px;font-size:18px}
+.auc-log>div{display:flex;justify-content:space-between;gap:8px;border-top:1.5px solid #F3ECD3;padding-top:4px}
+.auc-log b{font-variant-numeric:tabular-nums}
+.stepper{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.stepper-val{font-size:36px;line-height:1;font-variant-numeric:tabular-nums;text-align:center;min-width:90px}
+
+/* host coaching notes */
+.notes{display:flex;flex-direction:column;gap:8px}
+.now{display:flex;gap:10px;align-items:flex-start;background:#FFEFB8;color:#7A5200;border-radius:18px;padding:10px 14px;font-size:20px;line-height:1.25;font-weight:700}
+.now b{font-weight:800}
+.notes .fold-head{padding:11px 14px}
+.notes .fold-title{font-size:18px}
+.notes .fold-body{padding:0 14px 14px}
+.note-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:18px;line-height:1.3}
+.qa{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1.5px solid #F3ECD3}
+.qa:first-child{border-top:0;padding-top:0}
+.qa b{font-size:18px;line-height:1.25}
+.qa span{font-size:18px;line-height:1.3;color:var(--a-soft)}
+
+/* danger zone: small, quiet, last thing in More */
+.danger{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.danger-toggle{appearance:none;border:0;background:none;font:inherit;font-size:14px;color:#A39878;padding:6px 8px;cursor:pointer}
+.danger-reset{appearance:none;font:inherit;font-size:14px;color:#8E8266;background:none;border:1px solid #E3D8B4;border-radius:12px;padding:6px 12px;cursor:pointer}
+.danger-ok{color:#B3261E}
+.price-ref{outline:2px dashed var(--a-soft);outline-offset:-5px}
+.price-ref small{font-size:12px;margin-left:2px}
 
 /* voting */
 .voter .stars{display:flex;gap:8px;margin-top:10px}
@@ -196,3 +230,8 @@
   .adm .primary{font-size:21px;padding:8px 12px}
 }
 @media (max-width:360px){.adm .head,.adm .main,.adm .bottom{padding-left:12px;padding-right:12px}}
+
+.shapegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.shape-btn{flex-direction:column;gap:2px;padding:10px 4px;min-height:64px}
+.shape-btn .opt-shape{font-size:30px;line-height:1}
+.shape-btn small{font-size:11px;opacity:.7}

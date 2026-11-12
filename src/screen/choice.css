@@ -1,0 +1,179 @@
+/* ==========================================================================
+   Multiple-choice question flow + Mega Order (owner: question agent B1).
+   Own classes (cx-*) so nothing here fights screen.css. Flat colours, lip shadows, white sticker borders,
+   min text 36px (badges excepted), animate transform/opacity. Kids touch y >= 560.
+   ========================================================================== */
+
+/* ---------- team bar (bottom): minimal chips, one line when it fits ---------- */
+.cx-strip { position: absolute; left: calc(0px - var(--bleed, 0px)); right: calc(0px - var(--bleed, 0px)); display: flex; align-items: flex-start; z-index: 4; }
+.cx-chip-slot { position: relative; flex: none; }
+.cx-pair-plus { position: absolute; top: 50%; margin-top: -30px; width: 40px; text-align: center; font-size: 56px; font-weight: 800; line-height: 1; color: var(--ink); z-index: 6; pointer-events: none; }
+.cx-chip-tap { width: 100%; height: 100%; }
+.cx-bump { width: 100%; height: 100%; perspective: 1400px; }
+.cx-flip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+.cx-chip {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border: var(--border-chip, 5px) solid #fff; border-radius: 40px; box-shadow: var(--sh);
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px 10px 6px;
+  color: var(--ink);
+}
+.cx-front { background: var(--c-light); }
+.cx-front.is-selected, .cx-front.is-locked, .cx-front.is-lockme { background: var(--c-mid); }
+.cx-front.is-spot { background: var(--c); }
+.cx-front.is-dim { opacity: 0.55; }
+.cx-front.is-one { padding: 4px 18px 6px 12px; }
+.cx-chip-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cx-front.is-compact { padding: 4px 6px 6px; }
+.cx-front.is-compact .cx-chip-top { gap: 6px; }
+.cx-front.is-compact .cx-chip-name { font-size: 36px; }
+.cx-chip-name { flex: 1; min-width: 0; font-size: 38px; font-weight: 800; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cx-front.is-one .cx-chip-name { font-size: 44px; }
+.cx-chip-extra { display: flex; justify-content: center; }
+
+/* Customers + Happiness are the main goals (big); coins sit quietly beside them. */
+.cx-meters { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 2px; }
+.cx-meters.is-one { flex: none; justify-content: flex-end; gap: 26px; padding: 0; }
+.cx-m { display: inline-flex; align-items: center; gap: 4px; }
+.cx-m b { font-size: 44px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.cx-meters.is-compact .cx-m b { font-size: 38px; }
+.cx-m.is-coin { opacity: 0.85; }
+.cx-m.is-coin b { font-size: 36px; font-weight: 700; }
+.cx-meters.is-compact .cx-m.is-coin b { font-size: 34px; }
+.cx-meters.is-compact { gap: 3px; }
+
+/* ONE small status icon on the corner of the chip, never a text pill. */
+.cx-badge-wrap { position: absolute; top: -20px; right: -10px; z-index: 3; animation: cx-pop 0.38s cubic-bezier(0.3, 1.6, 0.5, 1) both; pointer-events: none; }
+.cx-badge { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 4px solid #fff; box-shadow: var(--sh-sm); font-size: 28px; font-weight: 800; line-height: 1; color: #fff; }
+.cx-badge.is-locked { background: var(--good); }
+.cx-badge.is-choosing { background: var(--sun); animation: cx-nudge 0.9s ease-in-out infinite; }
+.cx-badge.is-face { width: 58px; height: 58px; font-size: 32px; }
+.cx-lockme {
+  align-self: stretch; flex: 1; display: grid; place-items: center; text-align: center; font-size: 46px; font-weight: 800; line-height: 1;
+  background: var(--good); color: var(--ink); border-radius: 30px; border: 4px solid #fff; padding: 2px 24px 6px; box-shadow: var(--sh-sm);
+  animation: scr-k-bounce 0.8s ease-in-out infinite;
+}
+.cx-front.is-one .cx-lockme { flex: none; align-self: center; min-width: 220px; }
+.cx-back { transform: rotateY(180deg); flex-direction: row; align-items: center; justify-content: center; gap: 12px; padding: 4px 12px; }
+.cx-back-shape { display: grid; place-items: center; flex: none; }
+.cx-back-icon { font-size: 48px; line-height: 1; }
+.cx-back-text { min-width: 0; text-align: left; }
+.cx-back-name { font-size: 36px; font-weight: 800; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cx-back-choice { font-size: 36px; font-weight: 700; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes cx-pop { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes cx-nudge { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.1); } }
+
+/* ---------- question card (look only) ---------- */
+.cx-qcard {
+  position: absolute; z-index: 3; display: flex; align-items: center; overflow: hidden;
+  background: var(--paper); border: var(--border, 6px) solid #fff; border-radius: var(--r-card, 48px); box-shadow: var(--sh);
+}
+.cx-qcard-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 12px 44px 16px; }
+.cx-qcard-title { font-weight: 800; line-height: 1.05; color: var(--ink); }
+.cx-qcard-sub { font-weight: 700; line-height: 1.15; color: var(--ink-soft); overflow: hidden; }
+.cx-qcard.is-mini .cx-qcard-body { padding: 8px 36px 12px; }
+.cx-qcard.is-mini .cx-qcard-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- option tiles (y 560..890), colours 10% lighter ---------- */
+.cx-tile-slot { position: absolute; z-index: 2; }
+.cx-tile {
+  position: relative; width: 100%; height: calc(100% - 12px); background: var(--o); color: var(--ink);
+  border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh);
+  display: flex; flex-direction: column; gap: 8px; padding: 18px 24px 20px; overflow: visible;
+}
+.cx-tile-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+.cx-tile-tag { font-size: 38px; font-weight: 800; line-height: 1; background: #fff; border-radius: 999px; padding: 6px 20px 8px; box-shadow: var(--sh-sm); white-space: nowrap; }
+.cx-tile-tag.is-free { background: var(--good-soft); }
+.cx-tile-tag.is-plus { background: var(--coin-hi); }
+.cx-tile-text { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+.cx-tile-main { font-size: 46px; font-weight: 800; line-height: 1.08; overflow-wrap: anywhere; }
+.cx-tile-icon { font-size: 50px; }
+.cx-tile-detail { font-size: 36px; font-weight: 600; line-height: 1.1; margin-top: 8px; }
+.cx-tile.is-idle { opacity: 0.94; }
+.cx-tile.is-active { animation: scr-k-bounce 1.6s ease-in-out infinite; }
+.cx-tile.is-picked { box-shadow: var(--sh), 0 0 0 10px #fff; }
+.cx-tile.is-broke { color: #8D8366; }
+.cx-tile.is-broke .cx-tile-tag { background: #F2ECD8; font-size: 36px; }
+.cx-tile.is-empty { opacity: 0.42; }
+.cx-tile.is-trap { box-shadow: var(--sh), 0 0 0 8px var(--fibbot); }
+.cx-tile-picked {
+  position: absolute; left: 0; right: 0; margin: 0 auto; width: 220px; top: -32px; text-align: center;
+  background: #fff; color: var(--ink); font-size: 38px; font-weight: 800; line-height: 1.1;
+  border-radius: 999px; padding: 4px 0 6px; box-shadow: var(--sh-sm);
+}
+
+/* ---------- waiting / calm big text ---------- */
+.cx-wait { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; z-index: 3; pointer-events: none; }
+.cx-wait-icon { font-size: 150px; line-height: 1; }
+.cx-wait-title { font-size: 112px; font-weight: 800; line-height: 1.02; color: var(--ink); padding: 0 80px; }
+.cx-wait-sub { font-size: 64px; font-weight: 700; line-height: 1.1; color: var(--ink-soft); }
+
+/* ---------- reveal: who chose what ---------- */
+.cx-reveal-title { position: absolute; left: 0; right: 0; text-align: center; font-size: 72px; font-weight: 800; line-height: 1.05; color: var(--ink); z-index: 3; pointer-events: none; }
+.cx-chgrid { position: absolute; z-index: 3; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 32px; }
+.cx-chgrid.is-paired { flex-wrap: nowrap; gap: 0; align-items: center; }
+.cx-ch {
+  flex: 0 0 calc((100% - (var(--cols, 4) - 1) * 32px) / var(--cols, 4)); height: var(--h, 440px); min-width: 0;
+  border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh); padding: 26px 28px 28px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.cx-chgrid.is-paired .cx-ch { flex: 1 1 0; padding: 22px 16px 24px; gap: 16px; }
+.cx-ch-head { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; max-width: 100%; }
+.cx-ch.is-wide .cx-ch-head { flex-direction: row; width: 100%; gap: 16px; }
+.cx-ch-name { font-size: 44px; font-weight: 800; line-height: 1.05; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cx-ch-who { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.cx-ch.is-wide .cx-ch-name { text-align: left; font-size: 42px; }
+.cx-ch.is-narrow .cx-ch-name { font-size: 38px; }
+.cx-ch-pick {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; min-width: 0;
+  border: 5px solid #fff; border-radius: 36px; padding: 16px 18px 18px; box-shadow: var(--sh-sm);
+}
+.cx-ch.is-wide .cx-ch-pick { flex-direction: row; gap: 16px; padding: 12px 20px 14px; }
+.cx-ch-txt { font-size: 40px; font-weight: 800; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
+.cx-ch.is-wide .cx-ch-txt { text-align: left; font-size: 38px; }
+.cx-ch.is-narrow .cx-ch-txt { font-size: 36px; }
+.cx-ch-icon { font-size: 52px; }
+.cx-tag { display: inline-block; font-size: 38px; font-weight: 800; line-height: 1; background: #fff; border-radius: 999px; padding: 6px 22px 8px; box-shadow: var(--sh-sm); white-space: nowrap; }
+.cx-tag.is-free { background: var(--good-soft); }
+.cx-tag.is-cost { background: var(--sun-hi); }
+.cx-tag.is-plus { background: var(--coin-hi); }
+
+/* Fibbot: slides in from the right and stays, one short line */
+.cx-fib { position: absolute; z-index: 25; pointer-events: none; display: flex; flex-direction: column; align-items: center; width: 380px; }
+.cx-fib-bubble { width: 100%; margin-bottom: 52px; }
+.cx-fib-bubble .ui-bubble { width: 100%; }
+
+/* ---------- spotlight: one team on stage ---------- */
+.cx-spot-wrap { position: absolute; z-index: 5; }
+.cx-spot { position: relative; display: flex; align-items: stretch; min-height: 560px; background: var(--paper); border: 8px solid #fff; border-radius: 56px; }
+.cx-spot-left { width: 400px; flex: none; margin: 14px; border-radius: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+.cx-spot-name { font-size: 56px; font-weight: 800; line-height: 1.02; text-align: center; overflow-wrap: anywhere; }
+.cx-spot-right { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 16px; padding: 24px 40px 24px 16px; }
+.cx-spot.has-trap .cx-spot-right { padding-right: 350px; }
+.cx-spot-choice { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: 14px; max-width: 100%; padding: 10px 30px 12px 14px; border-radius: 40px; border: 6px solid #fff; font-size: 46px; font-weight: 800; line-height: 1.1; }
+.cx-spot-chose { font-size: 36px; font-weight: 800; background: #fff; border-radius: 999px; padding: 2px 20px 4px; }
+.cx-spot-picktext { min-width: 0; overflow-wrap: anywhere; flex: 0 1 auto; }
+.cx-spot-choice .cx-tag { flex: none; margin-left: 8px; }
+.cx-spot-story { font-size: 46px; font-weight: 800; line-height: 1.12; }
+.cx-spot-why { font-size: 38px; font-weight: 600; line-height: 1.2; background: var(--paper-3); border: 4px solid var(--paper-edge); border-radius: 32px; padding: 12px 26px 16px; }
+.cx-spot-why-tag { display: inline-block; margin-right: 14px; padding: 0 16px 2px; border-radius: 999px; background: var(--sun); font-weight: 800; }
+.cx-spot-bonus { display: flex; flex-direction: column; gap: 2px; background: var(--sun-hi); border: 4px solid #fff; border-radius: 32px; padding: 8px 26px 12px; box-shadow: var(--sh-sm); }
+.cx-spot-bonus b { font-size: 42px; font-weight: 800; line-height: 1.1; }
+.cx-spot-bonus span { font-size: 36px; font-weight: 600; line-height: 1.15; }
+.cx-spot-fibbot { position: absolute; right: 24px; bottom: 14px; z-index: 6; text-align: center; pointer-events: none; }
+
+/* ---------- done: calm summary ---------- */
+.cx-done { position: absolute; left: 56px; right: 56px; top: 250px; display: flex; flex-direction: column; align-items: center; gap: 48px; z-index: 3; }
+.cx-done-title { font-size: 96px; font-weight: 800; line-height: 1.05; text-align: center; color: var(--ink); }
+.cx-done-meters { display: flex; gap: 32px; align-items: stretch; justify-content: center; }
+.cx-done-m { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 380px; padding: 28px 28px 30px; text-align: center; background: var(--paper); border: 6px solid #fff; border-radius: 48px; box-shadow: var(--sh); }
+.cx-done-m.is-main { width: 520px; padding-top: 34px; }
+.cx-done-m b { font-size: 52px; font-weight: 800; line-height: 1.05; }
+.cx-done-m.is-main b { font-size: 60px; }
+.cx-done-m span { font-size: 38px; font-weight: 600; line-height: 1.15; color: var(--ink-soft); }
+
+/* ---------- Mega Order ---------- */
+.cx-solo { display: flex; align-items: center; gap: 24px; padding: 14px 32px; width: 1400px; max-width: 100%; border-radius: 40px; box-shadow: var(--sh); border: 6px solid #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-tile.is-active, .cx-lockme, .cx-badge.is-choosing { animation-duration: 3s; }
+}

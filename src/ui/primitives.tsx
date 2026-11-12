@@ -135,30 +135,45 @@ export function Pill({ children, color, edge, textColor, size = 'md', style, cla
 }
 
 // ---------------------------------------------------------------------------
-// CountUp: animates from the previous value to the new one (ease-out). Writes straight to the DOM, no re-renders.
+// Num: THE number component. Every digit lives in its own fixed-width cell (0.6em, the tabular width of Baloo 2), so a changing number
+// never changes width or wobbles. When a digit changes it rolls like an odometer (transform only). Cells are keyed from the right,
+// so a digit never re-mounts when the number grows or shrinks; only the cell that is really new fades in. Works for signs and
+// formats: pass a number (+ optional `format`) or a ready string such as '2:05', '₹40', '+12', '−3', '3/10'.
 // ---------------------------------------------------------------------------
-export function CountUp({ value, duration = 900, format, style, className }: { value: number; duration?: number; format?: (n: number) => string; style?: CSSProperties; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const shown = useRef(value);
-  const fmt = useRef(format);
-  fmt.current = format;
-  useEffect(() => {
-    const el = ref.current;
-    const from = shown.current, to = value;
-    if (!el) return;
-    if (from === to) { el.textContent = (fmt.current ?? String)(to); return; }
-    const t0 = performance.now();
-    let raf = 0;
-    const step = (t: number) => {
-      const k = Math.min(1, (t - t0) / Math.max(1, duration));
-      const eased = 1 - (1 - k) ** 3;
-      const v = Math.round(from + (to - from) * eased);
-      shown.current = v;
-      el.textContent = (fmt.current ?? String)(v);
-      if (k < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-  return <span ref={ref} className={`ui-num${className ? ' ' + className : ''}`} style={style}>{(format ?? String)(shown.current)}</span>;
+const DIGIT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+function Roll({ d, ms, fresh }: { d: number; ms: number; fresh: boolean }) {
+  const born = useRef(fresh).current; // only a cell that mounts after the first render fades in; it never re-triggers
+  return (
+    <span className={`ui-nd${born ? ' is-new' : ''}`} aria-hidden>
+      <span className="ui-nd-sizer">{d}</span>
+      <span className="ui-nd-clip">
+        <span className="ui-nd-strip" style={{ transform: `translateY(${-d}em)`, transitionDuration: `${ms}ms` }}>
+          {DIGIT_LIST.map(n => <span key={n} className="ui-nd-d">{n}</span>)}
+        </span>
+      </span>
+    </span>
+  );
+}
+export function Num({ value, format, duration = 700, style, className }: { value: number | string; format?: (n: number) => string; duration?: number; style?: CSSProperties; className?: string }) {
+  const text = typeof value === 'string' ? value : (format ?? String)(value);
+  const chars = Array.from(text);
+  const ready = useRef(false);
+  useEffect(() => { ready.current = true; }, []);
+  const fresh = ready.current;
+  return (
+    <span className={`ui-num${className ? ' ' + className : ''}`} style={style}>
+      <span className="ui-sr">{text}</span>
+      {chars.map((ch, i) => {
+        const k = chars.length - i; // key from the right: stable when the number gets longer or shorter
+        return /[0-9]/.test(ch)
+          ? <Roll key={k} d={+ch} ms={duration} fresh={fresh} />
+          : <span key={`c${k}`} className="ui-nc" aria-hidden>{ch === '-' ? '−' : ch}</span>;
+      })}
+    </span>
+  );
+}
+
+/** CountUp: same API as before (value, duration, format, style, className); digits roll to the new value inside fixed-width cells. */
+export function CountUp({ value, duration = 800, format, style, className }: { value: number; duration?: number; format?: (n: number) => string; style?: CSSProperties; className?: string }) {
+  return <Num value={value} duration={duration} format={format} style={style} className={className} />;
 }

@@ -1,3 +1,4 @@
+import './screen/lib/freeze';   // must be first: it patches clocks, timers and animation frames before React / motion load
 import { StrictMode, useEffect, useState, type ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource/baloo-2/600.css';

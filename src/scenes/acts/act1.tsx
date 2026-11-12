@@ -5,6 +5,7 @@ import {
   Bush, Burst, Clouds, FarSkyline, Ground, HUE, INK, Kid, Layer, Lightbulb, NearSkyline, FlyingRickshaw, RecipeTrack, SPRING, Shape,
   Sky, Slab, Svg, ThoughtCloud, Tiffin, Tree, World, full, soft, useSubstep, type KidPose, type KidMood,
 } from '../kit';
+import { Backdrop as Dim, Focus, Subject } from '../kit/focus';
 import { Mv, Show } from '../shared/bits';
 import type { SceneBodyProps } from '../types';
 
@@ -38,7 +39,7 @@ const Bench = memo(function Bench() {
 });
 
 /** Static far + near skylines (memoised: they never change). */
-const Backdrop = memo(function Backdrop() {
+const Skylines = memo(function Skylines() {
   return (
     <>
       <Layer depth={0.3}><Svg><FarSkyline baseY={780} color="#CFE7F4" win="#EAF6FC" /></Svg></Layer>
@@ -65,60 +66,82 @@ export default function Act1({ beat }: SceneBodyProps) {
   const sub = useSubstep(beat, [700, 1900, 3200]);
   const zoom = beat === 1 || beat === 2;
   const cam = zoom ? { x: (GX - 960) * 1.5, y: (GY - 300 - 640) * 1.5, zoom: 1.5 } : beat === 3 ? { x: 400, y: 0, zoom: 1 } : { x: 0, y: 0, zoom: 1 };
+  // Main subject: the question sign (beat 0, only once it has popped in), then the girl with her cold tiffin (beats 1-2).
+  // Beat 3 is a group of kids (no single subject), beat 4 is the recipe stamp.
+  const focusOn = beat === 0 ? sub >= 1 : beat <= 2;
   return (
     <div style={{ ...full, overflow: 'visible' }}>
-      <Sky tone={beat === 4 ? 'gold' : 'day'} horizon={800} />
-      <Clouds seed={2} count={5} yMin={300} yMax={560} fill="#fff" edge="#DDF0FB" />
-      <World cam={cam}>
-        <Backdrop />
-        <Layer depth={1}>
-          <Svg w={2400}>
-            <g transform="translate(-500 0)"><Ground y={830} width={3400} road={false} pave={HUE.cream} /></g>
-            <rect x={-540} y={920} width={3480} height={300} fill={LAWN.base} /><rect x={-540} y={920} width={3480} height={14} fill={LAWN.hi} />
-            <School />
-            <Tree x={900} y={850} s={1.2} /><Tree x={1680} y={850} s={1.4} hue={HUE.mint} /><Bush x={1480} y={860} s={0.8} />
-            <Bench />
-            {/* the problem: cold air */}
-            {beat === 1 && [0, 1, 2, 3].map(i => <Snow key={i} x={GX - 60 + i * 50} y={GY - 360 + (i % 2) * 24} d={i * 0.5} />)}
-          </Svg>
+      <Focus active={focusOn}>
+        <Dim blur={0}>
+          <Sky tone={beat === 4 ? 'gold' : 'day'} horizon={800} />
+          <Clouds seed={2} count={5} yMin={300} yMax={560} fill="#fff" edge="#DDF0FB" />
+        </Dim>
 
-          {/* kids arriving at school */}
-          {beat === 0 && [0, 1, 2].map(i => (
-            <div key={i} className="k-stroll" style={{ position: 'absolute', left: 120 + i * 190, top: 640, ['--dx' as string]: '260px', ['--dur' as string]: `${6 + i}s`, ['--delay' as string]: `${-i * 2}s` } as CSSProperties}>
-              <Kid size={230} walking skin={[0, 2, 1][i]} hair={i} hairStyle={[1, 0, 2][i] as 0 | 1 | 2} shirt={[HUE.sky, HUE.green, HUE.pink][i]} />
-            </div>
-          ))}
-          {/* beat 0: a big problem sign over the school */}
-          <Mv left={440} top={330} to={{ scale: beat === 0 ? 1 : 0, rotate: beat === 0 ? -6 : 0, opacity: beat === 0 ? 1 : 0 }} from={{ scale: 0, opacity: 0 }} spring={{ ...SPRING.hero, delay: 0.8 }} origin="50% 100%">
-            <div className="k-bob" style={{ ['--bob' as string]: '12px' } as CSSProperties}>
-              <svg width={260} height={300} viewBox="0 0 260 300" style={{ overflow: 'visible' }}>
-                <circle cx={130} cy={130} r={118} fill="#fff" /><circle cx={130} cy={130} r={106} fill={HUE.red.base} />
-                <ellipse cx={92} cy={82} rx={30} ry={18} fill={HUE.red.hi} opacity={0.6} />
-                <text x={130} y={186} textAnchor="middle" fontSize={170} fontWeight={800} fill="#fff" fontFamily="inherit">?</text>
-              </svg>
-            </div>
-          </Mv>
+        <World cam={cam}>
+          {/* the background: skylines, yard, school, kids walking in, the idea (dims while a subject has focus) */}
+          <Dim blur={0}>
+            <Skylines />
+            <Layer depth={1}>
+              <Svg w={2400}>
+                <g transform="translate(-500 0)"><Ground y={830} width={3400} road={false} pave={HUE.cream} /></g>
+                <rect x={-540} y={920} width={3480} height={300} fill={LAWN.base} /><rect x={-540} y={920} width={3480} height={14} fill={LAWN.hi} />
+                <School />
+                <Tree x={900} y={850} s={1.2} /><Tree x={1680} y={850} s={1.4} hue={HUE.mint} /><Bush x={1480} y={860} s={0.8} />
+                <Bench />
+              </Svg>
 
-          {/* the girl on the bench */}
-          <Mv left={GX} top={GY} bc to={{ scale: beat <= 2 || beat === 4 ? 1 : 0, y: beat === 2 && sub >= 1 ? -20 : 0 }} from={{ scale: beat === 0 ? 0 : 1 }} spring={{ ...SPRING.pop, delay: beat === 0 ? 1.2 : 0 }}>
-            <Kid size={340} skin={0} hair={0} hairStyle={2} shirt={HUE.sun}
-              pose={beat === 4 ? 'cheer' : beat <= 1 ? 'hold' : sub >= 1 ? 'cheer' : 'hold'} mood={beat === 1 ? 'cold' : beat === 4 || (beat === 2 && sub >= 1) ? 'grin' : 'happy'} />
-          </Mv>
-          <Mv left={GX} top={GY - 60} bc to={{ scale: beat === 1 || beat === 2 ? 1 : 0, y: 0 }} from={{ scale: 0 }} spring={SPRING.pop}>
-            <div className={beat === 1 ? 'k-shiver' : undefined}><Tiffin size={105} open cold={beat === 1} hot={beat === 2 && sub >= 1} /></div>
-          </Mv>
-          {/* beat 2: the idea + a flying rickshaw bringing hot lunch to school */}
-          <Mv left={GX + 90} top={GY - 540} to={{ scale: beat === 2 && sub >= 1 ? 1 : 0, y: 0 }} from={{ scale: 0 }} spring={SPRING.hero} origin="50% 100%"><div className="k-hero" style={{ ['--bob' as string]: '-8px' } as CSSProperties}><Lightbulb size={190} /></div></Mv>
-          <Mv left={GX - 500} top={GY - 470} to={{ scale: beat === 2 && sub >= 2 ? 1 : 0 }} from={{ scale: 0 }} spring={SPRING.pop} origin="100% 100%">
-            <ThoughtCloud size={320}>
-              <g transform="translate(120 96) scale(0.34)"><g transform="translate(-130 -110)"><FlyingRickshawArt /></g></g>
-            </ThoughtCloud>
-          </Mv>
-          <Show when={beat === 2 && sub >= 1} k="burst" y={0}><Burst fire={1} x={960} y={500} count={44} spread={600} up={500} colors={['#FFC800', '#fff', '#FF9600']} /></Show>
-        </Layer>
-      </World>
+              {/* beat 0: kids arriving at school */}
+              {beat === 0 && [0, 1, 2].map(i => (
+                <div key={i} className="k-stroll" style={{ position: 'absolute', left: 120 + i * 190, top: 640, ['--dx' as string]: '260px', ['--dur' as string]: `${6 + i}s`, ['--delay' as string]: `${-i * 2}s` } as CSSProperties}>
+                  <Kid size={230} walking skin={[0, 2, 1][i]} hair={i} hairStyle={[1, 0, 2][i] as 0 | 1 | 2} shirt={[HUE.sky, HUE.green, HUE.pink][i]} />
+                </div>
+              ))}
 
-      {/* beat 3: who needs what? */}
+              {/* beat 2: the idea + a flying rickshaw bringing hot lunch to school */}
+              <Mv left={GX + 90} top={GY - 540} to={{ scale: beat === 2 && sub >= 1 ? 1 : 0, y: 0 }} from={{ scale: 0 }} spring={SPRING.hero} origin="50% 100%"><div className="k-hero" style={{ ['--bob' as string]: '-8px' } as CSSProperties}><Lightbulb size={190} /></div></Mv>
+              <Mv left={GX - 500} top={GY - 470} to={{ scale: beat === 2 && sub >= 2 ? 1 : 0 }} from={{ scale: 0 }} spring={SPRING.pop} origin="100% 100%">
+                <ThoughtCloud size={320}>
+                  <g transform="translate(120 96) scale(0.34)"><g transform="translate(-130 -110)"><FlyingRickshawArt /></g></g>
+                </ThoughtCloud>
+              </Mv>
+            </Layer>
+          </Dim>
+
+          {/* the subjects: the question sign (beat 0), the girl with her tiffin (beats 1-2) */}
+          <Layer depth={1}>
+            <Subject at={{ x: 570, y: 500 }} w={260} h={300} anchor="c" scale={1.12}>
+              <motion.div initial={{ scale: 0, opacity: 0, rotate: 0 }} animate={{ scale: beat === 0 ? 1 : 0, opacity: beat === 0 ? 1 : 0, rotate: beat === 0 ? -6 : 0 }}
+                transition={{ ...SPRING.hero, delay: 0.7 }} style={{ transformOrigin: '50% 100%' }}>
+                <div className="k-bob" style={{ ['--bob' as string]: '12px' } as CSSProperties}>
+                  <svg width={260} height={300} viewBox="0 0 260 300" style={{ overflow: 'visible' }}>
+                    <circle cx={130} cy={130} r={118} fill="#fff" /><circle cx={130} cy={130} r={106} fill={HUE.red.base} />
+                    <ellipse cx={92} cy={82} rx={30} ry={18} fill={HUE.red.hi} opacity={0.6} />
+                    <text x={130} y={186} textAnchor="middle" fontSize={170} fontWeight={800} fill="#fff" fontFamily="inherit">?</text>
+                  </svg>
+                </div>
+              </motion.div>
+            </Subject>
+
+            <Subject at={{ x: GX, y: GY }} w={227} h={340} anchor="bc" scale={1.05}>
+              <motion.div initial={{ scale: beat === 0 ? 0 : 1 }}
+                animate={{ scale: beat <= 2 || beat === 4 ? 1 : 0, y: beat === 2 && sub >= 1 ? -20 : 0 }}
+                transition={{ ...SPRING.pop, delay: beat === 0 ? 1.2 : 0 }} style={{ position: 'relative', transformOrigin: '50% 100%', width: 227, height: 340 }}>
+                <Kid size={340} skin={0} hair={0} hairStyle={2} shirt={HUE.sun}
+                  pose={beat === 4 ? 'cheer' : beat <= 1 ? 'hold' : sub >= 1 ? 'cheer' : 'hold'} mood={beat === 1 ? 'cold' : beat === 4 || (beat === 2 && sub >= 1) ? 'grin' : 'happy'} />
+                <Mv left={113} top={280} bc to={{ scale: beat === 1 || beat === 2 ? 1 : 0, y: 0 }} from={{ scale: 0 }} spring={SPRING.pop}>
+                  <div className={beat === 1 ? 'k-shiver' : undefined}><Tiffin size={105} open cold={beat === 1} hot={beat === 2 && sub >= 1} /></div>
+                </Mv>
+              </motion.div>
+            </Subject>
+
+            {/* beat 1: cold air around the girl */}
+            <Svg>{beat === 1 && [0, 1, 2, 3].map(i => <Snow key={i} x={GX - 60 + i * 50} y={GY - 360 + (i % 2) * 24} d={i * 0.5} />)}</Svg>
+            <Show when={beat === 2 && sub >= 1} k="burst" y={0}><Burst fire={1} x={960} y={500} count={44} spread={600} up={500} colors={['#FFC800', '#fff', '#FF9600']} /></Show>
+          </Layer>
+        </World>
+      </Focus>
+
+      {/* beat 3: who needs what? (a group of kids: no single subject, nothing dimmed) */}
       <Show when={beat === 3} k="who" y={0}>
         {WANTS.map((w, i) => (
           <Mv key={i} left={230 + i * 330} top={960} bc to={{ scale: 1, y: 0, opacity: 1 }} from={{ scale: 0, y: 120, opacity: 0 }} spring={{ ...SPRING.pop, delay: 0.2 + i * 0.25 }}>

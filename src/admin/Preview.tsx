@@ -9,7 +9,7 @@ import type { Send } from './ctx';
 import Shell from './Shell';
 
 const NAMES = ['Aarav', 'Diya', 'Kabir', 'Ananya', 'Vihaan', 'Isha', 'Rohan', 'Meera', 'Arjun', 'Saanvi', 'Yash', 'Tara', 'Dev', 'Riya', 'Neel', 'Kiara', 'Om', 'Anvi', 'Veer', 'Siya', 'Reyaan', 'Myra', 'Atharv', 'Pari'];
-const TEAM_NAMES = ['Rocket Samosas', 'Chai Champs', 'Pixel Pandas', 'Turbo Tigers', 'Jugaad Jets', 'Spark Squad'];
+const TEAM_NAMES = ['Rocket Rangers', 'Cosmic Champs', 'Pixel Pandas', 'Turbo Tigers', 'Jugaad Jets', 'Spark Squad'];
 
 function params() {
   const h = location.hash;
@@ -25,7 +25,7 @@ export function build(stepId: string, phase: string | null, teamCount: 4 | 6): G
   d({ type: 'SET_SETTING', key: 'teamCount', value: teamCount });
 
   const nPlayers = stepId === 'players' ? 9 : teamCount === 6 ? 24 : 18;
-  NAMES.slice(0, nPlayers).forEach((n, i) => d({ type: 'ADD_PLAYER', player: { id: `p${i}`, name: n, grade: (5 + (i % 3)) as Grade } }));
+  NAMES.slice(0, nPlayers).forEach((n, i) => d({ type: 'ADD_PLAYER', player: { id: `p${i}`, name: n, grade: (5 + (i % 6)) as Grade } }));
   if (target > idx('players') || (stepId === 'teams' && phase === 'made')) d({ type: 'MAKE_TEAMS', teams: makeTeams(s.players, teamCount) });
   if (target > idx('roles')) s.teams.forEach(t => suggestRoles(t).forEach(r => d({ type: 'SET_ROLES', teamId: t.id, playerId: r.playerId, roles: r.roles })));
   if (stepId === 'roles') {
@@ -68,7 +68,8 @@ export function build(stepId: string, phase: string | null, teamCount: 4 | 6): G
     if (p !== 'intro') {
       next();
       const [a, b] = ids();
-      d({ type: 'BID', by: a, amount: 30 }); d({ type: 'BID', by: 'raivan', amount: 40 }); d({ type: 'BID', by: b, amount: 60 });
+      // Fibbot counter-bids inside the engine after each team bid, so only team bids are sent here.
+      d({ type: 'BID', by: a, amount: 30 }); d({ type: 'BID', by: b, amount: 60 });
       if (p === 'sold') next();
       if (p === 'bidding2') { next(); next(); d({ type: 'BID', by: ids()[2], amount: 30 }); }
     }
